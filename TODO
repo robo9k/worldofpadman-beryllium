@@ -1,0 +1,2 @@
+Restructure folders like engine code, i.e. ioquake.
+Also use a more advanced Makefile, like the engine does.

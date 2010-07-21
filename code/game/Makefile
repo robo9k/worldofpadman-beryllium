@@ -18,6 +18,28 @@ SOCFLAGS = $(CFLAGS) -g3 -ggdb3 -fPIC
 
 ARCH=$(shell uname -m | sed -e s/i.86/i386/)
 
+# version info
+# this has been copied from ioQuake3's Makefile
+VERSION=0.00a
+
+USE_SVN=
+ifeq ($(wildcard .svn),.svn)
+  SVN_REV=$(shell LANG=C svnversion .)
+  ifneq ($(SVN_REV),)
+    VERSION:=$(VERSION)-r$(SVN_REV)
+    USE_SVN=1
+  endif
+else
+ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
+  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
+  ifneq ($(SVN_REV),)
+    VERSION:=$(VERSION)-r$(SVN_REV)
+  endif
+endif
+endif
+
+CFLAGS += -DBERYLLIUM_VERSION=\"$(VERSION)\"
+
 OBJ = \
   g_main.o \
   ai_chat.o \
