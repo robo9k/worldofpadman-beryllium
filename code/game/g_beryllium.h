@@ -40,7 +40,7 @@ extern vmCvar_t	be_version;
 
 
 /* Functions */
-qboolean BE_ClientCommand( gentity_t *ent, char *cmd );
+qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd );
 
 
 #endif

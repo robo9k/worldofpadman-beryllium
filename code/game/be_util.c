@@ -17,20 +17,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "be_cmds.h"
+#include "q_shared.h"
+#include "be_util.h"
 
-
-/* Functions */
 
 /*
-	Hooks into ClientCommand() in g_cmds.c
-	We can catch any client command here and even override default ones,
-	since our function is called before original ones.
-	We already have a ent->client.
-	If we return qtrue, the original function will return immediatelly.
+	Send a command to one or all clients. Basically a wrapper around trap_SendServerCommand()
+	See CG_ServerCommand() in cg_servercmds.c
 */
-qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd ) {
-	/* This is just a wrapper function */
-	return BE_ClCmd( ent, cmd );
-}
+void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
+	// Valid range is -1 and 0 to MAX_CLIENTS-1
+	if ( ( clientNum < -1 ) || ( clientNum >= MAX_CLIENTS ) ) {
+		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
+	}
 
+	if ( cmd & CCMD_CENTERPRINT ) {
+		trap_SendServerCommand( clientNum, va( "cp \"%s\"" ) );
+	}
+	if ( cmd & CCMD_MESSAGEPRINT ) {
+		trap_SendServerCommand( clientNum, va( "mp \"%s\"" ) );
+	}
+	if ( cmd & CCMD_PRINT ) {
+		trap_SendServerCommand( clientNum, va( "print \"%s\"" ) );
+	}
+}

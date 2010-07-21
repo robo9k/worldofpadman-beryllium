@@ -17,20 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "be_cmds.h"
+#ifndef _BE_UTIL_H
+#define _BE_UTIL_H
 
+/* Structs */
+typedef enum {
+	CCMD_CENTERPRINT	= 1,
+	CCMD_MESSAGEPRINT	= 2,
+	CCMD_PRINT			= 4
+};
+#define CCMD_CP		CCMD_CENTERPRINT
+#define CCMD_MP		CCMD_MESSAGEPRINT
+#define CCMD_PRT	CCMD_PRINT
 
 /* Functions */
+void SendClientCommand( const int clientNum, const int cmd, const char *str );
 
-/*
-	Hooks into ClientCommand() in g_cmds.c
-	We can catch any client command here and even override default ones,
-	since our function is called before original ones.
-	We already have a ent->client.
-	If we return qtrue, the original function will return immediatelly.
-*/
-qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd ) {
-	/* This is just a wrapper function */
-	return BE_ClCmd( ent, cmd );
-}
+#endif
 

@@ -18,10 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "be_cmds.h"
+#include "be_util.h"
 
 
 /* Internal functions */
-static void BE_Cmd_CallVote_f( gentity_t *ent );
+static void BE_Cmd_CallVote_f( const gentity_t *ent );
 
 
 /* Variables */
@@ -29,8 +30,20 @@ const commands_t be_ccmds[] = {
 	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f },
 	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f }
 };
+const unsigned int NUM_CMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
 
-const int NUM_CMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[ 0 ] ) );
+const char* validVotes[] = {
+	"nextmap",
+	"map",
+	"map_restart",
+	"kick",
+	"clientkick",
+	"timelimit",
+	"pointlimit",
+	"g_gametype",
+	"setgametype"
+};
+const unsigned int NUM_VOTES = ( sizeof( validVotes ) / sizeof( validVotes[0] ) );
 
 
 /* Functions */
@@ -39,7 +52,7 @@ const int NUM_CMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[ 0 ] ) );
 	This function just loops through our registered client commands,
 	checks conditions in flags are met and then calls the function.
 */
-qboolean BE_ClCmd( gentity_t *ent, char *cmd ) {
+qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
 	for ( i = 0; i < NUM_CMDS; i++ ) {
@@ -75,6 +88,64 @@ qboolean BE_ClCmd( gentity_t *ent, char *cmd ) {
 /*
 	Beryllium's replacement for the original Cmd_CallVote_f() in g_cmds.c
 */
-static void BE_Cmd_CallVote_f( gentity_t *ent ) {
+static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
+	char	arg1[MAX_STRING_TOKENS];
+	char	arg2[MAX_STRING_TOKENS];
+	char	*c;
+	int		i;
+
+	if ( !g_allowVote.integer ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, "Voting not allowed here." );
+		return;
+	}
+
+	if ( level.voteTime ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, "A vote is already in progress." );
+		return;
+	}
+
+	if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, "You have called the maximum number of votes." );
+		return;
+	}
+
+	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, "Not allowed to call a vote as spectator." );
+		return;
+	}
+
+	// make sure it is a valid command to vote on
+	trap_Argv( 1, arg1, sizeof( arg1 ) );
+	trap_Argv( 2, arg2, sizeof( arg2 ) );
+
+	// NOTE: http://bugzilla.icculus.org/show_bug.cgi?id=3593
+	// check for command separators in arg2
+	for ( c = arg2; *c; ++c ) {
+		switch ( *c ) {
+			case '\n':
+			case '\r':
+			case ';':
+				SendClientCommand( ( ent - g_entities ), CCMD_CP, "Invalid vote string." );
+				return;
+			break;
+		}
+	}
+
+	for ( i = 0; i < NUM_VOTES; i++ ) {
+		if ( Q_stricmp( arg1, validVotes[i] ) == 0 ) {
+			break;
+		}
+	}
+	if ( i == NUM_VOTES ) {
+		char validVoteString[MAX_STRING_TOKENS] = { "Valid vote commands are: " };
+		for ( i = 0; i < NUM_VOTES; i++ ) {
+			Q_strcat( validVoteString, sizeof( validVoteString ),
+					  ( i < ( NUM_VOTES - 1 ) ) ? va( "%s, ", validVotes[i] ) : va( "%s.\n", validVotes[i] ) );
+		}
+
+		SendClientCommand( ( ent - g_entities ), ( CCMD_CP | CCMD_CP ), "Invalid vote string\n" );
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
+		return;
+	}
 }
 

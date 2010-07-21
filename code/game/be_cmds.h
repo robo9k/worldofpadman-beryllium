@@ -29,19 +29,19 @@ typedef enum {
 	CMD_MESSAGE			= 2,
 	CMD_LIVING			= 4,
 	CMD_INTERMISSION	= 8
-} cmdFlag_t;
+};
 
 typedef struct {
     char		*cmdName;
-    cmdFlag_t	cmdFlags;
-    void		( *cmdHandler )( gentity_t *ent );
+    int			cmdFlags;
+    void		( *cmdHandler )( const gentity_t *ent );
 } commands_t;
 
 
 /* Externals */
 
 /* Functions */
-qboolean BE_ClCmd( gentity_t *ent, char *cmd );
+qboolean BE_ClCmd( const gentity_t *ent, const char *cmd );
 
 
 #endif
