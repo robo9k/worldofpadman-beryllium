@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "be_cmds.h"
-#include "be_util.h"
+#include "g_local.h"
 
 
 /* Internal functions */

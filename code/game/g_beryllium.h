@@ -21,25 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _G_BERYLLIUM_H
 
 
-/* Includes */
-/* NOTE: g_local.h is implicitly included */
-#include "q_shared.h"
-
-
-/* Defines */
-
 #ifndef BERYLLIUM_VERSION
 	#error "BERYLLIUM_VERSION not defined, Makefile corrupt?"
 #endif
 
 
-/* Externals */
-
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
 
 
-/* Functions */
+/* "Exported" Functions */
 qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd );
 
 

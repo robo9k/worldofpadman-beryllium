@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "q_shared.h"
-#include "be_util.h"
+#include "g_local.h"
 
 
 /*
@@ -41,5 +40,14 @@ void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
 	if ( cmd & CCMD_PRINT ) {
 		trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
 	}
+}
+
+
+/*
+	Converts a string into a gametype using partial match.
+	Might return invalid gametype if no match
+*/
+gametype_t StringToGametype( const char *str ) {
+	return GT_MAX_GAME_TYPE;
 }
 

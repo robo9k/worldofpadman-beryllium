@@ -20,9 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _BE_CMDS_H
 #define _BE_CMDS_H
 
-#include "g_local.h"
-
-/* Structs */
 
 typedef enum {
 	CMD_CHEAT			= 1,
@@ -38,9 +35,6 @@ typedef struct {
 } commands_t;
 
 
-/* Externals */
-
-/* Functions */
 qboolean BE_ClCmd( const gentity_t *ent, const char *cmd );
 
 

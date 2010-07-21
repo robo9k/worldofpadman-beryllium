@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _BE_UTIL_H
 #define _BE_UTIL_H
 
-/* Structs */
+
 typedef enum {
 	CCMD_CENTERPRINT	= 1,
 	CCMD_MESSAGEPRINT	= 2,
@@ -30,8 +30,10 @@ typedef enum {
 #define CCMD_MP		CCMD_MESSAGEPRINT
 #define CCMD_PRT	CCMD_PRINT
 
-/* Functions */
+
 void SendClientCommand( const int clientNum, const int cmd, const char *str );
+gametype_t StringToGametype( const char *str );
+
 
 #endif
 
