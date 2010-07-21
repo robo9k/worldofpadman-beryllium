@@ -95,37 +95,37 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	int		i;
 
 	if ( !g_allowVote.integer ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_CP, "Voting not allowed here." );
+		SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "Voting not allowed here.\n" );
 		return;
 	}
 
 	if ( level.voteTime ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_CP, "A vote is already in progress." );
+		SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "A vote is already in progress.\n" );
 		return;
 	}
 
 	if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_CP, "You have called the maximum number of votes." );
+		SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "You have called the maximum number of votes.\n" );
 		return;
 	}
 
 	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_CP, "Not allowed to call a vote as spectator." );
+		SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "Not allowed to call a vote as spectator.\n" );
 		return;
 	}
 
-	// make sure it is a valid command to vote on
+	/* make sure it is a valid command to vote on */
 	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
-	// NOTE: http://bugzilla.icculus.org/show_bug.cgi?id=3593
-	// check for command separators in arg2
+	/* NOTE: http://bugzilla.icculus.org/show_bug.cgi?id=3593 */
+	/* check for command separators in arg2 */
 	for ( c = arg2; *c; ++c ) {
 		switch ( *c ) {
 			case '\n':
 			case '\r':
 			case ';':
-				SendClientCommand( ( ent - g_entities ), CCMD_CP, "Invalid vote string." );
+				SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "Invalid vote string.\n" );
 				return;
 			break;
 		}
@@ -143,9 +143,11 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 					  ( i < ( NUM_VOTES - 1 ) ) ? va( "%s, ", validVotes[i] ) : va( "%s.\n", validVotes[i] ) );
 		}
 
-		SendClientCommand( ( ent - g_entities ), ( CCMD_CP | CCMD_CP ), "Invalid vote string\n" );
+		SendClientCommand( ( ent - g_entities ), ( CCMD_PRT | CCMD_CP ), "Invalid vote string\n" );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
 		return;
 	}
+
+	
 }
 

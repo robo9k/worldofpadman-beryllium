@@ -30,14 +30,16 @@ void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
 	if ( ( clientNum < -1 ) || ( clientNum >= MAX_CLIENTS ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 	}
+	/* TODO: Check wheter clientNum is connected */
 
 	if ( cmd & CCMD_CENTERPRINT ) {
-		trap_SendServerCommand( clientNum, va( "cp \"%s\"" ) );
+		trap_SendServerCommand( clientNum, va( "cp \"%s\"", str ) );
 	}
 	if ( cmd & CCMD_MESSAGEPRINT ) {
-		trap_SendServerCommand( clientNum, va( "mp \"%s\"" ) );
+		trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
 	}
 	if ( cmd & CCMD_PRINT ) {
-		trap_SendServerCommand( clientNum, va( "print \"%s\"" ) );
+		trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
 	}
 }
+
