@@ -21,6 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _G_BERYLLIUM_H
 
 
+/* Includes */
+/* NOTE: g_local.h is implicitly included */
+#include "q_shared.h"
+
+
 /* Defines */
 
 #ifndef BERYLLIUM_VERSION
@@ -32,6 +37,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
+
+
+/* Functions */
+qboolean BE_ClientCommand( gentity_t *ent, char *cmd );
 
 
 #endif

@@ -74,6 +74,8 @@ OBJ = \
   g_weapon.o \
   q_math.o \
   q_shared.o \
+  g_beryllium.o \
+  be_cmds.o \
 
 SOOBJ = \
   g_syscalls.o \
@@ -120,6 +122,8 @@ g_utils.o : g_utils.c; $(DO_CC)
 g_weapon.o : g_weapon.c; $(DO_CC)
 q_math.o : q_math.c; $(DO_CC)
 q_shared.o : q_shared.c; $(DO_CC)
+g_beryllium.o : g_beryllium.c; $(DO_CC)
+be_cmds.o : be_cmds.c; $(DO_CC)
   
 g_syscalls.o : g_syscalls.c; $(DO_CC)
 

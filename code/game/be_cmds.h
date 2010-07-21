@@ -17,20 +17,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "be_cmds.h"
+#ifndef _BE_CMDS_H
+#define _BE_CMDS_H
 
+#include "g_local.h"
+
+/* Structs */
+
+typedef enum {
+	CMD_CHEAT			= 1,
+	CMD_MESSAGE			= 2,
+	CMD_LIVING			= 4,
+	CMD_INTERMISSION	= 8
+} cmdFlag_t;
+
+typedef struct {
+    char		*cmdName;
+    cmdFlag_t	cmdFlags;
+    void		( *cmdHandler )( gentity_t *ent );
+} commands_t;
+
+
+/* Externals */
 
 /* Functions */
+qboolean BE_ClCmd( gentity_t *ent, char *cmd );
 
-/*
-	Hooks into ClientCommand() in g_cmds.c
-	We can catch any client command here and even override default ones,
-	since our function is called before original ones.
-	We already have a ent->client.
-	If we return qtrue, the original function will return immediatelly.
-*/
-qboolean BE_ClientCommand( gentity_t *ent, char *cmd ) {
-	/* This is just a wrapper function */
-	return BE_ClCmd( ent, cmd );
-}
+
+#endif
 

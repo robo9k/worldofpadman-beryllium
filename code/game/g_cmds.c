@@ -1723,6 +1723,12 @@ void ClientCommand( int clientNum ) {
 
 	trap_Argv( 0, cmd, sizeof( cmd ) );
 
+	/* added beryllium */
+	if ( BE_ClientCommand( ent, cmd ) ) {
+		return;
+	}
+	/* end beryllium */
+
 	if (Q_stricmp (cmd, "say") == 0) {
 		Cmd_Say_f (ent, SAY_ALL, qfalse);
 		return;
