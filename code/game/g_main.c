@@ -74,6 +74,12 @@ vmCvar_t	nextmapBackUp;
 vmCvar_t	g_transmitSVboastermissiles;
 vmCvar_t	g_defaultChangedMarker;
 
+/* added beryllium */
+
+vmCvar_t	be_version;
+
+/* end beryllium */
+
 // bk001129 - made static to avoid aliasing
 static cvarTable_t		gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -155,7 +161,13 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &nextmapBackUp, "nextmapBackUp", "", 0,0,qfalse},
 	{ &g_transmitSVboastermissiles,"g_transmitSVboastermissiles","0",0,0,qtrue},
 
-	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse}
+	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse},
+
+	/* added beryllium */
+
+	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse }
+
+	/* end beryllium */
 
 };
 

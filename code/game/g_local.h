@@ -1009,3 +1009,11 @@ int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *paren
 
 void	trap_SnapVector( float *v );
 
+
+/* added beryllium */
+
+/* Included here, because of dependencies */
+#include "g_beryllium.h"
+
+/* end beryllium */
+
