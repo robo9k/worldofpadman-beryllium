@@ -147,6 +147,12 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		return;
 	}
 
-	
+	/* if there is still a vote to be executed */
+	if ( level.voteExecuteTime ) {
+		level.voteExecuteTime = 0;
+		trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
+	}
+
+	/* TODO: Declare a voteType enum? Otherwise we'd need to check strings again */
 }
 

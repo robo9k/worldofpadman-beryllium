@@ -44,10 +44,37 @@ void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
 
 
 /*
-	Converts a string into a gametype using partial match.
+	Converts a string into a gametype. List is from ui_callvote.c
 	Might return invalid gametype if no match
 */
+/* FIXME: Remove this ugliness. All these multiple strings are nasty.
+          Use partial match?
+*/
+typedef struct {
+	char		*str;
+	gametype_t	type;
+} mapGametypeString_t;
 gametype_t StringToGametype( const char *str ) {
+	const mapGametypeString_t gametypeRemap[] = {
+		{ "Free For All",			GT_FFA			},
+		{ "Tournament",				GT_TOURNAMENT	},
+		{ "Spray your Color FFA",	GT_SPRAYFFA		},
+		{ "Last Pad Standing",		GT_LPS			},
+		{ "Team Deathmatch",		GT_TEAM			},
+		{ "Spray your Color TP",	GT_SPRAY		},
+		{ "Big Balloon",			GT_BALLOON		}
+	};
+	const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
+
+	int i;
+	
+
+	for ( i = 0; i < NUM_GTSTRS; i++ ) {
+		if ( Q_stricmp( gametypeRemap[i].str, str ) == 0 ) {
+			return ( gametypeRemap[i].type );
+		}
+	}
+
 	return GT_MAX_GAME_TYPE;
 }
 
