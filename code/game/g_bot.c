@@ -150,6 +150,11 @@ static void G_LoadArenas( void ) {
 	}
 
 	// get all arenas from .arena files
+	/* changed beryllium
+       NOTE: This caused the server to reference all pk3s, which
+	         made autodownload mostly useless.
+	*/
+	/*
 	numdirs = trap_FS_GetFileList("scripts", ".woparena", dirlist, 1024 );
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs; i++, dirptr += dirlen+1) {
@@ -158,6 +163,7 @@ static void G_LoadArenas( void ) {
 		strcat(filename, dirptr);
 		G_LoadArenasFromFile(filename);
 	}
+	*/
 	trap_Printf( va( "%i arenas parsed\n", g_numArenas ) );
 	
 	for( n = 0; n < g_numArenas; n++ ) {
