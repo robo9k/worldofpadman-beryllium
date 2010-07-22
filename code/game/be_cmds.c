@@ -218,13 +218,10 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		/* FIXME: Handle LAN servers */
-		/*
 		if ( player->pers.localClient ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not kick the host player.\n" );
 			return;
 		}
-		*/
 
 		/* We've got one, convert into clientkick vote
 		   TODO: Check for multiple matches
@@ -248,11 +245,11 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %d", arg1, i );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Gametype %s", GametypeToString( i ) );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "g_gametype %d", i );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Gametype '%s'", GametypeToString( i ) );
 	}
 	else if ( Q_stricmp( arg1, "map" ) == 0 ) {
-		char s[MAX_STRING_CHARS];
+		char s[128];
 		fileHandle_t f;
 		
 		/* Does map exist at all? */
@@ -272,7 +269,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Map %s", arg2 );
 	}
 	else if ( Q_stricmp( arg1, "nextmap" ) == 0 ) {
-		char s[MAX_STRING_CHARS];
+		char s[128];
 
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
 		if ( !*s ) {
@@ -298,24 +295,47 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 		/* TODO: Display clientid as well? */
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "clientkick \"%i\"", i );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Kick %s", level.clients[i].pers.netname );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Kick '%s'", level.clients[i].pers.netname );
+
+		/* Append additional argument, e.g. "reason" */
+		if ( trap_Argc() >= 4 ) {
+			char r[32];
+			trap_Argv( 3, r, sizeof( r ) );
+
+			Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( S_COLOR_WHITE", %s", r ) );
+		}
 	}
 	else if ( Q_stricmp( arg1, "map_restart" ) == 0 ) {
 		Q_strncpyz( level.voteString, "map_restart", sizeof( level.voteDisplayString ) );
 		Q_strncpyz( level.voteDisplayString, "Restart map", sizeof( level.voteDisplayString ) );
 	}
-	/* Any other vote is not explicitly handled */
-	/* These are currently: pointlimit, timelimit */
-	/* TODO: Check for numerical values */
+	else if ( ( Q_stricmp( arg1, "pointlimit" ) == 0 ) ||
+	          ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
+		i = atoi( arg2 );
+
+		if ( i < 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "Invalid %s.\n", arg1 ) );
+			return;
+		}
+
+		if ( trap_Cvar_VariableIntegerValue( arg1 ) == i ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "This is the current %s.\n", arg1 ) );
+			return;
+		}
+
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, arg2 );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
+	}
+	/* Any other vote is not explicitly handled
+	   Are there any left?
+	*/
 	else {
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	}
 
-	/* Phew, we finally got a valid and formatted vote */
-	/* FIXME: There is a problem with displaying the votestring due to double " inside */
-/*	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: '%s'.\n", ent->client->pers.netname, level.voteDisplayString ) );*/
-	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote.\n", ent->client->pers.netname ) );
+	/* FIXME: There is a problem clientside when displaying a votestring with double " inside */
+	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: %s.\n", ent->client->pers.netname, level.voteDisplayString ) );
 	/* TODO: Create a seperate BE_Logf() with loglevels and such */
 	G_LogPrintf( "%i called vote '%s'\n", ( ent - g_entities ), level.voteString );
 
