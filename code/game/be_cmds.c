@@ -41,6 +41,11 @@ const char* validVotes[] = {
 	"pointlimit",
 	"g_gametype",
 	"setgametype"
+	/* NOTE: Missing votes are:
+	         g_doWarmup,
+	         fastGamespeed,
+	         normalGamespeed
+	*/
 };
 const unsigned int NUM_VOTES = ( sizeof( validVotes ) / sizeof( validVotes[0] ) );
 
@@ -301,15 +306,18 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 	/* Any other vote is not explicitly handled */
 	/* These are currently: pointlimit, timelimit */
+	/* TODO: Check for numerical values */
 	else {
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	}
 
 	/* Phew, we finally got a valid and formatted vote */
-	SendClientCommand( -1, CCMD_PRT, va( "%s called a vote: \"%s\".\n", ent->client->pers.netname, level.voteDisplayString ) );
+	/* FIXME: There is a problem with displaying the votestring due to double " inside */
+/*	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: '%s'.\n", ent->client->pers.netname, level.voteDisplayString ) );*/
+	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote.\n", ent->client->pers.netname ) );
 	/* TODO: Create a seperate BE_Logf() with loglevels and such */
-	G_LogPrintf( "%i called a vote \"%s\"\n", ( ent - g_entities ), level.voteString );
+	G_LogPrintf( "%i called vote '%s'\n", ( ent - g_entities ), level.voteString );
 
 	/* start the voting, the caller autoamtically votes yes */
 	level.voteTime = level.time;
