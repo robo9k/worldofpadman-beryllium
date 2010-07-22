@@ -323,7 +323,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, arg2 );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
 	}
 	/* Any other vote is not explicitly handled
