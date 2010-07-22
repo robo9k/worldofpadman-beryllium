@@ -475,6 +475,12 @@ qboolean	ConsoleCommand( void ) {
 
 	trap_Argv( 0, cmd, sizeof( cmd ) );
 
+	/* added beryllium */
+	if ( BE_ConsoleCommand( cmd ) ) {
+		return qtrue;
+	}
+	/* end beryllium */
+
 	if ( Q_stricmp (cmd, "entitylist") == 0 ) {
 		Svcmd_EntityList_f();
 		return qtrue;

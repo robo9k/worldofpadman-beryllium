@@ -17,30 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "g_local.h"
+#ifndef _BE_SVCMDS_H
+#define _BE_SVCMDS_H
 
 
-/* Functions */
-
-/*
-	Hooks into ClientCommand() in g_cmds.c
-	We can catch any client command here and even override default ones,
-	since our function is called before original ones.
-	We already have a ent->client.
-	If we return qtrue, the original function will return immediatelly.
-*/
-qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd ) {
-	/* This is just a wrapper function */
-	return BE_ClCmd( ent, cmd );
-}
+/* FIXME: This is almost the same as commands_t in be_cmds.h */
+typedef struct {
+    char		*cmdName;
+    void		( *cmdHandler )( void );
+} cmds_t;
 
 
-/*
-	Hooks into ConsoleCommand() in g_svcmds.c
-	Basically the same as  BE_ClientCommand() for server commands, i.e. rcon.
-*/
-qboolean BE_ConsoleCommand( const char *cmd ) {
-	/* This is just a wrapper function */
-	return BE_ConCmd( cmd );
-}
+qboolean BE_ConCmd( const char *cmd );
+
+#endif
 

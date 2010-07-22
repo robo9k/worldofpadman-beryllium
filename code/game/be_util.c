@@ -45,7 +45,7 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 	See CG_ServerCommand() in cg_servercmds.c
 */
 void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
-	// Valid range is -1 and 0 to MAX_CLIENTS-1
+	/* Valid range is -1 and 0 to MAX_CLIENTS-1 */
 	if ( ( clientNum < -1 ) || ( clientNum >= MAX_CLIENTS ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 	}

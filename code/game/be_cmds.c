@@ -29,7 +29,7 @@ const commands_t be_ccmds[] = {
 	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f },
 	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f }
 };
-const unsigned int NUM_CMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
+const unsigned int NUM_CCMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
 
 const char* validVotes[] = {
 	"nextmap",
@@ -59,7 +59,7 @@ const unsigned int NUM_VOTES = ( sizeof( validVotes ) / sizeof( validVotes[0] ) 
 qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
-	for ( i = 0; i < NUM_CMDS; i++ ) {
+	for ( i = 0; i < NUM_CCMDS; i++ ) {
 		if ( Q_stricmp( cmd, be_ccmds[i].cmdName ) == 0 ) {
 			// do tests here to reduce the amount of repeated code
 			// We provide this command, but the conditions to actually execute it are not given

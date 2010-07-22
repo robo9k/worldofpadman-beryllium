@@ -76,6 +76,7 @@ OBJ = \
   q_shared.o \
   g_beryllium.o \
   be_cmds.o \
+  be_svcmds.o \
   be_util.o \
 
 SOOBJ = \
@@ -125,6 +126,7 @@ q_math.o : q_math.c; $(DO_CC)
 q_shared.o : q_shared.c; $(DO_CC)
 g_beryllium.o : g_beryllium.c; $(DO_CC)
 be_cmds.o : be_cmds.c; $(DO_CC)
+be_svcmds.o : be_svcmds.c; $(DO_CC)
 be_util.o : be_util.c; $(DO_CC)
   
 g_syscalls.o : g_syscalls.c; $(DO_CC)
