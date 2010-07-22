@@ -32,7 +32,9 @@ typedef enum {
 
 
 void SendClientCommand( const int clientNum, const int cmd, const char *str );
+
 gametype_t StringToGametype( const char *str );
+char* GametypeToString( const gametype_t gt );
 
 
 #endif
