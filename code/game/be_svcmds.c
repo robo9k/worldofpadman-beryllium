@@ -21,9 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 static void BE_Svcmd_Tell_f( void );
+static void BE_Svcmd_Cancelvote_f( void );
 
 const svcmd_t be_svcmds[] = {
-	{ "tell",	BE_Svcmd_Tell_f }
+	{ "tell",		BE_Svcmd_Tell_f			},
+	{ "cancelvote",	BE_Svcmd_Cancelvote_f	}
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
 
@@ -42,6 +44,11 @@ qboolean BE_ConCmd( const char *cmd ) {
 }
 
 
+/*
+	Print text to one or all clients. Text is displayed in
+	the client's log as it is passed to the function
+	(except for some weird double quotes with " )
+*/
 static void BE_Svcmd_Tell_f( void ) {
 	char clientStr[MAX_TOKEN_CHARS];
 	int clientNum;
@@ -69,5 +76,24 @@ static void BE_Svcmd_Tell_f( void ) {
 	}
 
 	trap_SendServerCommand( clientNum, va( "print \"%s\n\"", ConcatArgs( 2 ) ) );
+}
+
+
+/*
+	Cancel a currently running vote, i.e. emulate everyone
+	voted no. This doesn't work with teamvotes, as they are not
+	actually used by the game.
+*/
+static void BE_Svcmd_Cancelvote_f( void ) {
+	if ( !level.voteTime ) {
+		G_Printf( "No vote in progress.\n" );
+		return;
+	}
+
+	level.voteNo = level.numConnectedClients;
+	level.voteYes = 0;
+	CheckVote();
+
+	SendClientCommand( -1, CCMD_PRT, "Vote was canceled.\n" );
 }
 

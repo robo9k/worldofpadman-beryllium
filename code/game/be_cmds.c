@@ -295,9 +295,8 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		/* TODO: Display clientid as well? */
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "clientkick \"%i\"", i );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Kick '%s'", level.clients[i].pers.netname );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "Kick %i: '%s'", i, level.clients[i].pers.netname );
 
 		/* Append additional argument, e.g. "reason" */
 		if ( trap_Argc() >= 4 ) {
