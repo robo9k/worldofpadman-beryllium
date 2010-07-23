@@ -255,7 +255,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
+		trap_Cvar_VariableStringBuffer( "mapname", s, sizeof( s ) );
 		if ( Q_stricmp( arg2, s ) == 0 ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "This is the current map. Use 'map_restart' if you want to restart.\n" );
 			return;
