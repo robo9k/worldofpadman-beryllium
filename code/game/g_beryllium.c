@@ -44,3 +44,42 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 	return BE_ConCmd( cmd );
 }
 
+
+/*
+	Beryllium's replacement for CheckVote() in g_main.c
+	Determines whether a vote passed or failed and execute it
+*/
+/* TODO: Create be_vote.c and move function */
+void BE_CheckVote( void ) {
+	if ( level.voteExecuteTime && ( level.voteExecuteTime < level.time ) ) {
+		level.voteExecuteTime = 0;
+		trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
+	}
+
+	if ( !level.voteTime ) {
+		return;
+	}
+
+	if ( ( level.time - level.voteTime ) >= VOTE_TIME ) {
+		SendClientCommand( -1, CCMD_PRT, "Vote failed, timeout.\n" );
+	}
+	else {
+		if ( level.voteYes > ( level.numVotingClients / 2 ) ) {
+			/* Set timeout, then execute and remove the vote at next call */
+			SendClientCommand( -1, CCMD_PRT, "Vote passed.\n" );
+			level.voteExecuteTime = ( level.time + 3000 ); /* FIXME: Magical constant; voteExecuteDelay */
+		}
+		else if ( level.voteNo >= ( level.numVotingClients / 2 ) ) {
+			/* same behavior as a timeout */
+			SendClientCommand( -1, CCMD_PRT, "Vote failed.\n" );
+		}
+		else {
+			/* still waiting for a majority */
+			return;
+		}
+	}
+
+	level.voteTime = 0;
+	trap_SetConfigstring( CS_VOTE_TIME, "" );
+}
+

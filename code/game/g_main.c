@@ -2177,7 +2177,12 @@ end = trap_Milliseconds();
 	CheckTeamStatus();
 
 	// cancel vote if timed out
+	/* changed beryllium */
+	/*
 	CheckVote();
+	*/
+	BE_CheckVote();
+	/* end beryllium */
 
 	// check team votes
 	CheckTeamVote( TEAM_RED );

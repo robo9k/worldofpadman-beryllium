@@ -22,12 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Internal functions */
 static void BE_Cmd_CallVote_f( const gentity_t *ent );
+static void BE_Cmd_Vote_f( const gentity_t *ent );
 
 
 /* Variables */
 const ccmd_t be_ccmds[] = {
-	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f },
-	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f }
+	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f	},
+	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f	},
+	{ "vote",		CMD_MESSAGE,	BE_Cmd_Vote_f		}
 };
 const unsigned int NUM_CCMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
 
@@ -88,6 +90,7 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 	/* This is none of our business */
 	return qfalse;
 }
+
 
 /*
 	Beryllium's replacement for the original Cmd_CallVote_f() in g_cmds.c
@@ -246,11 +249,9 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 	else if ( Q_stricmp( arg1, "map" ) == 0 ) {
 		char s[128];
-		fileHandle_t f;
 		
 		/* Does map exist at all? */
-		f = trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), &f, FS_READ );
-		if ( -1 == f ) {
+		if ( trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), NULL, FS_READ ) == -1 ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Map not found.\n" );
 			return;
 		}
@@ -355,5 +356,52 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	trap_SetConfigstring( CS_VOTE_STRING, level.voteDisplayString );	
 	trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
 	trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
+}
+
+
+/*
+	Beryllium's replacement for Cmd_Vote_f() in g_cmds.c
+*/
+static void BE_Cmd_Vote_f( const gentity_t *ent ) {
+	char msg[8];
+
+	if ( !level.voteTime ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "No vote in progress.\n" );
+		return;
+	}
+	if ( ent->client->ps.eFlags & EF_VOTED ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote already cast.\n" );
+		return;
+	}
+	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Not allowed to vote as spectator.\n" );
+		return;
+	}
+
+	SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote cast, thank you.\n" );
+
+	ent->client->ps.eFlags |= EF_VOTED;
+
+	trap_Argv( 1, msg, sizeof( msg ) );
+
+	if ( ( msg[0] == 'y' ) || ( msg[0] == 'Y' ) || ( msg[0] == '1' ) ) {
+		level.voteYes++;
+		trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
+
+		/* TODO: Don't print to self? Need SendClientCommandExcept()
+	             Use Loglevels?
+		*/
+		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" voted "S_COLOR_GREEN"yes"S_COLOR_WHITE".\n", ent->client->pers.netname ) );
+	}
+	else {
+		level.voteNo++;
+		trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
+
+		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" voted "S_COLOR_RED"no"S_COLOR_WHITE".\n", ent->client->pers.netname ) );
+	}
+
+	/* "a majority will be determined in CheckVote, which will also account
+	   for players entering or leaving"
+	*/
 }
 
