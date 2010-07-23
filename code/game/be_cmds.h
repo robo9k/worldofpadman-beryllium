@@ -32,7 +32,7 @@ typedef struct {
     char		*cmdName;
     int			cmdFlags;
     void		( *cmdHandler )( const gentity_t *ent );
-} commands_t;
+} ccmd_t;
 
 
 qboolean BE_ClCmd( const gentity_t *ent, const char *cmd );

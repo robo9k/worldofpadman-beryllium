@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _BE_SVCMDS_H
 
 
-/* FIXME: This is almost the same as commands_t in be_cmds.h */
 typedef struct {
     char		*cmdName;
     void		( *cmdHandler )( void );
-} cmds_t;
+} svcmd_t;
 
 
 qboolean BE_ConCmd( const char *cmd );

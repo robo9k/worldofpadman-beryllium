@@ -25,7 +25,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent );
 
 
 /* Variables */
-const commands_t be_ccmds[] = {
+const ccmd_t be_ccmds[] = {
 	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f },
 	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f }
 };
@@ -109,6 +109,9 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		return;
 	}
 
+	/* FIXME: One can gain new votes by changing team. If we use a fixed limit, it should be persistant
+	          for each map.
+	*/
 	if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You have called the maximum number of votes.\n" );
 		return;
@@ -145,7 +148,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		char validVoteString[MAX_STRING_TOKENS] = { "Valid vote commands are: " };
 		for ( i = 0; i < NUM_VOTES; i++ ) {
 			Q_strcat( validVoteString, sizeof( validVoteString ),
-					  ( i < ( NUM_VOTES - 1 ) ) ? va( "%s, ", validVotes[i] ) : va( "%s.\n", validVotes[i] ) );
+					  ( i < ( NUM_VOTES - 1 ) ) ? va( S_COLOR_YELLOW"%s"S_COLOR_WHITE", ", validVotes[i] ) : va( S_COLOR_YELLOW"%s"S_COLOR_WHITE".\n", validVotes[i] ) );
 		}
 
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Invalid vote string.\n" );
@@ -181,18 +184,11 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		char		cleanName[64];
 		int			id = -1;
 
-		/* this is nasty, no need to have it voteable. Admins shall use rcon */
-		/* kick allbots might be legitimate though */
-		if ( Q_stricmp( arg2, "all" ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Only admins are allowed to do this. If a player is named 'all', use 'clientkick' instead.\n" );
-			return;
-		}
-
 		/* try to circumvent renaming exploit and use id, which can not change */
 		for ( i = 0; i < level.maxclients; i++ ) {
 			player = &level.clients[i];
 
-			if ( player->pers.connected == CON_DISCONNECTED ) {
+			if ( CON_DISCONNECTED == player->pers.connected ) {
 				continue;
 			}
 
@@ -213,7 +209,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			/* TODO: Partial match with strstr (dangerous?) */
 		}
 
-		if ( id == -1 ) {
+		if ( -1 == id ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "No player found with that name. Check for typos or use 'clientkick' instead.\n" );
 			return;
 		}
@@ -258,6 +254,12 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Map not found.\n" );
 			return;
 		}
+
+		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
+		if ( Q_stricmp( arg2, s ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "This is the current map. Use 'map_restart' if you want to restart.\n" );
+			return;
+		}		
 		
 		/* Backup and re-apply current nextmap */
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
@@ -288,7 +290,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			return;
 		}
 
-		if ( level.clients[i].pers.connected == CON_DISCONNECTED ) {
+		if ( CON_DISCONNECTED == level.clients[i].pers.connected ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Client not connected.\n" );
 			return;
 		}
@@ -299,9 +301,9 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 		/* Append additional argument, e.g. "reason" */
 		if ( trap_Argc() >= 4 ) {
-			char r[32];
-			trap_Argv( 3, r, sizeof( r ) );
+			char r[16];
 
+			Q_strncpyz( r, ConcatArgs( 3 ), sizeof( r ) );
 			Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( S_COLOR_WHITE", %s", r ) );
 		}
 	}
@@ -335,7 +337,7 @@ static void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 
 	/* FIXME: There is a problem clientside when displaying a votestring with double " inside */
-	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: %s.\n", ent->client->pers.netname, level.voteDisplayString ) );
+	SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: "S_COLOR_YELLOW"%s"S_COLOR_WHITE".\n", ent->client->pers.netname, level.voteDisplayString ) );
 	/* TODO: Create a seperate BE_Logf() with loglevels and such */
 	G_LogPrintf( "%i called vote '%s'\n", ( ent - g_entities ), level.voteString );
 

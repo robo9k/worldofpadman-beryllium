@@ -1225,7 +1225,15 @@ int BotAILoadMap( int restart ) {
 
 	if (!restart) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+		/* changed beryllium */
+		/*
 		trap_BotLibLoadMap( mapname.string );
+		*/
+		/* return value >  0 means error */
+		if ( trap_BotLibLoadMap( mapname.string ) ) {
+			return qfalse;
+		}
+		/* end beryllium */
 	}
 
 	for (i = 0; i < MAX_CLIENTS; i++) {

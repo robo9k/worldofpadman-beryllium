@@ -11,7 +11,12 @@
 
 // the "gameversion" client command will print this plus compile date
 //(original)#define	GAMEVERSION	"baseq3"
+/* changed beryllium */
+/*
 #define	GAMEVERSION	"wop"
+*/
+#define GAMEVERSION "beryllium"
+/* end beryllium */
 
 //(original)#define BODY_QUEUE_SIZE		8
 #define BODY_QUEUE_SIZE		64 //noch zu überdenken, ob man wirklich so viele entities dafür frei halten kann ... ohne probleme zu bekommen

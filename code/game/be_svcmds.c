@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 static void BE_Svcmd_Tell_f( void );
 
-const cmds_t be_svcmds[] = {
+const svcmd_t be_svcmds[] = {
 	{ "tell",	BE_Svcmd_Tell_f }
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
