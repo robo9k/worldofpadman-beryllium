@@ -63,6 +63,7 @@ static qboolean IsAllowedVote( const char *str ) {
 void BE_Cmd_Vote_f( const gentity_t *ent ) {
 	char msg[8];
 
+
 	if ( !level.voteTime ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "No vote in progress.\n" );
 		return;
@@ -231,9 +232,11 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			}			
 
 			Q_strcat( validVoteString, sizeof( validVoteString ),
-					  ( i < ( NUM_VOTEH - 1 ) ) ? va( S_COLOR_YELLOW"%s"S_COLOR_WHITE", ", voteHandler[i].str )
-                                                : va( S_COLOR_YELLOW"%s"S_COLOR_WHITE".\n", voteHandler[i].str ) );
+					  va( S_COLOR_YELLOW"%s"S_COLOR_WHITE", ", voteHandler[i].str ) );
 		}
+		/* Hackity, because I'm too lazy to detect last vote properly */
+		Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
+
 
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Invalid vote string.\n" );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
@@ -468,9 +471,9 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a map name.\n" );
 			return qfalse;
 		}
-		
+
 		/* Does map exist at all? */
-		if ( trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), NULL, FS_READ ) == -1 ) {
+		if ( !trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), NULL, FS_READ ) ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Map not found.\n" );
 			return qfalse;
 		}
@@ -538,7 +541,7 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 	     ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
 
 		if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You must supply a %s.\n", arg2 ) );
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You must supply a %s.\n", arg1 ) );
 			return qfalse;
 		}
 
