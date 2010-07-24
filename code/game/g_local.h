@@ -1020,6 +1020,7 @@ void	trap_SnapVector( float *v );
 /* Included here, because of dependencies */
 #include "g_beryllium.h"
 #include "be_util.h"
+#include "be_vote.h"
 #include "be_cmds.h"
 #include "be_svcmds.h"
 

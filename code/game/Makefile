@@ -78,6 +78,7 @@ OBJ = \
   be_cmds.o \
   be_svcmds.o \
   be_util.o \
+  be_vote.o \
 
 SOOBJ = \
   g_syscalls.o \
@@ -128,6 +129,7 @@ g_beryllium.o : g_beryllium.c; $(DO_CC)
 be_cmds.o : be_cmds.c; $(DO_CC)
 be_svcmds.o : be_svcmds.c; $(DO_CC)
 be_util.o : be_util.c; $(DO_CC)
+be_vote.o : be_vote.c; $(DO_CC)
   
 g_syscalls.o : g_syscalls.c; $(DO_CC)
 

@@ -1612,6 +1612,12 @@ void CheckTournament( void ) {
 CheckVote
 ==================
 */
+/* changed beryllium */
+/* FIXME: This is to prevent this function from being called accidently.
+          Should we rather directly skip to BE_CheckVote() inside the
+          original function (and display a warning)?
+*/
+/*
 void CheckVote( void ) {
 	if ( level.voteExecuteTime && level.voteExecuteTime < level.time ) {
 		level.voteExecuteTime = 0;
@@ -1640,6 +1646,8 @@ void CheckVote( void ) {
 	trap_SetConfigstring( CS_VOTE_TIME, "" );
 
 }
+*/
+/* end beryllium */
 
 /*
 ==================

@@ -92,7 +92,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 
 	level.voteNo = level.numConnectedClients;
 	level.voteYes = 0;
-	CheckVote();
+	BE_CheckVote();
 
 	SendClientCommand( -1, CCMD_PRT, "Vote was canceled.\n" );
 }
