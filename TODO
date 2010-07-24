@@ -1,2 +1,4 @@
 Restructure folders like engine code, i.e. ioquake.
 Also use a more advanced Makefile, like the engine does.
+
+Define S_COLOR_DEFAULT, S_COLOR_IMPORTANT, S_COLOR_POSITIVE etc.

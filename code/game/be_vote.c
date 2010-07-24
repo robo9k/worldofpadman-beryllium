@@ -316,7 +316,8 @@ static qboolean VoteH_Gametype( const gentity_t *ent ) {
 	}
 
 	Com_sprintf( level.voteString, sizeof( level.voteString ), "set g_gametype %d", i );
-	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"Gametype '%s'", GametypeToString( i ) );
+	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+	             S_COLOR_YELLOW"Gametype '%s'"S_COLOR_WHITE, GametypeToString( i ) );
 
 	return qtrue;
 }
@@ -398,15 +399,21 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 		return qfalse;
 	}
 
+	if ( ( ent - g_entities ) == i ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not kick yourself.\n" );
+		return qfalse;
+	}
+
 	Com_sprintf( level.voteString, sizeof( level.voteString ), "clientkick \"%i\"", i );
-	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"Kick %i: '%s'", i, level.clients[i].pers.netname );
+	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+	             S_COLOR_YELLOW"Kick %i: '%s'"S_COLOR_WHITE, i, level.clients[i].pers.netname );
 
 	/* Append additional argument, e.g. "reason" */
 	if ( trap_Argc() >= 4 ) {
 		char r[16];
 
 		Q_strncpyz( r, ConcatArgs( 3 ), sizeof( r ) );
-		Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( S_COLOR_WHITE", %s", r ) );
+		Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( ", %s"S_COLOR_WHITE, r ) );
 	}
 
 	return qtrue;
@@ -447,7 +454,8 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 		} else {
 			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s", arg2 );
 		}
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"Map %s", arg2 );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+		             S_COLOR_YELLOW"Map %s"S_COLOR_WHITE, arg2 );
 
 		return qtrue;
 	}
@@ -467,7 +475,8 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 	}
 	else if ( Q_stricmp( arg1, "map_restart" ) == 0 ) {
 		Q_strncpyz( level.voteString, "map_restart", sizeof( level.voteDisplayString ) );
-		Q_strncpyz( level.voteDisplayString, S_COLOR_YELLOW"Restart map", sizeof( level.voteDisplayString ) );
+		Q_strncpyz( level.voteDisplayString,
+		            S_COLOR_YELLOW"Restart map"S_COLOR_WHITE, sizeof( level.voteDisplayString ) );
 
 		return qtrue;
 	}
@@ -506,7 +515,8 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 		}
 
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, i );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"%s", level.voteString );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+		             S_COLOR_YELLOW"%s"S_COLOR_WHITE, level.voteString );
 
 		return qtrue;
 	}
@@ -524,7 +534,8 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 		}
 
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s", cmd );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"%s", arg1 );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
+		             S_COLOR_YELLOW"%s"S_COLOR_WHITE, arg1 );
 
 		return qtrue;
 	}

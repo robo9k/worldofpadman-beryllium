@@ -24,7 +24,8 @@
    be_version       - A read-only cvar that indicates the beryllium version
                       in use.
 
-   be_voteDuration  - How long a vote lasts. Time is in seconds.
+   be_voteDuration  - How long a vote lasts. Time is in seconds. Will only
+                      take effect for votes called after changing the cvar.
 
 
    .: Credits :.
