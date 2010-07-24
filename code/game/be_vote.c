@@ -28,6 +28,8 @@ static qboolean VoteH_Kick( const gentity_t *ent );
 static qboolean VoteH_Gametype( const gentity_t *ent );
 static qboolean VoteH_Misc( const gentity_t *ent );
 
+static qboolean IsAllowedVote( const char *str );
+
 
 const voteHandler_t voteHandler[] = {
 	{ "nextmap",			VoteH_Map		},
@@ -44,6 +46,11 @@ const voteHandler_t voteHandler[] = {
 	{ "normalgamespeed",	VoteH_Misc 		}
 };
 const unsigned int NUM_VOTEH = ( sizeof( voteHandler ) / sizeof( voteHandler[0] ) );
+
+
+static qboolean IsAllowedVote( const char *str ) {
+	return qtrue;
+}
 
 
 /*
@@ -152,6 +159,13 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 	for ( i = 0; i < NUM_VOTEH; i++ ) {
 		if ( Q_stricmp( arg1, voteHandler[i].str ) == 0 ) {
+			if ( !IsAllowedVote( arg1 ) ) {
+				/* TODO: Print allowed votes? At least at bottom of function if vote is invalid */
+				SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote is not allowed.\n" );
+				return;
+			}
+
+
 			/* Legitimate vote
 			   Any error handling, message printing etc must be done in VoteH_
 			*/
@@ -194,12 +208,21 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 				return;
 			}
+			else {
+				/* Error inside vote handler. Error output is done in handler itself, so nothing to do */
+				return;
+			}
 		}
 	}
 
 	if ( NUM_VOTEH == i ) {
-		char validVoteString[MAX_STRING_TOKENS] = { "Valid vote commands are: " };
+		char validVoteString[MAX_STRING_TOKENS] = { "Valid and allowed vote commands are: " };
 		for ( i = 0; i < NUM_VOTEH; i++ ) {
+			if ( !IsAllowedVote( voteHandler[i].str ) ) {
+				/* FIXME: Handle case when there are no allowed votes? Set g_allowVote 0? */
+				continue;
+			}			
+
 			Q_strcat( validVoteString, sizeof( validVoteString ),
 					  ( i < ( NUM_VOTEH - 1 ) ) ? va( S_COLOR_YELLOW"%s"S_COLOR_WHITE", ", voteHandler[i].str )
                                                 : va( S_COLOR_YELLOW"%s"S_COLOR_WHITE".\n", voteHandler[i].str ) );
