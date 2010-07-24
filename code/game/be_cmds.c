@@ -20,10 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "g_local.h"
 
 
-/* Internal functions */
-static void BE_Cmd_CallVote_f( const gentity_t *ent );
-
-
 /* Variables */
 const ccmd_t be_ccmds[] = {
 	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f	},

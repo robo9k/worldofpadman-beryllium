@@ -20,6 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef _BE_VOTE_H
 #define _BE_VOTE_H
 
+#define VOTE_EXECUTEDELAY 3000
+
+typedef struct {
+	char		*str;
+	qboolean	( *cmdHandler)( const gentity_t *ent );
+} voteHandler_t;
+
 
 void BE_Cmd_Vote_f( const gentity_t *ent );
 void BE_Cmd_CallVote_f( const gentity_t *ent );
