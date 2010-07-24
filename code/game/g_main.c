@@ -80,6 +80,7 @@ vmCvar_t	be_version;
 
 vmCvar_t	be_voteDuration;
 vmCvar_t	be_allowedVotes;
+vmCvar_t	be_votePause;
 
 /* end beryllium */
 
@@ -175,7 +176,8 @@ static cvarTable_t		gameCvarTable[] = {
 	/* FIXME: Keep in sync with vote command handler string array? */
 	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit"
 	                                       "/pointlimit/g_gametype/setgametype/fastgamespeed/normalgamespeed/",
-	                                       CVAR_ARCHIVE, 0, qfalse }
+	                                       CVAR_ARCHIVE, 0, qfalse },
+	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

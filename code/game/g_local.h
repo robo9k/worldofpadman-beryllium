@@ -437,6 +437,7 @@ typedef struct {
 
 	/* added beryllium */
 	int			voteDuration;
+	int			voteEnd;
 	/* end beryllium */
 } level_locals_t;
 

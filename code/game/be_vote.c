@@ -53,6 +53,7 @@ static qboolean IsAllowedVote( const char *str ) {
 
 	Com_sprintf( needle, sizeof( needle ), "/%s/", str );
 	
+	/* FIXME: Use case insensitive search? */
 	return ( strstr( be_allowedVotes.string, needle ) != NULL );
 }
 
@@ -137,6 +138,11 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Not allowed to call a vote as spectator.\n" );
+		return;
+	}
+
+	if ( ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not call a vote so short after the previous one.\n" );
 		return;
 	}
 
@@ -279,6 +285,7 @@ void BE_CheckVote( void ) {
 		}
 	}
 
+	level.voteEnd = level.time;
 	level.voteTime = 0;
 	trap_SetConfigstring( CS_VOTE_TIME, "" );
 }
