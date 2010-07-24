@@ -39,7 +39,7 @@ const voteHandler_t voteHandler[] = {
 	{ "pointlimit",			VoteH_Misc		},
 	{ "g_gametype",			VoteH_Gametype	},
 	{ "setgametype",		VoteH_Gametype	},
-	{ "g_dowarmup",			VoteH_Misc		},
+/*	{ "g_dowarmup",			VoteH_Misc		},*/ /* This is just too stupid to be votable */
 	{ "fastgamespeed",		VoteH_Misc		},
 	{ "normalgamespeed",	VoteH_Misc 		}
 };
@@ -468,7 +468,8 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 
 
 	if ( ( Q_stricmp( arg1, "pointlimit" ) == 0 ) ||
-	          ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
+	     ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
+
 		i = atoi( arg2 );
 
 		if ( i < 0 ) {
@@ -486,15 +487,24 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 
 		return qtrue;
 	}
-	/* Any other vote is not explicitly handled
-	   Are there any left?
-	*/
 	else {
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", level.voteString );
+		/* FIXME: This is ugly. I'd prefer some sort of array. Also re-enable g_doWarmup? */
+		char *cmd;
+		if ( Q_stricmp( arg1, "fastgamespeed" ) == 0 ) {
+			cmd = "set g_speed 320";
+		}
+		else if ( Q_stricmp( arg1, "normalgamespeed" ) == 0 ) {
+			cmd = ( "set g_speed "DEFAULT_GSPEED_STR );
+		}
+		else {
+			G_Error( "VoteH_Misc: Unhandled vote %s\n", arg1 );
+		}
+
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s", cmd );
+		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), S_COLOR_YELLOW"%s", arg1 );
+
+		return qtrue;
 	}
 
-	/* Uh? */
-	return qfalse;
 }
 
