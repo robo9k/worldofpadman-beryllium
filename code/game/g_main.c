@@ -81,6 +81,7 @@ vmCvar_t	be_version;
 vmCvar_t	be_voteDuration;
 vmCvar_t	be_allowedVotes;
 vmCvar_t	be_votePause;
+vmCvar_t	be_voteRate;
 
 /* end beryllium */
 
@@ -177,7 +178,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit"
 	                                       "/pointlimit/g_gametype/setgametype/fastgamespeed/normalgamespeed/",
 	                                       CVAR_ARCHIVE, 0, qfalse },
-	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

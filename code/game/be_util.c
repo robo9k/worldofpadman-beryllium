@@ -98,3 +98,27 @@ char* GametypeToString( const gametype_t gt ) {
 	return NULL;
 }
 
+
+/*
+	Converts a time into a short string.
+	Assumes time is given in ms
+*/
+char* TimeToString( const int time, char *str, const size_t size ) {
+	int min, tens, sec;
+
+	if ( ( str == NULL ) || ( size <= 0 ) ) {
+		return NULL;
+	}
+
+	sec = ( time / 1000 );
+
+	min   = ( sec / 60 );
+	sec  -= ( min * 60 );
+	tens  = ( sec / 10 );
+	sec  -= ( tens * 10 );
+
+	Com_sprintf( str, size, "%i:%i%i", min, tens, sec );
+
+	return str;
+}
+

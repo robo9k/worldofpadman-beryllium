@@ -40,8 +40,8 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 
 	for ( i = 0; i < NUM_CCMDS; i++ ) {
 		if ( Q_stricmp( cmd, be_ccmds[i].cmdName ) == 0 ) {
-			// do tests here to reduce the amount of repeated code
-			// We provide this command, but the conditions to actually execute it are not given
+			/* do tests here to reduce the amount of repeated code */
+			/* We provide this command, but the conditions to actually execute it are not given */
 
 			if ( !( be_ccmds[i].cmdFlags & CMD_INTERMISSION ) && level.intermissiontime ) {
 				return qtrue;

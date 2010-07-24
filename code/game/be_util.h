@@ -37,5 +37,7 @@ gametype_t StringToGametype( const char *str );
 char* GametypeToString( const gametype_t gt );
 
 
+char* TimeToString( const int time, char *str, const size_t size );
+
 #endif
 

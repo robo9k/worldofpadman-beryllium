@@ -142,7 +142,16 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 
 	if ( ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not call a vote so short after the previous one.\n" );
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "One can not call a vote so short after the previous one.\n" );
+		TimeToString( ( ( be_votePause.integer * 1000 ) - ( level.time - level.voteEnd ) ), arg1, sizeof( arg1 ) );
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You need to wait %s.\n", arg1 ) );
+		return;
+	}
+
+	if ( ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not call a new vote so short after your previous one.\n" );
+		TimeToString( ( ( be_voteRate.integer * 1000 ) - ( level.time - ent->client->pers.voteTime ) ), arg1, sizeof( arg1 ) );
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You need to wait %s.\n", arg1 ) );
 		return;
 	}
 
@@ -186,7 +195,7 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			if ( voteHandler[i].cmdHandler( ent ) ) {
 
 				/* FIXME: There is a problem clientside when displaying a votestring with double " inside */
-				SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: "S_COLOR_YELLOW"%s"S_COLOR_WHITE".\n",
+				SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" called a vote: %s"S_COLOR_WHITE".\n",
 	                                                 ent->client->pers.netname, level.voteDisplayString ) );
 				/* TODO: Create a seperate BE_Logf() with loglevels and such. Use voteString or voteDisplayString? */
 				G_LogPrintf( "%i called vote '%s'\n", ( ent - g_entities ), level.voteString );
@@ -202,6 +211,8 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 				}
 				ent->client->ps.eFlags |= EF_VOTED;
 				ent->client->pers.voteCount++;
+
+				ent->client->pers.voteTime = level.time;
 
 				/* A littly hackity to get votes with variable time.
 				   The client has a hardcoded duration of VOTE_TIME, which
