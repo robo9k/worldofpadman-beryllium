@@ -1,0 +1,52 @@
+
+    _____             _ _ _           
+   | __  |___ ___ _ _| | |_|_ _ _____ 
+   | __ -| -_|  _| | | | | | | |     |
+   |_____|___|_| |_  |_|_|_|___|_|_|_|
+                 |___|                
+
+
+   .: Installation :.
+
+   The usual distribution includes a file called qagame.qvm. You need to
+   copy this file into a vm/ folder below your mod's folder.
+   The full path depends on your fs_homepath and fs_game ( and fs_basepath )
+   setting.
+   Since this is a serverside mod, you do not need to serve beryllium's
+   files via autodownload.
+
+
+   .: Variables :.
+
+   Please note that beryllium does not check cvars for sane values, since
+   it is assumed that admins know what they are doing :)
+
+   be_version       - A read-only cvar that indicates the beryllium version
+                      in use.
+
+   be_voteDuration  - How long a vote lasts. Time is in seconds.
+
+
+   .: Credits :.
+
+   Thanks in no particular order:
+         World of Padman Team,
+         Community around the game,
+         ioquake,
+         id Software
+
+   Beryllium uses portions of other people's code, which was licensed
+   under the GPL or a similar license.
+   Furthermore, some ideas have been adopted or copied.
+
+   Thus additional credits go to:
+        Tremulous,
+        OpenArena, OAX,
+        Smokin' Guns,
+        Urban Terror,
+        ExcessivePlus,
+        BigBrotherBot
+
+
+EOF
+
