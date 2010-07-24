@@ -49,7 +49,11 @@ const unsigned int NUM_VOTEH = ( sizeof( voteHandler ) / sizeof( voteHandler[0] 
 
 
 static qboolean IsAllowedVote( const char *str ) {
-	return qtrue;
+	char needle[MAX_STRING_TOKENS];
+
+	Com_sprintf( needle, sizeof( needle ), "/%s/", str );
+	
+	return ( strstr( be_allowedVotes.string, needle ) != NULL );
 }
 
 
@@ -85,13 +89,19 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 		/* TODO: Don't print to self? Need SendClientCommandExcept()
 	             Use Loglevels?
 		*/
+		/* TODO: Privacy? Cvar? Log? */
+		/*
 		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" voted "S_COLOR_GREEN"yes"S_COLOR_WHITE".\n", ent->client->pers.netname ) );
+		*/
 	}
 	else {
 		level.voteNo++;
 		trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
 
+		/* TODO: Privacy? Cvar? Log? */
+		/*
 		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_WHITE" voted "S_COLOR_RED"no"S_COLOR_WHITE".\n", ent->client->pers.netname ) );
+		*/
 	}
 
 	/* "a majority will be determined in CheckVote, which will also account
@@ -119,9 +129,6 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		return;
 	}
 
-	/* FIXME: One can gain new votes by changing team. If we use a fixed limit, it should be persistant
-	          for each map.
-	*/
 	if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You have called the maximum number of votes.\n" );
 		return;
@@ -289,7 +296,14 @@ static qboolean VoteH_Gametype( const gentity_t *ent ) {
 
 	/* Special: A variant of g_gametype vote */
 	if ( Q_stricmp( arg1, "setgametype" ) == 0 ) {
-		gametype_t gt = StringToGametype( ConcatArgs( 2 ) );
+		gametype_t gt;
+
+		if ( strlen( arg2 ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a gametype keyword.\n" );
+			return qfalse;
+		}
+
+		gt = StringToGametype( ConcatArgs( 2 ) );
 
 		if ( GT_MAX_GAME_TYPE == gt ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Couldn't find a gametype with the keywords.\n" );
@@ -303,6 +317,11 @@ static qboolean VoteH_Gametype( const gentity_t *ent ) {
 
 	
 	/* Now we have a g_gametype vote */
+	if ( strlen( arg2 ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a gametype number.\n" );
+			return qfalse;
+	}
+
 	i = atoi( arg2 );
 
 	if( ( GT_SINGLE_PLAYER == i ) || ( i < GT_FFA ) || ( i >= GT_MAX_GAME_TYPE ) ) {
@@ -341,6 +360,11 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 		gclient_t	*player;
 		char		cleanName[64];
 		int			id = -1;
+
+		if ( strlen( arg2 ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a client name.\n" );
+			return qfalse;
+		}
 
 		/* try to circumvent renaming exploit and use id, which can not change */
 		for ( i = 0; i < level.maxclients; i++ ) {
@@ -387,6 +411,11 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 
 
 	/* Now we have a clientkick vote */
+	if ( strlen( arg2 ) == 0 ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a client number.\n" );
+		return qfalse;
+	}
+
 	i = atoi( arg2 );
 
 	if ( ( i < 0 ) || ( i >= MAX_CLIENTS ) ) {
@@ -434,6 +463,11 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 
 	if ( Q_stricmp( arg1, "map" ) == 0 ) {
 		char s[128];
+
+		if ( strlen( arg2 ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You must supply a map name.\n" );
+			return qfalse;
+		}
 		
 		/* Does map exist at all? */
 		if ( trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), NULL, FS_READ ) == -1 ) {
@@ -469,7 +503,8 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 		}
 
 		Q_strncpyz( level.voteString, "vstr nextmap", sizeof( level.voteDisplayString ) );
-		Q_strncpyz( level.voteDisplayString, S_COLOR_YELLOW"Next map", sizeof( level.voteDisplayString ) );
+		Q_strncpyz( level.voteDisplayString,
+		            S_COLOR_YELLOW"Next map"S_COLOR_WHITE, sizeof( level.voteDisplayString ) );
 
 		return qtrue;
 	}
@@ -501,6 +536,11 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 
 	if ( ( Q_stricmp( arg1, "pointlimit" ) == 0 ) ||
 	     ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
+
+		if ( strlen( arg2 ) == 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You must supply a %s.\n", arg2 ) );
+			return qfalse;
+		}
 
 		i = atoi( arg2 );
 

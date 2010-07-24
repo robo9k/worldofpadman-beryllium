@@ -27,6 +27,9 @@
    be_voteDuration  - How long a vote lasts. Time is in seconds. Will only
                       take effect for votes called after changing the cvar.
 
+   be_allowedVotes  - List of allowed votes. Each vote needs to be enclosed
+                      in //. Take a look at the default value.
+
 
    .: Credits :.
 

@@ -79,6 +79,7 @@ vmCvar_t	g_defaultChangedMarker;
 vmCvar_t	be_version;
 
 vmCvar_t	be_voteDuration;
+vmCvar_t	be_allowedVotes;
 
 /* end beryllium */
 
@@ -170,7 +171,11 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 
 	/* FIXME: Use proper g_ instead of be_ prefix? */
-	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
+	/* FIXME: Keep in sync with vote command handler string array? */
+	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit"
+	                                       "/pointlimit/g_gametype/setgametype/fastgamespeed/normalgamespeed/",
+	                                       CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

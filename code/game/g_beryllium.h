@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 extern vmCvar_t	be_version;
 
 extern vmCvar_t	be_voteDuration;
+extern vmCvar_t	be_allowedVotes;
 
 
 /* "Exported" Functions */
