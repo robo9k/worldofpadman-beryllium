@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
 
+extern vmCvar_t	be_voteDuration;
+
 
 /* "Exported" Functions */
 qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd );

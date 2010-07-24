@@ -347,7 +347,19 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	ent->client->ps.eFlags |= EF_VOTED;
 	ent->client->pers.voteCount++;
 
-	trap_SetConfigstring( CS_VOTE_TIME, va( "%i", level.voteTime ) );
+	/* A littly hackity to get votes with variable time.
+	   The client has a hardcoded duration of VOTE_TIME, which
+	   is 30s. So we need to send a modified level.voteTime to the client
+	   to get its time being displayed correctly, while still having
+	   the correct voteTime in game.
+	*/
+	/* This is needed so chaning the cvar doesn't fuck up current vote
+	   Cvar is in seconds.
+	*/
+	level.voteDuration = ( be_voteDuration.integer * 1000 );
+	i = ( level.voteTime + ( level.voteDuration - VOTE_TIME ) );	
+
+	trap_SetConfigstring( CS_VOTE_TIME, va( "%i", i ) );
 	trap_SetConfigstring( CS_VOTE_STRING, level.voteDisplayString );	
 	trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
 	trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
@@ -369,7 +381,7 @@ void BE_CheckVote( void ) {
 		return;
 	}
 
-	if ( ( level.time - level.voteTime ) >= VOTE_TIME ) {
+	if ( ( level.time - level.voteTime ) >= level.voteDuration ) {
 		SendClientCommand( -1, CCMD_PRT, "Vote failed, timeout.\n" );
 	}
 	else {

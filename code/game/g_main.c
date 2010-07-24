@@ -78,6 +78,8 @@ vmCvar_t	g_defaultChangedMarker;
 
 vmCvar_t	be_version;
 
+vmCvar_t	be_voteDuration;
+
 /* end beryllium */
 
 // bk001129 - made static to avoid aliasing
@@ -165,7 +167,10 @@ static cvarTable_t		gameCvarTable[] = {
 
 	/* added beryllium */
 
-	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse }
+	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+
+	/* FIXME: Use proper g_ instead of be_ prefix? */
+	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 
