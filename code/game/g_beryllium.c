@@ -44,3 +44,31 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 	return BE_ConCmd( cmd );
 }
 
+
+/*
+	Hooks midway into G_Damage() in g_combat.c.
+	TODO: Create separate functions which handle knockback and radius damage
+*/
+void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
+			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
+
+	/* We are only interested in clients' damage */
+	if ( !( targ->client ) || !( attacker->client ) ) {
+		return;
+	}
+
+	/* Respawn protection */
+	/* TODO: Visualise this by making weapons non-functional?
+	         Remove protection if weapon fired.
+	         Maybe also apply a certain shader while being protected?
+	*/
+	if ( ( MOD_TRIGGER_HURT != *mod ) && ( targ != attacker ) ) {
+		if ( ( level.time - attacker->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {	
+			*damage = 0;
+		}
+		if ( ( level.time - targ->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {
+			*damage = 0;
+		}
+	}
+}
+

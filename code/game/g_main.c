@@ -84,6 +84,8 @@ vmCvar_t	be_votePause;
 vmCvar_t	be_voteRate;
 vmCvar_t	be_votePass;
 
+vmCvar_t	be_respawnProtect;
+
 /* end beryllium */
 
 // bk001129 - made static to avoid aliasing
@@ -181,7 +183,9 @@ static cvarTable_t		gameCvarTable[] = {
 	                                       CVAR_ARCHIVE, 0, qfalse },
 	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

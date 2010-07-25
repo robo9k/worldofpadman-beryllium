@@ -919,6 +919,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( damage < 1 ) {
 		damage = 1;
 	}
+
+	/* added beryllium */
+	/* FIXME: Call earlier? The minimum damage of 1 is a problem here */
+	BE_Damage( targ, inflictor, attacker, dir, point, &damage, &dflags, &mod );
+	/* end beryllium */
+
 	take = damage;
 	save = 0;
 

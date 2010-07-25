@@ -35,10 +35,15 @@ extern vmCvar_t	be_votePause;
 extern vmCvar_t be_voteRate;
 extern vmCvar_t be_votePass;
 
+extern vmCvar_t	be_respawnProtect;
+
 
 /* "Exported" Functions */
 qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd );
 qboolean BE_ConsoleCommand( const char *cmd );
+
+void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
+			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod );
 
 
 #endif

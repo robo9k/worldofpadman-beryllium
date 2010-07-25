@@ -21,24 +21,27 @@
    Please note that beryllium does not check cvars for sane values, since
    it is assumed that admins know what they are doing :)
 
-   be_version       - A read-only cvar that indicates the beryllium version
-                      in use.
+   be_version        - A read-only cvar that indicates the beryllium version
+                       in use.
 
-   be_voteDuration  - How long a vote lasts. Time is in seconds. Will only
-                      take effect for votes called after changing the cvar.
+   be_voteDuration   - How long a vote lasts. Time is in seconds. Will only
+                       take effect for votes called after changing the cvar.
 
-   be_allowedVotes  - List of allowed votes. Each vote needs to be enclosed
-                      in //. Take a look at the default value. Please note
-                      that this is case sensitive, everything needs to be
-                      lowercase!
+   be_allowedVotes   - List of allowed votes. Each vote needs to be enclosed
+                       in //. Take a look at the default value. Please note
+                       that this is case sensitive, everything needs to be
+                       lowercase!
 
-   be_votePause     - General pause between votes. Time is in seconds.
+   be_votePause      - General pause between votes. Time is in seconds.
 
-   be_voteRate      - How often a clients can call a vote. Time is in seconds.
+   be_voteRate       - How often a client can call a vote. Time is in seconds.
 
-   be_votePass      - How many clients need to vote yes for a vote to pass.
-                      This is a minimum, i.e. the actual number of clients
-                      has to be above. This is a fraction from 0.0 to 1.0.
+   be_votePass       - How many clients need to vote yes for a vote to pass.
+                       This is a minimum, i.e. the actual number of clients
+                       has to be above. This is a fraction from 0.0 to 1.0.
+
+   be_respawnProtect - After respawning, clients don't take and handle damage.
+                       Time is in seconds.
 
 
    .: Credits :.
