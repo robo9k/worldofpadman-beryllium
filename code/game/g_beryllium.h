@@ -33,6 +33,7 @@ extern vmCvar_t	be_voteDuration;
 extern vmCvar_t	be_allowedVotes;
 extern vmCvar_t	be_votePause;
 extern vmCvar_t be_voteRate;
+extern vmCvar_t be_votePass;
 
 
 /* "Exported" Functions */

@@ -174,6 +174,12 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		}
 	}
 
+	if ( !IsAllowedVote( arg1 ) ) {
+		/* TODO: Print allowed votes? At least at bottom of function if vote is invalid */
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote is not allowed.\n" );
+		return;
+	}
+
 	
 	/* if there is still a vote to be executed */
 	if ( level.voteExecuteTime ) {
@@ -184,13 +190,6 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 	for ( i = 0; i < NUM_VOTEH; i++ ) {
 		if ( Q_stricmp( arg1, voteHandler[i].str ) == 0 ) {
-			if ( !IsAllowedVote( arg1 ) ) {
-				/* TODO: Print allowed votes? At least at bottom of function if vote is invalid */
-				SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote is not allowed.\n" );
-				return;
-			}
-
-
 			/* Legitimate vote
 			   Any error handling, message printing etc must be done in VoteH_
 			*/
@@ -257,7 +256,7 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
 
 
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Invalid vote string.\n" );
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Not a valid vote string.\n" );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
 		return;
 	}
@@ -283,12 +282,12 @@ void BE_CheckVote( void ) {
 		SendClientCommand( -1, CCMD_PRT, "Vote failed, timeout.\n" );
 	}
 	else {
-		if ( level.voteYes > ( level.numVotingClients / 2 ) ) {
+		if ( level.voteYes > ( level.numVotingClients *  be_votePass.value ) ) {
 			/* Set timeout, then execute and remove the vote at next call */
 			SendClientCommand( -1, CCMD_PRT, "Vote passed.\n" );
 			level.voteExecuteTime = ( level.time + VOTE_EXECUTEDELAY );
 		}
-		else if ( level.voteNo >= ( level.numVotingClients / 2 ) ) {
+		else if ( level.voteNo >= ( level.numVotingClients * ( 1.0 - be_votePass.value ) ) ) {
 			/* same behavior as a timeout */
 			SendClientCommand( -1, CCMD_PRT, "Vote failed.\n" );
 		}
