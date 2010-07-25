@@ -141,14 +141,16 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		return;
 	}
 
-	if ( ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
+	if ( level.voteEnd &&
+	     ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "One can not call a vote so short after the previous one.\n" );
 		TimeToString( ( ( be_votePause.integer * 1000 ) - ( level.time - level.voteEnd ) ), arg1, sizeof( arg1 ) );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You need to wait %s.\n", arg1 ) );
 		return;
 	}
 
-	if ( ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
+	if ( ent->client->pers.voteTime &&
+	     ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You can not call a new vote so short after your previous one.\n" );
 		TimeToString( ( ( be_voteRate.integer * 1000 ) - ( level.time - ent->client->pers.voteTime ) ), arg1, sizeof( arg1 ) );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( "You need to wait %s.\n", arg1 ) );
