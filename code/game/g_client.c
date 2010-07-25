@@ -1180,10 +1180,6 @@ void ClientSpawn(gentity_t *ent) {
 		client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_SPRAYPISTOL );
 	}
 
-	/* added beryllium */
-	BE_ClientSpawn( ent );
-	/* end beryllium */
-
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
 	if(g_gametype.integer == GT_LPS) {
