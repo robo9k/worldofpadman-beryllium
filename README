@@ -34,6 +34,12 @@
 
    be_votePause     - General pause between votes. Time is in seconds.
 
+   be_voteRate      - How often a clients can call a vote. Time is in seconds.
+
+   be_votePass      - How many clients need to vote yes for a vote to pass.
+                      This is a minimum, i.e. the actual number of clients
+                      has to be above. This is a fraction from 0.0 to 1.0.
+
 
    .: Credits :.
 
