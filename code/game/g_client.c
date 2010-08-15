@@ -650,6 +650,19 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 			continue;
 		}
 
+		/* added beryllium */
+		/* don't allow nonprinting characters or (dead) console keys */
+		if ( ch < ' ' || ch > '}' || ch == '`' ) {
+			continue;
+		}
+		
+		/* don't allow names beginning with "[skipnotify]" because it messes up /ignore-related code */
+		/* Magic constant 12 == strlen( "[skipnotify]" ) .. */
+		if( Q_strncmp( p, "[skipnotify]", 12 ) == 0 ) {
+			Com_sprintf( p, outSize, "%s", ( p + 12 ) );
+		}
+		/* end added */
+
 		// check colors
 		if( ch == Q_COLOR_ESCAPE ) {
 			// solo trailing carat is not a color prefix
@@ -752,6 +765,9 @@ void ClientUserinfoChanged( int clientNum ) {
 	// set name
 	Q_strncpyz ( oldname, client->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
+	/* beryllium FIXME: This might set client->pers.netname to "UnnamedPlayer", but client->name remains "".
+	                    One would need to fix name in userinfo as well, so code in sv_client.c SV_UserinfoChanged() works as expected
+	*/
 	ClientCleanName( s, client->pers.netname, sizeof(client->pers.netname) );
 
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR || (g_gametype.integer==GT_LPS && client->sess.livesleft<=0)) {

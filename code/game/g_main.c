@@ -94,6 +94,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_cheats, "sv_cheats", "", 0, 0, qfalse },
 
 	// noset vars
+	/* beryllium NOTE: Some bad Serverbrowsers seem to indentify servers using the gamename, so DONTCHANGE */
 	{ NULL, "gamename", GAMEVERSION , CVAR_SERVERINFO | CVAR_ROM, 0, qfalse  },
 	{ NULL, "gamedate", __DATE__ , CVAR_ROM, 0, qfalse  },
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, qfalse  },
@@ -387,10 +388,16 @@ void G_UpdateCvars( void ) {
 			trap_Cvar_Update( cv->vmCvar );
 
 			if ( cv->modificationCount != cv->vmCvar->modificationCount ) {
+				/* changed beryllium */
+				/* There is no real need to print debug info to all clients.. */
+				/*
 				if(!Q_stricmp(cv->cvarName,"g_speed")) {
 					trap_SendServerCommand( -1, va("print \"Server: %s (modCnt: %i(vm) / %i(en))\n\"", 
 						cv->cvarName, cv->modificationCount, cv->vmCvar->modificationCount ) );
 				}
+				*/
+				/* end changed */
+
 				cv->modificationCount = cv->vmCvar->modificationCount;
 
 				if ( cv->trackChange ) {

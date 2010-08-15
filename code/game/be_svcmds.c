@@ -94,6 +94,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 	level.voteYes = 0;
 	BE_CheckVote();
 
-	SendClientCommand( -1, CCMD_PRT, "Vote was canceled.\n" );
+	/* TODO: Also log this? */
+	SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
 }
 

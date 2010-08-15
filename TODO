@@ -2,3 +2,18 @@ Restructure folders like engine code, i.e. ioquake.
 Also use a more advanced Makefile, like the engine does.
 
 Define S_COLOR_DEFAULT, S_COLOR_IMPORTANT, S_COLOR_POSITIVE etc.
+
+Print realtime at game startup
+
+Add g_nextmap, which is not executed immediatelly, but at map end
+
+Use way more helper functions
+Create helpers to get one or more client numbers (or -1 for world) from a string
+
+Improve vote pass. Print amount of yes-no-dontcare at vote end?
+
+Unlagged?
+
+Floodlimit chat, vote, userinfo
+
+Fix encoding and linebreaks in all files..

@@ -26,6 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 
+#define S_COLOR_DEFAULT		S_COLOR_WHITE	/* Used to "reset" colored output after other colored output */
+#define S_COLOR_POSITIVE	S_COLOR_GREEN
+#define S_COLOR_NEGATIVE	S_COLOR_RED
+#define S_COLOR_ITALIC		S_COLOR_YELLOW	/* Important output */
+#define S_COLOR_BOLD		S_COLOR_CYAN	/* Even more important output */
+
+
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
 
@@ -36,6 +43,9 @@ extern vmCvar_t be_voteRate;
 extern vmCvar_t be_votePass;
 
 extern vmCvar_t	be_respawnProtect;
+
+
+extern char	*ConcatArgs( int start ); /* FIXME: Add this to game headers? Declared in g_cmds.c */
 
 
 /* "Exported" Functions */
