@@ -17,4 +17,18 @@ NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() o
 
 Fix encoding and linebreaks in all files..
 
+Mute players' chat, vote etc.
+Lock a players name, team. Also globally lock teams. This will most likely cause problems with other code
+
 Implement a ccmd /players, which lists players with their cid, name, (time, score), team, etc. to allow identifying players by cid
+
+Is a command to pause the entire game usefull? Certainly quite some dirty code all around involved
+
+Rename player command?
+
+There are quite a bunch of commands which are fun, but not actually usefull: slap, fling, disorient, freeze, kill, swapteams, spec999
+
+Save scores on teamchange between real teams?
+
+Add new votes, like shuffleteams.
+

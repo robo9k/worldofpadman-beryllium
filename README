@@ -64,6 +64,9 @@
       shuffleteams
          In team gametypes try to even teams by splitting players
          evenly across teams.
+         This does not restart the game or reset scores, except
+         on players (since they are currently not saved on team
+         changes).
 
 
    .: Credits :.
