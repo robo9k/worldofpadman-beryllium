@@ -41,7 +41,29 @@
                        has to be above. This is a fraction from 0.0 to 1.0.
 
    be_respawnProtect - After respawning, clients don't take and handle damage.
-                       Time is in seconds.
+                       Time is in seconds. There is no notification whether
+                       you or a target are (still) protected.
+
+
+   .: Commands :.
+
+      .: Client :.
+
+      
+      .: Server :.
+
+      tell cid text
+         Send a connected client some text.
+         Clientnum can be -1 to print to everyone.
+         Text is printed as-is to client.
+
+      cancelvote
+         Cancel a currently running vote, i.e.
+         emulate that everyone voted no.
+
+      shuffleteams
+         In team gametypes try to even teams by splitting players
+         evenly across teams.
 
 
    .: Credits :.

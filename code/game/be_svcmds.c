@@ -22,10 +22,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 static void BE_Svcmd_Tell_f( void );
 static void BE_Svcmd_Cancelvote_f( void );
+static void BE_Svcmd_ShuffleTeams_f( void );
+
+/* FIXME: Add this to game headers? Declared in g_main.c */
+int QDECL SortRanks( const void *a, const void *b );
 
 const svcmd_t be_svcmds[] = {
-	{ "tell",		BE_Svcmd_Tell_f			},
-	{ "cancelvote",	BE_Svcmd_Cancelvote_f	}
+	{ "tell",			BE_Svcmd_Tell_f			},
+	{ "cancelvote",		BE_Svcmd_Cancelvote_f	},
+	{ "shuffleteams",	BE_Svcmd_ShuffleTeams_f	}
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
 
@@ -90,11 +95,71 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 		return;
 	}
 
-	level.voteNo = level.numConnectedClients;
+	level.voteNo = level.numVotingClients;
 	level.voteYes = 0;
 	BE_CheckVote();
 
 	/* TODO: Also log this? */
 	SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
+}
+
+
+/*
+	Shuffle teams by splitting good players evenly across teams.
+	TODO: Also keep currently better team in mind (especially with uneven player counts).
+          Maybe also use kills-deaths/time instead of simply current points to get best
+	      players.
+*/
+static void BE_Svcmd_ShuffleTeams_f( void ) {
+	int i, team;
+	int count = 0;
+	int	sortedClients[MAX_CLIENTS];
+	gclient_t *cl;
+
+	if ( g_gametype.integer < GT_TEAM ) {
+		G_Printf( "Not in a team gametype." );
+		return;
+	}
+
+	/* TODO: Also log this? */
+	SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
+
+	for( i = 0; i < level.numConnectedClients; i++ ) {
+		cl = ( level.clients + level.sortedClients[i] );
+
+		/* If not actively playing, ignore */
+		if( ( cl->sess.sessionTeam != TEAM_RED ) &&
+		    ( cl->sess.sessionTeam != TEAM_BLUE ) ) {
+			continue;
+		}
+
+		sortedClients[count++] = level.sortedClients[i];
+	}
+
+	qsort( sortedClients, count, sizeof( sortedClients[0] ), SortRanks );
+
+	for( i = 0; i < count; i++ ) {
+		cl = ( level.clients + sortedClients[i] );
+
+		team = ( (i % 2) + TEAM_RED );
+		cl->sess.sessionTeam = team;
+
+		/* Bots' team is quite different */
+		if ( (g_entities + sortedClients[i])->r.svFlags & SVF_BOT ) {
+			char ci[MAX_INFO_STRING];
+
+			trap_GetUserinfo( sortedClients[i], ci, sizeof ( ci ) );
+			if ( !Info_Validate( ci ) ) {
+				G_Error( "shuffleteams: Invalid userinfo for bot!\n" );
+			}
+
+			Info_SetValueForKey( ci, "team", TeamName( team ) );
+
+			trap_SetUserinfo( sortedClients[i], ci );
+		}
+
+		ClientUserinfoChanged( sortedClients[i] );
+		ClientBegin( sortedClients[i] );
+	}
 }
 

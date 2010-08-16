@@ -1,8 +1,6 @@
 Restructure folders like engine code, i.e. ioquake.
 Also use a more advanced Makefile, like the engine does.
 
-Define S_COLOR_DEFAULT, S_COLOR_IMPORTANT, S_COLOR_POSITIVE etc.
-
 Print realtime at game startup
 
 Add g_nextmap, which is not executed immediatelly, but at map end
@@ -15,5 +13,8 @@ Improve vote pass. Print amount of yes-no-dontcare at vote end?
 Unlagged?
 
 Floodlimit chat, vote, userinfo
+NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
 
 Fix encoding and linebreaks in all files..
+
+Implement a ccmd /players, which lists players with their cid, name, (time, score), team, etc. to allow identifying players by cid
