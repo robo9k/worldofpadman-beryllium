@@ -32,3 +32,7 @@ Save scores on teamchange between real teams?
 
 Add new votes, like shuffleteams.
 
+Do more sanity checks and calls to G_Error plus some debug output.
+
+Either use less colors/more equal to game's default output or add option to disable/reduce colors
+

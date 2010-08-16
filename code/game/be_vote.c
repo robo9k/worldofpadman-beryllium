@@ -115,6 +115,27 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 }
 
 
+static void PrintValidVotes( const gentity_t *ent ) {
+	int i;
+	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
+
+	for ( i = 0; i < NUM_VOTEH; i++ ) {
+		if ( !IsAllowedVote( voteHandler[i].str ) ) {
+			/* FIXME: Handle case when there are no allowed votes? Set g_allowVote 0? */
+			continue;
+		}			
+
+		/* This is not actually "bold", but needs to differ from the "italic" hint */
+		Q_strcat( validVoteString, sizeof( validVoteString ),
+				  va( S_COLOR_BOLD"%s"S_COLOR_ITALIC", ", voteHandler[i].str ) );
+	}
+	/* Hackity, because I'm too lazy to detect last vote properly */
+	Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
+
+	SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
+}
+
+
 /*
 	Beryllium's replacement for the original Cmd_CallVote_f() in g_cmds.c
 */
@@ -178,8 +199,9 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 
 	if ( !IsAllowedVote( arg1 ) ) {
-		/* TODO: Print allowed votes? At least at bottom of function if vote is invalid */
+		/* TODO: Check whether client actually supplied a vote. Might only want a list */
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote is not allowed.\n" );
+		PrintValidVotes( ent );
 		return;
 	}
 
@@ -249,27 +271,6 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 				return;
 			}
 		}
-	}
-
-	if ( NUM_VOTEH == i ) {
-		char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
-		for ( i = 0; i < NUM_VOTEH; i++ ) {
-			if ( !IsAllowedVote( voteHandler[i].str ) ) {
-				/* FIXME: Handle case when there are no allowed votes? Set g_allowVote 0? */
-				continue;
-			}			
-
-			/* This is not actually "bold", but needs to differ from the "italic" hint */
-			Q_strcat( validVoteString, sizeof( validVoteString ),
-					  va( S_COLOR_BOLD"%s"S_COLOR_ITALIC", ", voteHandler[i].str ) );
-		}
-		/* Hackity, because I'm too lazy to detect last vote properly */
-		Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
-
-
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not a valid vote string.\n" );
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
-		return;
 	}
 
 }
@@ -533,6 +534,7 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
 		if ( !*s ) {
+			/* This is unlikely to happen, since nextmap will usually be "map_restart 0" */
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"nextmap is not set on the server.\n" );
 			return qfalse;
 		}
