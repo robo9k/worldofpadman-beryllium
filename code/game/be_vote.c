@@ -56,8 +56,7 @@ static qboolean IsAllowedVote( const char *str ) {
 
 	Com_sprintf( needle, sizeof( needle ), "/%s/", str );
 	
-	/* FIXME: Use case insensitive search? */
-	return ( strstr( be_allowedVotes.string, needle ) != NULL );
+	return ( Q_stristr( be_allowedVotes.string, needle ) != NULL );
 }
 
 

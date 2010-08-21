@@ -1,9 +1,11 @@
 Restructure folders like engine code, i.e. ioquake.
 Also use a more advanced Makefile, like the engine does.
 
+Restructure this file; using proper layout and sort by priority!
+
 Print realtime at game startup
 
-Add g_nextmap, which is not executed immediatelly, but at map end
+Add g_nextmap, which is not executed immediatelly, but at map end. Maybe use already existing cvar nextmapBackUp
 
 Use way more helper functions
 Create helpers to get one or more client numbers (or -1 for world) from a string
@@ -32,7 +34,21 @@ Save scores on teamchange between real teams?
 
 Add new votes, like shuffleteams.
 
+Shuffleteams might use kills/deaths ration instead of just scores (also account for 1/1, even noobs can do one kill in the first minute).
+Also do not shuffle good players which have been in their team for a long time?
+I assume this is all just to complicated (to implement) and players might still feel that teams are uneven and just call another shuffleteams vote..
+
 Do more sanity checks and calls to G_Error plus some debug output.
 
 Either use less colors/more equal to game's default output or add option to disable/reduce colors
+
+Remove some unused code, like teamLeader, com_blood etc.?
+Maybe fix rank calculation in LPS
+
+Make client time (and points) persistant across maps.
+This will cause some problems (current map kill/death ratio) and irritation. Needs at least new var for totalTime, spectatorTime, (currentScore) etc.
+
+Also check say/say_team for our (lateron) added custom client commands?
+
+Create sort of a help system, which at least explains votes and newly added commands.
 

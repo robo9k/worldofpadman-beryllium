@@ -28,9 +28,7 @@
                        take effect for votes called after changing the cvar.
 
    be_allowedVotes   - List of allowed votes. Each vote needs to be enclosed
-                       in //. Take a look at the default value. Please note
-                       that this is case sensitive, everything needs to be
-                       lowercase!
+                       in //. Take a look at the default value.
 
    be_votePause      - General pause between votes. Time is in seconds.
 

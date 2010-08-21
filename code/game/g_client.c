@@ -629,6 +629,9 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	char	ch;
 	char	*p;
 	int		spaces;
+	/* added beryllium */
+	int		totalWhitespace = 0;
+	/* end added */
 
 	//save room for trailing null byte
 	outSize--;
@@ -655,14 +658,8 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 		if ( ch < ' ' || ch > '}' || ch == '`' ) {
 			continue;
 		}
-		
-		/* don't allow names beginning with "[skipnotify]" because it messes up /ignore-related code */
-		/* Magic constant 12 == strlen( "[skipnotify]" ) .. */
-		if( Q_strncmp( p, "[skipnotify]", 12 ) == 0 ) {
-			Com_sprintf( p, outSize, "%s", ( p + 12 ) );
-		}
 		/* end added */
-
+		
 		// check colors
 		if( ch == Q_COLOR_ESCAPE ) {
 			// solo trailing carat is not a color prefix
@@ -702,6 +699,13 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 			break;
 		}
 
+		/* added beryllium */
+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+		if ( ch == ' ' ) {
+			totalWhitespace++;
+		}
+		/* end added */
+
 		*out++ = ch;
 		colorlessLen++;
 		len++;
@@ -712,6 +716,21 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	if( *p == 0 || colorlessLen == 0 ) {
 		Q_strncpyz( p, "UnnamedPlayer", outSize );
 	}
+
+	/* added beryllium */
+	/* TODO: Prevent names that begin with "[skipnotify]" */
+	/* NOTE: Names that are numerical numbers in clientid range should be forbidden, too.
+	         Votes have been fixed with beryllium though.
+	*/
+	/* FIXME: #define DEFAULT_PLAYERNAME / INVALID_PLAYERNAME_DEFAULT
+	          Maybe we should reset to "PadPlayer"?
+	*/
+
+	/* /name "^7 " etc. also results in an "empty" name */
+	if ( totalWhitespace >= colorlessLen ) {
+		Q_strncpyz( p, "UnnamedPlayer", outSize );
+	}
+	/* end added */
 }
 
 
@@ -765,10 +784,15 @@ void ClientUserinfoChanged( int clientNum ) {
 	// set name
 	Q_strncpyz ( oldname, client->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
-	/* beryllium FIXME: This might set client->pers.netname to "UnnamedPlayer", but client->name remains "".
-	                    One would need to fix name in userinfo as well, so code in sv_client.c SV_UserinfoChanged() works as expected
-	*/
 	ClientCleanName( s, client->pers.netname, sizeof(client->pers.netname) );
+
+	/* added beryllium */
+	/* NOTE: If we don't do this, the engine might still have an "invalid" name in client->name
+	         Fixing the userinfo will cause the engine to correctly re-read the name.
+	*/
+	Info_SetValueForKey( userinfo, "name", client->pers.netname );
+	trap_SetUserinfo( clientNum , userinfo );
+	/* end added */
 
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR || (g_gametype.integer==GT_LPS && client->sess.livesleft<=0)) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {

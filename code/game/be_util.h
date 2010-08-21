@@ -39,5 +39,8 @@ char* GametypeToString( const gametype_t gt );
 
 char* TimeToString( const int time, char *str, const size_t size );
 
+
+const char	*Q_stristr( const char *s, const char *find);
+
 #endif
 

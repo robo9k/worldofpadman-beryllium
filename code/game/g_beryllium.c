@@ -58,9 +58,8 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 
 	/* Respawn protection */
-	/* TODO: Visualise this by making weapons non-functional?
-	         Remove protection if weapon fired.
-	         Maybe also apply a certain shader while being protected?
+	/* TODO: Visualise this by making weapons non-functional? Or simply centerprint countdown?
+	         Remove protection if weapon fired!
 	*/
 	if ( ( MOD_TRIGGER_HURT != *mod ) && ( targ != attacker ) ) {
 		if ( ( level.time - attacker->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {	

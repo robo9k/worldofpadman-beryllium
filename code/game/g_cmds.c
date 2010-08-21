@@ -1746,11 +1746,23 @@ void ClientCommand( int clientNum ) {
 		return;
 	}
 
+	/* changed beryllium */
+	/*
 	// ignore all other commands when at intermission
 	if (level.intermissiontime) {
 		Cmd_Say_f (ent, qfalse, qtrue);
 		return;
 	}
+	*/
+
+	/* Really ignore all other commands when at intermission,
+	   so don't even print them. This prevents all these "vote yes", "dropCartridge"
+	   Spam at the end of a round.
+	*/
+	if ( level.intermissiontime ) {
+		return;
+	}
+	/* end changed */
 
 	if (Q_stricmp (cmd, "give") == 0)
 		Cmd_Give_f (ent);
