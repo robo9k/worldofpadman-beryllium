@@ -95,7 +95,7 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 		*/
 		/* TODO: Privacy? Cvar? Log? */
 		/*
-		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted yes.\n", ent->client->pers.netname ) );
+		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted yes.\n", ent->client->pers.netname ) );
 		*/
 	}
 	else {
@@ -104,7 +104,7 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 
 		/* TODO: Privacy? Cvar? Log? */
 		/*
-		SendClientCommand( -1, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted no.\n", ent->client->pers.netname ) );
+		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted no.\n", ent->client->pers.netname ) );
 		*/
 	}
 
@@ -166,15 +166,19 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 	if ( level.voteEnd &&
 	     ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
+
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"One can not call a vote so short after the previous one.\n" );
+
 		TimeToString( ( ( be_votePause.integer * 1000 ) - ( level.time - level.voteEnd ) ), arg1, sizeof( arg1 ) );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
 		return;
 	}
 
-	if ( ent->client->pers.voteTime &&
+	if ( ent->client->pers.voteTime && 
 	     ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
+
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not call a new vote so short after your previous one.\n" );
+
 		TimeToString( ( ( be_voteRate.integer * 1000 ) - ( level.time - ent->client->pers.voteTime ) ), arg1, sizeof( arg1 ) );
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
 		return;
@@ -225,7 +229,7 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 				/* FIXME: There is a problem clientside when displaying a votestring with double " inside.
 				          voteDisplayString is also S_COLOR_ITALIC
 				*/
-				SendClientCommand( -1, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
+				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
 	                                                 ent->client->pers.netname, level.voteDisplayString ) );
 				/* TODO: Create a seperate BE_Printf( type, level, text ).
 				         Use voteString or voteDisplayString?
@@ -291,17 +295,17 @@ void BE_CheckVote( void ) {
 
 	/* TODO: Print numbers of yay-nay-rest? */
 	if ( ( level.time - level.voteTime ) >= level.voteDuration ) {
-		SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote failed, timeout.\n" );
+		SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote failed, timeout.\n" );
 	}
 	else {
 		if ( level.voteYes > ( level.numVotingClients *  be_votePass.value ) ) {
 			/* Set timeout, then execute and remove the vote at next call */
-			SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote passed.\n" );
+			SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote passed.\n" );
 			level.voteExecuteTime = ( level.time + VOTE_EXECUTEDELAY );
 		}
 		else if ( level.voteNo >= ( level.numVotingClients * ( 1.0 - be_votePass.value ) ) ) {
 			/* same behavior as a timeout */
-			SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote failed.\n" );
+			SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote failed.\n" );
 		}
 		else {
 			/* still waiting for a majority */
@@ -392,52 +396,30 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 
 	/* Special: A variant of clientkick vote */
 	if ( Q_stricmp( arg1, "kick" ) == 0 ) {
-		gclient_t	*player;
-		char		cleanName[64];
-		int			id = -1;
+		int id;
 
 		if ( strlen( arg2 ) == 0 ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a client name.\n" );
 			return qfalse;
 		}
 
-		/* try to circumvent renaming exploit and use id, which can not change */
-		for ( i = 0; i < level.maxclients; i++ ) {
-			player = &level.clients[i];
+		id = ClientnumFromString( arg2 );
 
-			if ( CON_DISCONNECTED == player->pers.connected ) {
-				continue;
-			}
-
-			/* exact match */
-			if ( Q_stricmp( arg2, player->pers.netname ) == 0 ) {
-				id = i;
-				break;
-			}
-
-			/* match without colorcodes */
-			Q_strncpyz( cleanName, player->pers.netname, sizeof( cleanName ) );
-			Q_CleanStr( cleanName );
-			if ( Q_stricmp( arg2, cleanName ) == 0 ) {
-				id = i;
-				break;
-			}
-
-			/* TODO: Partial match with strstr (dangerous?) */
-		}
-
-		if ( -1 == id ) {
+		if ( CID_NONE == id ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"No player found with that name. Check for typos or use 'clientkick' instead.\n" );
 			return qfalse;
 		}
+		else if ( CID_MULTIPLE == id ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Multiple players found with that name. Use 'clientkick' instead.\n" );
+			return qfalse;
+		}
 
-		if ( player->pers.localClient ) {
+		if ( level.clients[id].pers.localClient ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
 			return qfalse;
 		}
 
 		/* We've got one, convert into clientkick vote
-		   TODO: Check for multiple matches
 		   TODO: Display old and current name in votestring?
 		*/
 		Q_strncpyz( arg1, "clientkick", sizeof( arg1 ) );
@@ -453,7 +435,7 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 
 	i = atoi( arg2 );
 
-	if ( ( i < 0 ) || ( i >= MAX_CLIENTS ) ) {
+	if ( !ValidClientID( i, qfalse ) ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not a valid client number.\n" );
 		return qfalse;
 	}

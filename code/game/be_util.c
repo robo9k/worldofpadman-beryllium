@@ -44,9 +44,8 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 	Send a command to one or all clients. Basically a wrapper around trap_SendServerCommand()
 	See CG_ServerCommand() in cg_servercmds.c
 */
-void SendClientCommand( const int clientNum, const int cmd, const char *str ) {
-	/* Valid range is -1 and 0 to MAX_CLIENTS-1 */
-	if ( ( clientNum < -1 ) || ( clientNum >= MAX_CLIENTS ) ) {
+void SendClientCommand( const clientNum_t clientNum, const int cmd, const char *str ) {
+	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 	}
 	/* TODO: Check wheter clientNum is connected */
@@ -154,5 +153,73 @@ const char *Q_stristr( const char *s, const char *find)
     s--;
   }
   return s;
+}
+
+
+/*
+	Returns whether given clientNum integer is in valid
+	range from 0 to MAX_CLIENTS-1.
+	Does not do any other sanity checks!
+*/
+qboolean ValidClientID( const int clientNum, const qboolean allowWorld ) {
+	if ( ( clientNum < 0 ) || ( clientNum >= MAX_CLIENTS ) ) {
+		if ( allowWorld && ( CID_WORLD == clientNum ) ) {
+			return qtrue;
+		}
+
+		return qfalse;
+	}
+	
+	return qtrue;
+}
+
+
+/*
+	Returns a clientNum_t for a given string/name.
+	If there are multiple matches, it won't return the first
+	match but CID_MULTIPLE (sort of an error).
+*/
+/* TODO: Rewrite to better handle multiple matches OR
+         add ClientnumsFromString() (note the plural!).
+   NOTE: There's always a tradeoff between accuracy and comfort
+*/
+clientNum_t ClientnumFromString( const char *name ) {
+	gclient_t	*player;
+	char		cleanName[MAX_NETNAME];
+	int			id = CID_NONE, matches = 0, i;
+
+	for ( i = 0; i < level.maxclients; i++ ) {
+		player = &level.clients[i];
+
+		if ( CON_DISCONNECTED == player->pers.connected ) {
+			continue;
+		}
+
+		/* exact case-insensitive match */
+		if ( Q_stricmp( name, player->pers.netname ) == 0 ) {
+			id = i;
+			matches++;
+			continue;
+		}
+
+		/* match without colorcodes */
+		/* FIXME: Does this violate the multiple matches approach? */
+		Q_strncpyz( cleanName, player->pers.netname, sizeof( cleanName ) );
+		Q_CleanStr( cleanName );
+		if ( Q_stricmp( name, cleanName ) == 0 ) {
+			id = i;
+			matches++;
+			continue;
+		}
+
+		/* TODO: Partial match with strstr (dangerous?) */
+	}
+
+	if ( matches > 1 ) {
+		return CID_MULTIPLE;
+	}
+	else {
+		return id;
+	}
 }
 

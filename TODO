@@ -52,3 +52,5 @@ Also check say/say_team for our (lateron) added custom client commands?
 
 Create sort of a help system, which at least explains votes and newly added commands.
 
+Prevent multiple occurencies of names, instead rename, e.g. PadPlayer0, Padplayer1 etc.
+

@@ -60,21 +60,20 @@ static void BE_Svcmd_Tell_f( void ) {
 
 	if ( trap_Argc() < 3 ) {
 		/* TODO: Move counting of arguments and help into BE_ConCmd() ? */
-		G_Printf( "Usage: tell <id> <text>\n" );
+		G_Printf( "Usage: tell <cid> <text>\n" );
 		return;
 	}
 
 	trap_Argv( 1, clientStr, sizeof( clientStr ) );
 	clientNum = atoi( clientStr );
 
-	/* Valid range is -1 and 0 to MAX_CLIENTS-1 */
-	if ( ( clientNum < -1 ) || ( clientNum >= MAX_CLIENTS ) ) {
-		G_Printf( "clientNum out of range\n" );
+	if ( !ValidClientID( clientNum, qtrue ) ) {
+		G_Printf( "Cid out of range\n" );
 		return;
 	}
 
 	/* Client needs to be fully connected to see message */
-	if ( ( clientNum != -1 ) &&
+	if ( ( clientNum != CID_ALL ) &&
 	     level.clients[clientNum].pers.connected != CON_CONNECTED ) {
 			G_Printf( "Client not connected.\n" );
 			return;
@@ -100,7 +99,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 	BE_CheckVote();
 
 	/* TODO: Also log this? */
-	SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
+	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
 }
 
 
@@ -122,7 +121,7 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 	}
 
 	/* TODO: Also log this? */
-	SendClientCommand( -1, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
+	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
 
 	for( i = 0; i < level.numConnectedClients; i++ ) {
 		cl = ( level.clients + level.sortedClients[i] );
