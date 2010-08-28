@@ -537,9 +537,15 @@ qboolean	ConsoleCommand( void ) {
 			trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(1) ) );
 			return qtrue;
 		}
+
+		/* changed beryllium
+		/* This "feature" is annoying, disable */
+		/*
 		// everything else will also be printed as a say command
 		trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(0) ) );
 		return qtrue;
+		*/
+		/* end changed */
 	}
 
 	return qfalse;

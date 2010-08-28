@@ -179,8 +179,8 @@ static cvarTable_t		gameCvarTable[] = {
 	/* FIXME: Use proper g_ instead of be_ prefix? */
 	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
 	/* FIXME: Keep in sync with vote command handler string array? */
-	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit"
-	                                       "/pointlimit/g_gametype/setgametype/fastgamespeed/normalgamespeed/",
+	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit/pointlimit"
+	                                       "/g_gametype/setgametype/fastgamespeed/normalgamespeed/shuffleteams/",
 	                                       CVAR_ARCHIVE, 0, qfalse },
 	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },

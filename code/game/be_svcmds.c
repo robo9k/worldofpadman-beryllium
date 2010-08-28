@@ -89,13 +89,17 @@ static void BE_Svcmd_Tell_f( void ) {
 	actually used by the game.
 */
 static void BE_Svcmd_Cancelvote_f( void ) {
-	if ( !level.voteTime ) {
+	if ( !level.voteTime && !level.voteExecuteTime ) {
 		G_Printf( "No vote in progress.\n" );
 		return;
 	}
 
+	/* NOTE: Don't set voteTime to 0, because BE_CheckVote() would return too early */
+	level.voteExecuteTime = 0;
+
 	level.voteNo = level.numVotingClients;
 	level.voteYes = 0;
+
 	BE_CheckVote();
 
 	/* TODO: Also log this? */
@@ -110,7 +114,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 	      players.
 */
 static void BE_Svcmd_ShuffleTeams_f( void ) {
-	int i, team;
+	int i, p, team;
 	int count = 0;
 	int	sortedClients[MAX_CLIENTS];
 	gclient_t *cl;
@@ -122,6 +126,9 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 
 	/* TODO: Also log this? */
 	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
+
+	/* Offset to put "best"/first player in currently inferior team */
+	p = ( ( level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE] ) ? 1 : 0 );
 
 	for( i = 0; i < level.numConnectedClients; i++ ) {
 		cl = ( level.clients + level.sortedClients[i] );
@@ -135,12 +142,14 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 		sortedClients[count++] = level.sortedClients[i];
 	}
 
+	/* TODO: Don't shuffle if (human)count <= 1 ? */
+
 	qsort( sortedClients, count, sizeof( sortedClients[0] ), SortRanks );
 
 	for( i = 0; i < count; i++ ) {
 		cl = ( level.clients + sortedClients[i] );
 
-		team = ( (i % 2) + TEAM_RED );
+		team = ( ( ( i + p ) % 2 ) + TEAM_RED );
 		cl->sess.sessionTeam = team;
 
 		/* Bots' team is quite different */

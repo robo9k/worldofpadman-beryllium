@@ -41,7 +41,8 @@ const voteHandler_t voteHandler[] = {
 	{ "setgametype",		VoteH_Gametype	},
 /*	{ "g_dowarmup",			VoteH_Misc		},*/ /* This is just too stupid to be votable */
 	{ "fastgamespeed",		VoteH_Misc		},
-	{ "normalgamespeed",	VoteH_Misc 		}
+	{ "normalgamespeed",	VoteH_Misc 		},
+	{ "shuffleteams",		VoteH_Misc		}
 };
 const unsigned int NUM_VOTEH = ( sizeof( voteHandler ) / sizeof( voteHandler[0] ) );
 
@@ -202,8 +203,9 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 
 	if ( !IsAllowedVote( arg1 ) ) {
-		/* TODO: Check whether client actually supplied a vote. Might only want a list */
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote is not allowed.\n" );
+		if ( strlen( arg1 ) > 0 ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote is not allowed or invalid.\n" );
+		}
 		PrintValidVotes( ent );
 		return;
 	}
@@ -575,6 +577,19 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 		             S_COLOR_ITALIC"%s"S_COLOR_DEFAULT, level.voteString );
+
+		return qtrue;
+	}
+	/* NOTE: New server command implemented in beryllium's gamecode */
+	else if ( Q_stricmp( arg1, "shuffleteams" ) == 0 ) {
+		if ( g_gametype.integer < GT_TEAM ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not in a team gametype.\n" );
+			return qfalse;
+		}
+
+		Q_strncpyz( level.voteString, "shuffleteams", sizeof( level.voteDisplayString ) );
+		Q_strncpyz( level.voteDisplayString,
+		            S_COLOR_ITALIC"Shuffle teams"S_COLOR_DEFAULT, sizeof( level.voteDisplayString ) );
 
 		return qtrue;
 	}

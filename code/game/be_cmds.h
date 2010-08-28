@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _BE_CMDS_H
 
 
-typedef enum {
+enum {
 	CMD_CHEAT			= 1,
 	CMD_MESSAGE			= 2,
 	CMD_LIVING			= 4,
