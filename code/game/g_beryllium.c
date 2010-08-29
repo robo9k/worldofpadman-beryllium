@@ -71,3 +71,53 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 }
 
+
+/*
+	Hooks into ClientUserinfoChanged() in g_client.c
+	We work with the original function's copy of the userinfo
+	after it has been validated.
+*/
+void BE_ClientUserinfoChanged( int clientNum ) {
+	char userinfo[MAX_INFO_STRING];
+	qboolean changed = qfalse;
+	gentity_t *ent = ( g_entities + clientNum );
+	int i;
+	char name[MAX_NETNAME];
+
+	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+
+	/* Fix wrong player skins */
+	/* NOTE: Clients who have cg_forceModel set might still see wrong models, since we
+	         can not change their clientside setting (needs clientside fixing - should use userinfo as well ).
+	*/
+	if ( !validPlayermodel( Info_ValueForKey (userinfo, "model"), Info_ValueForKey (userinfo, "headmodel") ) ) {
+		Info_SetValueForKey( userinfo, "model", DEFAULT_PLAYERMODEL_S );
+		Info_SetValueForKey( userinfo, "headmodel", DEFAULT_PLAYERMODEL_S );
+		changed = qtrue;
+	}
+
+	/* Fix multiple names */
+	ClientCleanName( Info_ValueForKey (userinfo, "name"), name, sizeof( name ) );
+	/* FIXME: This is hax! ClientnumFromString() depends on netname, but it would only be set
+	          after the original ClientUserinfoChanged() returns.
+	*/
+	Q_strncpyz( ent->client->pers.netname, name, sizeof( ent->client->pers.netname ) );
+	if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
+		char newname[MAX_NETNAME];
+		for ( i = 0; i < level.maxclients; i++ ) {
+			/* NOTE: First clone should have "2" as suffix, thus +2 */
+			Com_sprintf( newname, sizeof( newname ), "%s %i", name, ( i + 2 ) );
+			if ( ClientnumFromString( newname ) == CID_NONE ) {
+				Info_SetValueForKey( userinfo, "name", newname );
+				changed = qtrue;
+				break;
+			}
+		}
+	}
+
+
+	if ( changed ) {
+		trap_SetUserinfo( clientNum , userinfo );
+	}
+}
+

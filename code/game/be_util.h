@@ -64,5 +64,9 @@ qboolean ValidClientID( const int clientNum, const qboolean allowWorld );
 
 clientNum_t ClientnumFromString( const char *name );
 
+qboolean fileExists( const char *path );
+
+qboolean validPlayermodel( const char *model, const char *headModel );
+
 #endif
 

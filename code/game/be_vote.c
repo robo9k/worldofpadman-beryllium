@@ -489,7 +489,7 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 		}
 
 		/* Does map exist at all? */
-		if ( !trap_FS_FOpenFile( va( "maps/%s.bsp", arg2 ), NULL, FS_READ ) ) {
+		if ( !fileExists( va( "maps/%s.bsp", arg2 ) ) ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Map not found.\n" );
 			return qfalse;
 		}

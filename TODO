@@ -52,8 +52,6 @@ Also check say/say_team for our (lateron) added custom client commands?
 
 Create sort of a help system, which at least explains votes and newly added commands.
 
-Prevent multiple occurencies of names, instead rename, e.g. PadPlayer0, Padplayer1 etc.
-
 Take care of special vote situations:
 - Only two players connected; one calls vote and joins spectators/leaves
 - Most players are connecting, one fully connected calls a vote
@@ -61,4 +59,6 @@ Take care of special vote situations:
 Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
 
 splitChat
+
+Implement a guid filter like sv_banFile. Also disallow empty/malformed guids
 

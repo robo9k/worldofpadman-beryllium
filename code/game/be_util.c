@@ -223,3 +223,52 @@ clientNum_t ClientnumFromString( const char *name ) {
 	}
 }
 
+
+/*
+	Helper function to check whether a file exists serverside
+*/
+qboolean fileExists( const char *path ) {
+	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
+}
+
+
+/*
+	Helper function to fix models like padman/doesntexist
+	which basically use a non existing skin.
+*/
+qboolean validPlayermodel( const char *model, const char *headModel ) {
+	char base[MAX_QPATH];
+	char *skin;
+
+	if ( ( model == NULL ) || ( headModel == NULL ) ) {
+		return qfalse;
+	}
+	
+	Q_strncpyz( base, model, sizeof( base ) );
+	skin = strchr( base, '/' );
+	if ( skin ) {
+		*skin++ = '\0';
+	}
+	else {
+		skin = DEFAULT_PLAYERSKIN_S;
+	}
+	if ( !fileExists( va( PLAYERMODEL_PATH_S"%s/upper_%s.skin", base, skin ) ) ) {
+		return qfalse;
+	}
+
+	Q_strncpyz( base, headModel, sizeof( base ) );
+	skin = strchr( base, '/' );
+	if ( skin ) {
+		*skin++ = '\0';
+	}
+	else {
+		skin = DEFAULT_PLAYERSKIN_S;
+	}
+	if ( !fileExists( va( PLAYERMODEL_PATH_S"%s/head_%s.skin", base, skin ) ) ) {
+		return qfalse;
+	}
+
+
+	return qtrue;	
+}
+

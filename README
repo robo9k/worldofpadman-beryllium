@@ -67,6 +67,13 @@
          changes).
 
 
+   .: Other changes :.
+
+   Beryllium automatically renames players, preventing multiple players having the same name.
+   A new "shuffleteams" vote has been added, which is equal the new server command.
+   Players should no longer be able to use non-existant skins.
+
+
    .: Credits :.
 
    Thanks in no particular order:

@@ -760,6 +760,10 @@ void ClientUserinfoChanged( int clientNum ) {
 	ent = g_entities + clientNum;
 	client = ent->client;
 
+	/* added beryllium */
+	BE_ClientUserinfoChanged( clientNum );
+	/* end added */
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 	// check for malformed or illegal info strings
@@ -789,6 +793,7 @@ void ClientUserinfoChanged( int clientNum ) {
 	/* added beryllium */
 	/* NOTE: If we don't do this, the engine might still have an "invalid" name in client->name
 	         Fixing the userinfo will cause the engine to correctly re-read the name.
+	         We can not properly do this inside BE_ClientUserinfoChanged()
 	*/
 	Info_SetValueForKey( userinfo, "name", client->pers.netname );
 	trap_SetUserinfo( clientNum , userinfo );

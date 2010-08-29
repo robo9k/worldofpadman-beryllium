@@ -33,6 +33,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define S_COLOR_BOLD		S_COLOR_CYAN	/* Even more important output */
 
 
+#define DEFAULT_PLAYERMODEL_S	"padman"
+#define DEFAULT_PLAYERSKIN_S	"default"
+#define PLAYERMODEL_PATH_S		"models/wop_players/"
+
+
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
 
@@ -54,6 +59,8 @@ qboolean BE_ConsoleCommand( const char *cmd );
 
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod );
+
+void BE_ClientUserinfoChanged( int clientNum );
 
 
 #endif
