@@ -82,9 +82,11 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	qboolean changed = qfalse;
 	gentity_t *ent = ( g_entities + clientNum );
 	int i;
-	char name[MAX_NETNAME];
+	char name[MAX_NETNAME], oldname[MAX_NETNAME];
+
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+
 
 	/* Fix wrong player skins */
 	/* NOTE: Clients who have cg_forceModel set might still see wrong models, since we
@@ -96,23 +98,37 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 		changed = qtrue;
 	}
 
+
 	/* Fix multiple names */
+	/* NOTE: Since we only mess with userinfo, the clientside idea of its name remains the same. */
 	ClientCleanName( Info_ValueForKey (userinfo, "name"), name, sizeof( name ) );
-	/* FIXME: This is hax! ClientnumFromString() depends on netname, but it would only be set
-	          after the original ClientUserinfoChanged() returns.
+	/* FIXME: This is hax! ClientnumFromString() depends on netname, but it will only be set
+	          after the original ClientUserinfoChanged() returns. So we need to set and reset
+	          to the new name in userinfo.
 	*/
+	Q_strncpyz( oldname, ent->client->pers.netname, sizeof( oldname ) );
 	Q_strncpyz( ent->client->pers.netname, name, sizeof( ent->client->pers.netname ) );
 	if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
 		char newname[MAX_NETNAME];
 		for ( i = 0; i < level.maxclients; i++ ) {
-			/* NOTE: First clone should have "2" as suffix, thus +2 */
-			Com_sprintf( newname, sizeof( newname ), "%s %i", name, ( i + 2 ) );
+			Com_sprintf( newname, sizeof( newname ), "RenamedPlayer %i", ( i + 1 ) );
 			if ( ClientnumFromString( newname ) == CID_NONE ) {
 				Info_SetValueForKey( userinfo, "name", newname );
 				changed = qtrue;
+				Q_strncpyz( ent->client->pers.netname, newname, sizeof( ent->client->pers.netname ) );
+				/* NOTE: This happens a lot while client connects, only print when intentionally renaming in-game.
+				         Also note that original ClientUserinfoChanged() will not detect this renaming, so we "need" to print some info anyways.
+				*/
+				if ( ent->client->pers.connected == CON_CONNECTED ) {
+					SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n", oldname, newname ) );
+				}
 				break;
 			}
 		}
+	}
+	else {
+		/* Revert hax above to comply with original ClientUserinfoChanged() rename behavior */
+		Q_strncpyz( ent->client->pers.netname, oldname, sizeof( ent->client->pers.netname ) );
 	}
 
 
