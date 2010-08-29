@@ -42,6 +42,11 @@
                        Time is in seconds. There is no notification whether
                        you or a target are (still) protected.
 
+   be_maxVotes       - Maximum number of votes per client. This gets reset
+                       at map- or team-change.
+
+   be_switchTeamTime - Minimum pause between team changes for players in seconds.
+
 
    .: Commands :.
 

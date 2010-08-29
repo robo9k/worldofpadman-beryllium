@@ -46,8 +46,11 @@ extern vmCvar_t	be_allowedVotes;
 extern vmCvar_t	be_votePause;
 extern vmCvar_t be_voteRate;
 extern vmCvar_t be_votePass;
+extern vmCvar_t be_maxVotes;
 
 extern vmCvar_t	be_respawnProtect;
+
+extern vmCvar_t	be_switchTeamTime;
 
 
 extern char	*ConcatArgs( int start ); /* FIXME: Add this to game headers? Declared in g_cmds.c */

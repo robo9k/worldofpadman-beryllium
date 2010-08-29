@@ -708,7 +708,11 @@ void Cmd_Team_f( gentity_t *ent ) {
 	}
 
 	if ( ent->client->switchTeamTime > level.time ) {
-		trap_SendServerCommand( ent-g_entities, "print \"May not switch teams more than once per 5 seconds.\n\"" );
+		/* changed beryllium */
+		/*trap_SendServerCommand( ent-g_entities, "print \"May not switch teams more than once per 5 seconds.\n\"" );*/
+		/* TODO: Use proper beryllium colors and TimeToString()? */
+		trap_SendServerCommand( ( ent - g_entities ), va( "print \"May not switch teams more than once per %i seconds.\n\"", be_switchTeamTime.integer ) );
+		/* end changed*/
 		return;
 	}
 
@@ -722,7 +726,10 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	SetTeam( ent, s );
 
-	ent->client->switchTeamTime = level.time + 5000;
+	/* changed beryllium */
+	/*ent->client->switchTeamTime = level.time + 5000;*/
+	ent->client->switchTeamTime = ( level.time + ( be_switchTeamTime.integer * 1000 ) );
+	/* end changed */
 }
 
 

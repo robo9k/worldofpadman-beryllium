@@ -155,7 +155,8 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 		return;
 	}
 
-	if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {
+	/*if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {*/
+	if ( ent->client->pers.voteCount >= be_maxVotes.integer ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You have called the maximum number of votes.\n" );
 		return;
 	}

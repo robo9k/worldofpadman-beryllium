@@ -83,8 +83,11 @@ vmCvar_t	be_allowedVotes;
 vmCvar_t	be_votePause;
 vmCvar_t	be_voteRate;
 vmCvar_t	be_votePass;
+vmCvar_t	be_maxVotes;
 
 vmCvar_t	be_respawnProtect;
+
+vmCvar_t	be_switchTeamTime;
 
 /* end beryllium */
 
@@ -185,8 +188,11 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse },
+	{ &be_maxVotes, "be_maxVotes", "3", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 
