@@ -20,7 +20,7 @@ ARCH=$(shell uname -m | sed -e s/i.86/i386/)
 
 # version info
 # this has been copied from ioQuake3's Makefile
-VERSION=0.02a
+VERSION=0.03a
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)
