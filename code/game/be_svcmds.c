@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 static void BE_Svcmd_Tell_f( void );
 static void BE_Svcmd_Cancelvote_f( void );
 static void BE_Svcmd_ShuffleTeams_f( void );
+static void BE_Svcmd_RenamePlayer_f( void );
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
 int QDECL SortRanks( const void *a, const void *b );
@@ -30,9 +31,13 @@ int QDECL SortRanks( const void *a, const void *b );
 const svcmd_t be_svcmds[] = {
 	{ "tell",			BE_Svcmd_Tell_f			},
 	{ "cancelvote",		BE_Svcmd_Cancelvote_f	},
-	{ "shuffleteams",	BE_Svcmd_ShuffleTeams_f	}
+	{ "shuffleteams",	BE_Svcmd_ShuffleTeams_f	},
+	{ "rename",			BE_Svcmd_RenamePlayer_f	}
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
+
+
+/* FIXME: clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
 
 
 qboolean BE_ConCmd( const char *cmd ) {
@@ -55,7 +60,7 @@ qboolean BE_ConCmd( const char *cmd ) {
 	(except for some weird double quotes with " )
 */
 static void BE_Svcmd_Tell_f( void ) {
-	char clientStr[MAX_TOKEN_CHARS];
+	char clientStr[3];
 	int clientNum;
 
 	if ( trap_Argc() < 3 ) {
@@ -171,3 +176,55 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 	}
 }
 
+
+/*
+	Forcefully rename a player.
+	Limits for invalid characters and multiple names still apply.
+*/
+static void BE_Svcmd_RenamePlayer_f( void ) {
+	char	clientStr[3], newname[MAX_NETNAME];
+	char	userinfo[MAX_INFO_STRING];
+	int		clientNum;
+
+	if ( trap_Argc() < 3 ) {
+		/* TODO: Move counting of arguments and help into BE_ConCmd() ? */
+		G_Printf( "Usage: rename <cid> <newname>\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+	clientNum = atoi( clientStr );
+
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Cid out of range\n" );
+		return;
+	}
+
+	trap_Argv( 2, newname, sizeof( newname ) );
+
+	/* FIXME: Renaming connecting clients is somewhat useless, since they might change
+	          their name multiple times automatically during connect, which is not limited.
+
+	          Lock names after rename? (set nameChanges to be_maxNameChanges-1)
+	*/
+
+	/* TODO: Print info that player was forcefully renamed? */
+
+	/* Make beryllium's filter code in ClientUserinfoChanged() work like expected */
+	/* NOTE: In order for rename to work always, we need to invalidate the actual value of
+	         the client's maxNameChanges.
+	         If we don't do this, even admin cant rename when maximum is exceeded.
+	*/
+	if ( level.clients[clientNum].pers.nameChanges > be_maxNameChanges.integer ) {
+		level.clients[clientNum].pers.nameChanges = ( be_maxNameChanges.integer - 1 );
+	}
+	else {
+		level.clients[clientNum].pers.nameChanges--;
+	}
+	level.clients[clientNum].pers.nameChangeTime = 0;
+
+	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+	Info_SetValueForKey( userinfo, "name", newname );
+	trap_SetUserinfo( clientNum, userinfo );
+  	ClientUserinfoChanged( clientNum );
+}

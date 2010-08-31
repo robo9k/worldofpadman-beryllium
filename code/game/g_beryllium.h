@@ -52,6 +52,8 @@ extern vmCvar_t	be_respawnProtect;
 
 extern vmCvar_t	be_switchTeamTime;
 
+extern vmCvar_t	be_maxNameChanges;
+
 
 extern char	*ConcatArgs( int start ); /* FIXME: Add this to game headers? Declared in g_cmds.c */
 

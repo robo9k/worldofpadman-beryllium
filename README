@@ -47,6 +47,11 @@
 
    be_switchTeamTime - Minimum pause between team changes for players in seconds.
 
+   be_maxNameChanges - Number of times a client can rename. Does not apply to
+                       automatic during connect. Will stick to the last name
+                       before hitting limit. Set to -1 for unlimited (default
+                       behaviour) renames.
+
 
    .: Commands :.
 
@@ -70,6 +75,13 @@
          This does not restart the game or reset scores, except
          on players (since they are currently not saved on team
          changes).
+
+      rename cid newname
+         Rename given client to newname.
+         be_maxNameChanges setting does not apply to this,
+         other limits like invalid characters in name
+         or multiple names do still apply!
+         This does not add to the client's rename counter.
 
 
    .: Other changes :.

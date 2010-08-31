@@ -245,7 +245,11 @@ typedef struct {
 	qboolean	teamInfo;			// send team overlay updates?
 
 	/* added beryllium */
+	/* FIXME: Use unsigned int? */
 	int			voteTime;
+
+	int			nameChanges;
+	int			nameChangeTime;
 	/* end beryllium */
 } clientPersistant_t;
 

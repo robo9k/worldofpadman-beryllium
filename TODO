@@ -14,7 +14,7 @@ Improve vote pass. Print amount of yes-no-dontcare at vote end?
 
 Unlagged?
 
-Floodlimit chat, vote, userinfo
+Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
 
 Fix encoding and linebreaks in all files..
@@ -33,10 +33,6 @@ There are quite a bunch of commands which are fun, but not actually usefull: sla
 Save scores on teamchange between real teams?
 
 Add new votes, like shuffleteams.
-
-Shuffleteams might use kills/deaths ration instead of just scores (also account for 1/1, even noobs can do one kill in the first minute).
-Also do not shuffle good players which have been in their team for a long time?
-I assume this is all just to complicated (to implement) and players might still feel that teams are uneven and just call another shuffleteams vote..
 
 Do more sanity checks and calls to G_Error plus some debug output.
 

@@ -51,7 +51,7 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 				return qtrue;
 			}
 
-			if ( ( be_ccmds[i].cmdFlags & CMD_LIVING ) && ( ent->client->ps.pm_type == PM_DEAD ) ) {
+			if ( ( be_ccmds[i].cmdFlags & CMD_LIVING ) && ( PM_DEAD == ent->client->ps.pm_type ) ) {
 				return qtrue;
 			}
 

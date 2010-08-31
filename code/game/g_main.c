@@ -89,6 +89,8 @@ vmCvar_t	be_respawnProtect;
 
 vmCvar_t	be_switchTeamTime;
 
+vmCvar_t	be_maxNameChanges;
+
 /* end beryllium */
 
 // bk001129 - made static to avoid aliasing
@@ -192,7 +194,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_maxNameChanges, "be_maxNameChanges", "-1", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 
