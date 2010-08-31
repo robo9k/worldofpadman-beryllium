@@ -58,3 +58,5 @@ splitChat
 
 Implement a guid filter like sv_banFile. Also disallow empty/malformed guids
 
+Properly sync the versionstring in README with the actual current version (in code/game/Makefile plus svn rev).
+

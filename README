@@ -57,6 +57,8 @@
 
       .: Client :.
 
+      A new "shuffleteams" vote has been added, whose behaviour is equal to the new server command.
+
       
       .: Server :.
 
@@ -87,8 +89,14 @@
    .: Other changes :.
 
    Beryllium automatically renames players, preventing multiple players having the same name.
-   A new "shuffleteams" vote has been added, which is equal the new server command.
    Players should no longer be able to use non-existant skins.
+
+
+   .: Versions :.
+
+   This README applies to the current version of Beryllium, which is 0.03a-r48.
+   The code bases upon World of Padman's v1.2 gamecode and is thus only compatible
+   with this version of the game.
 
 
    .: Credits :.
@@ -109,6 +117,7 @@
         Smokin' Guns,
         Urban Terror,
         ExcessivePlus,
+        ETpro,
         BigBrotherBot
 
 
