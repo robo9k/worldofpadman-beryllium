@@ -91,6 +91,10 @@ vmCvar_t	be_switchTeamTime;
 
 vmCvar_t	be_maxNameChanges;
 
+vmCvar_t	be_checkGUIDs;
+
+vmCvar_t	be_maxConnections;
+
 /* end beryllium */
 
 // bk001129 - made static to avoid aliasing
@@ -196,7 +200,11 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_maxNameChanges, "be_maxNameChanges", "-1", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_maxNameChanges, "be_maxNameChanges", "-1", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_checkGUIDs, "be_checkGUIDs", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

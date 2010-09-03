@@ -37,6 +37,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_PLAYERSKIN_S	"default"
 #define PLAYERMODEL_PATH_S		"models/wop_players/"
 
+enum {
+	GUIDCHECK_EMPTY		= 1,
+	GUIDCHECK_FORMAT	= 2
+};
+
 
 /* Cvars. See g_main.c */
 extern vmCvar_t	be_version;
@@ -54,6 +59,10 @@ extern vmCvar_t	be_switchTeamTime;
 
 extern vmCvar_t	be_maxNameChanges;
 
+extern vmCvar_t	be_checkGUIDs;
+
+extern vmCvar_t	be_maxConnections;
+
 
 extern char	*ConcatArgs( int start ); /* FIXME: Add this to game headers? Declared in g_cmds.c */
 
@@ -66,6 +75,7 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod );
 
 void BE_ClientUserinfoChanged( int clientNum );
+char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
 
 
 #endif

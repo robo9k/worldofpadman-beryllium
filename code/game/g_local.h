@@ -250,6 +250,9 @@ typedef struct {
 
 	int			nameChanges;
 	int			nameChangeTime;
+
+	char		guid[33];
+	char		ip[16];
 	/* end beryllium */
 } clientPersistant_t;
 

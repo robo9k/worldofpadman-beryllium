@@ -52,6 +52,26 @@
                        before hitting limit. Set to -1 for unlimited (default
                        behaviour) renames.
 
+   be_maxConnections - Maximum number of connections per IP, players above are
+                       rejected.
+                       This defeats tools like q3fill almost entirely (you could
+                       furthermore set sv_timeout to a low value).
+                       If set to default of 0, unlimited connections are allowed.
+
+   be_checkGUIDs     - This is a bitmask, supporting the following flags:
+                          1 - Reject empty GUIDs
+                          2 - Reject invalid GUIDs
+
+                       Please note that World of Padman v1.1 did not yet use
+                       GUIDs, so people using the old (v1.2 compatible) engine
+                       will be rejected for emtpy GUIDs.
+                       A valid GUID is exactly 32 chars long and only consists
+                       of 0-9 and A-F. Cheat tools like aimbots etc. sometimes
+                       change the GUID to invalid values.
+
+                       Please also read ioquake's README concerning the purpose
+                       of cl_guid!
+
 
    .: Commands :.
 

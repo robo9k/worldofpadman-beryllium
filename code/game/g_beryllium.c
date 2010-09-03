@@ -159,9 +159,121 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 		Q_strncpyz( ent->client->pers.netname, oldname, sizeof( ent->client->pers.netname ) );
 	}
 
+	/* TODO: Check whether client wants to change ip or guid, then drop him? */
+
 
 	if ( changed ) {
 		trap_SetUserinfo( clientNum , userinfo );
 	}
+}
+
+
+/*
+	Hooks early into ClientConnect() in g_client.c.
+	If we return NULL, ClientConnect() continues, otherwise client will be
+	rejected with our return value.
+*/
+/* FIXME: Call trap_DropClient() rather than having them trying to connect continously? */
+char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
+	char userinfo[MAX_INFO_STRING];
+	char *value;
+	char ip[16], guid[33];
+
+
+	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+
+	/* check for malformed or illegal info strings */
+	if ( !Info_Validate( userinfo ) ) {
+		return "Invalid userinfo.";
+	}
+
+	/* All other checks are only reasonable against "humans" */	
+	if ( isBot ) {
+		return NULL;
+	}
+
+
+	value = Info_ValueForKey( userinfo, "ip" );
+	Q_strncpyz( ip, value, sizeof( ip ) );
+	/* strip port */
+	value = strchr( ip, ':' );
+  	if ( value ) {
+	    *value = '\0';
+	}
+  
+	if( !*ip ) {
+    	return "No IP in userinfo.";
+	}
+	/* "127.0.0.1" or the like */
+	/* NOTE: Other possible values "bot", "localhost". But these don't occur, since
+	         we check for isBot and "localhost" luckily passes. We might also want to
+	         check number of dots?
+	*/
+	if ( strlen( ip ) < 7 ) {
+		return "Invalid IP in userinfo.";
+	}
+
+	if ( be_maxConnections.integer ) {
+		gclient_t *other;
+		int i, count = 0;
+
+		for ( i = 0 ; i < level.maxclients; i++ ) {
+			other = &level.clients[i];
+			/* NOTE: CON_CONNECTING is only set in original ClientConnect() lateron */
+			if ( other && ( CON_DISCONNECTED != other->pers.connected ) ) {
+				/* NOTE: Ensure that ip is saved consistently, i.e. either with or
+				         without :port!
+				*/
+				if ( strcmp( ip, other->pers.ip ) == 0 ) {
+					count++;
+				}
+			}
+		}
+
+		if ( count >= be_maxConnections.integer ) {
+			return "Maximum simultaneos connections per IP exceeded.";
+		}
+	}
+
+
+	if ( be_checkGUIDs.integer ) {
+		/* "Its value is a 32 character string made up of [a-f] and [0-9] characters." */
+		value = Info_ValueForKey( userinfo, "cl_guid" );
+  		Q_strncpyz( guid, value, sizeof( guid ) );
+
+		/* TODO: Add GUIDCHECK_MULTIPLE? */
+
+		if ( *guid && ( be_checkGUIDs.integer & GUIDCHECK_FORMAT ) ) {
+			int count = 0;
+			qboolean valid = qtrue;
+
+			while ( guid[count] != '\0' && valid ) {
+				if( ( ( guid[count] < '0' ) || ( guid[count] > '9' ) ) &&
+				    ( ( guid[count] < 'A' ) || ( guid[count] > 'F' ) ) ) {
+					valid = qfalse;
+					break;
+	   			}
+      			count++;
+		    }
+
+			if ( !valid || ( count != 32 ) )  {
+				return "Invalid GUID in userinfo.";
+			}
+		}
+		else if ( be_checkGUIDs.integer & GUIDCHECK_EMPTY ) {
+			/* NOTE: This happens with v1.1 engine clients in World of Padman.
+			         So maybe we should return a more helpfull "error message"?
+			*/
+			return "No GUID in userinfo.";
+		}
+	}
+
+
+	/* NOTE: We can not set any data for the client, since original ClientConnect()
+	         will erase the whole client struct with memset() after we return.
+	*/
+
+
+	return NULL;
 }
 

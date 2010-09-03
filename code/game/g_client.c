@@ -938,8 +938,18 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	gclient_t	*client;
 	char		userinfo[MAX_INFO_STRING];
 	gentity_t	*ent;
+	/* added beryllium */
+	char ip[16], guid[33];
+	/* end added */
 
 	ent = &g_entities[ clientNum ];
+
+	/* added beryllium */
+	value = BE_ClientConnect( clientNum, firstTime, isBot );
+	if ( value != NULL ) {
+		return value;
+	}
+	/* end added */
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
@@ -987,6 +997,27 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			return "BotConnectfailed";
 		}
 	}
+
+
+	/* added beryllium */
+	/* NOTE: See NOTEs in BE_ClientConnect() */
+	/* Copy pasta .. */
+
+	value = Info_ValueForKey( userinfo, "ip" );
+	Q_strncpyz( ip, value, sizeof( ip ) );
+	/* strip port */
+	value = strchr( ip, ':' );
+  	if ( value ) {
+	    *value = '\0';
+	}
+
+	value = Info_ValueForKey( userinfo, "cl_guid" );
+	Q_strncpyz( guid, value, sizeof( guid ) );
+
+
+	Q_strncpyz( client->pers.guid, guid, sizeof( client->pers.guid ) );
+	Q_strncpyz( client->pers.ip, ip, sizeof( client->pers.ip ) );
+	/* end added */
 
 	
 	// get and distribute relevent paramters
