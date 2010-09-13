@@ -98,8 +98,10 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 		/*
 		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted yes.\n", ent->client->pers.netname ) );
 		*/
+
+		ent->client->pers.voted = VOTE_YES;
 	}
-	else {
+	else if ( ( msg[0] == 'n' ) || ( msg[0] == 'N' ) || ( msg[0] == '0' ) ) {
 		level.voteNo++;
 		trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
 
@@ -107,6 +109,8 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 		/*
 		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" voted no.\n", ent->client->pers.netname ) );
 		*/
+
+		ent->client->pers.voted = VOTE_NO;
 	}
 
 	/* "a majority will be determined in CheckVote, which will also account
@@ -247,11 +251,15 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 				for ( i = 0 ; i < level.maxclients ; i++ ) {
 					level.clients[i].ps.eFlags &= ~EF_VOTED;
+					level.clients[i].pers.voted = VOTE_NONE;
 				}
 				ent->client->ps.eFlags |= EF_VOTED;
 				ent->client->pers.voteCount++;
 
 				ent->client->pers.voteTime = level.time;
+
+				ent->client->pers.voted = VOTE_YES;
+
 
 				/* A littly hackity to get votes with variable time.
 				   The client has a hardcoded duration of VOTE_TIME, which
@@ -259,7 +267,7 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 				   to get its time being displayed correctly, while still having
 				   the correct voteTime in game.
 				*/
-				/* voteDuration is needed so chaning the cvar doesn't fuck up current vote
+				/* voteDuration is needed so changing the cvar doesn't fuck up current vote
 				   Cvar is in seconds.
 				*/
 				level.voteDuration = ( be_voteDuration.integer * 1000 );
@@ -287,6 +295,8 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	Determines whether a vote passed or failed and execute it
 */
 void BE_CheckVote( void ) {
+	int i;
+
 	if ( level.voteExecuteTime && ( level.voteExecuteTime < level.time ) ) {
 		level.voteExecuteTime = 0;
 		trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
@@ -294,6 +304,25 @@ void BE_CheckVote( void ) {
 
 	if ( !level.voteTime ) {
 		return;
+	}
+
+	/* FIXME: Properly count voters/votes. This is already done in CalculateRanks, but does not
+	          account for players that callvote/vote, join spectators (but are still counted, since
+	          they voted previously) at the next vote. So just recount here quick&dirty
+	*/
+	level.numVotingClients = 0;
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( ( level.clients[i].pers.connected != CON_CONNECTED ) ||
+		     ( g_entities[i].r.svFlags & SVF_BOT ) ) {
+			continue;
+		}
+
+		if ( level.clients[i].sess.sessionTeam != TEAM_SPECTATOR ) {
+			level.numVotingClients++;
+		}
+		else if ( level.clients[i].pers.voted != VOTE_NONE ) {
+			level.numVotingClients++;
+		}
 	}
 
 	/* TODO: Print numbers of yay-nay-rest? */
@@ -362,6 +391,11 @@ static qboolean VoteH_Gametype( const gentity_t *ent ) {
 	if ( strlen( arg2 ) == 0 ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a gametype number.\n" );
 			return qfalse;
+	}
+
+	if ( !IsANumber( arg2 ) ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+			return qfalse;		
 	}
 
 	i = atoi( arg2 );
@@ -436,6 +470,11 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 		return qfalse;
 	}
 
+	if ( !IsANumber( arg2 ) ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+			return qfalse;		
+	}
+
 	i = atoi( arg2 );
 
 	if ( !ValidClientID( i, qfalse ) ) {
@@ -453,17 +492,23 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 		return qfalse;
 	}
 
-	Com_sprintf( level.voteString, sizeof( level.voteString ), "clientkick \"%i\"", i );
 	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 	             S_COLOR_ITALIC"Kick %i: '%s'"S_COLOR_DEFAULT, i, level.clients[i].pers.netname );
 
 	/* Append additional argument, e.g. "reason" */
 	if ( trap_Argc() >= 4 ) {
-		char r[16];
+		char reason[16];
 
-		Q_strncpyz( r, ConcatArgs( 3 ), sizeof( r ) );
-		Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( S_COLOR_ITALIC", %s"S_COLOR_DEFAULT, r ) );
+		Q_strncpyz( reason, ConcatArgs( 3 ), sizeof( reason ) );
+		Q_strcat( level.voteDisplayString, sizeof( level.voteDisplayString ), va( S_COLOR_ITALIC", %s"S_COLOR_DEFAULT, reason ) );
+
+		/* NOTE: "dropclient" is a custom server command provided by beryllium */
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "dropclient %i \"%s\"", i, reason );
 	}
+	else {
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "dropclient %i", i );
+	}
+
 
 	return qtrue;
 }
@@ -561,6 +606,11 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 		if ( strlen( arg2 ) == 0 ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_NEGATIVE"You must supply a %s.\n", arg1 ) );
 			return qfalse;
+		}
+
+		if ( !IsANumber( arg2 ) ) {
+				SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+				return qfalse;		
 		}
 
 		i = atoi( arg2 );

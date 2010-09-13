@@ -630,7 +630,9 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	char	*p;
 	int		spaces;
 	/* added beryllium */
-	int		totalWhitespace = 0;
+	int			totalWhitespace = 0;
+	qboolean	invalid = qfalse;
+	char		cleanName[MAX_NETNAME];
 	/* end added */
 
 	//save room for trailing null byte
@@ -718,17 +720,32 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	}
 
 	/* added beryllium */
-	/* TODO: Prevent names that begin with "[skipnotify]" */
-	/* NOTE: Names that are numerical numbers in clientid range should be forbidden, too.
-	         Votes have been fixed with beryllium though.
-	*/
-	/* FIXME: #define DEFAULT_PLAYERNAME / INVALID_PLAYERNAME_DEFAULT
-	          Maybe we should reset to "PadPlayer"?
-	*/
-
 	/* /name "^7 " etc. also results in an "empty" name */
 	if ( totalWhitespace >= colorlessLen ) {
-		Q_strncpyz( p, "UnnamedPlayer", outSize );
+		invalid = qtrue;	
+	}
+
+	Q_strncpyz( cleanName, p, sizeof( cleanName ) );
+	Q_CleanStr( cleanName );
+
+	/* Used to not print text to chat area, but console only */
+	if ( Q_strncmp( "[skipnotify]", cleanName, 12 ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* Used in serverside chat messages */
+	if ( Q_stricmp( "server", cleanName ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* Numerical names as in client numbers */
+	if ( IsANumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
+		invalid = qtrue;
+	}
+
+
+	if ( invalid ) {
+		Q_strncpyz( p, INVALID_PLAYERNAME_DEFAULT_S, outSize );
 	}
 	/* end added */
 }

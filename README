@@ -82,10 +82,35 @@
       
       .: Server :.
 
-      tell cid text
-         Send a connected client some text.
-         Clientnum can be -1 to print to everyone.
-         Text is printed as-is to client.
+      stell cid text
+         Serverside tell chat.
+
+      ssay text
+         Serverside say chat.
+
+      ssay_team team text
+         Serverside team chat. Use "red"/"r" etc. as teamname.
+
+      scp cid text
+         Centerprint text to a client.
+         Text will be printed in large letters in the middle of the screen.
+
+      smp cid text
+         Messageprint text to a client.
+         Text will be printed in the upper right of the screen.
+
+      sprint cid text
+         Print text to a client.
+         Text will be printed to the upper left chat area.
+
+      
+      You can use -1 for scp, smp and sprint to send to every client.
+      Messages sent with stell, ssay and ssay_team will use "server" as playername.
+
+
+      dropclient cid reason
+         Basically the same as clientkick, but you can supply an
+         additional argument which will be displayed.
 
       cancelvote
          Cancel a currently running vote, i.e.

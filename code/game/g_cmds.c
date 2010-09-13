@@ -888,6 +888,9 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 
 #define EC		"\x19"
 
+/* changed beryllium */
+/* NOTE: Beryllium's server commands use this in non-default ways, thus the rewrite */
+/*
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
 	int			j;
 	gentity_t	*other;
@@ -948,7 +951,96 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		other = &g_entities[j];
 		G_SayTo( ent, other, mode, color, name, text );
 	}
+}*/
+
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
+	int			i;
+	gentity_t	*other;
+	int			color;
+	char		name[MAX_NETNAME], *namesrc;
+	char		text[MAX_SAY_TEXT];
+	char		location[64];
+
+	/* TODO: With split chat, keep team (and send to spectator/free) */
+	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
+		mode = SAY_ALL;
+	}
+
+	/* Beryllium's calls don't have a valid entity */
+	if ( !ent ) {
+		/* TODO: Make this a forbidden name for clients */
+		namesrc = "server";
+	}
+	else {
+		namesrc = ent->client->pers.netname;
+	}
+
+	/* Hackity: In order for the above to work, beryllium sets target rather than ent for SAY_TEAM */
+	if ( SAY_TEAM == mode ) {
+		ent = target;
+		target = NULL;
+	}
+
+	/* NOTE: We should not change the loglines, since external parsers expect them to be in this format.
+	         Exact implementation of chat messages clientside is known to G_SayTo
+	*/
+
+	switch ( mode ) {
+		default:	/* fall through */
+
+		case SAY_ALL:
+			G_LogPrintf( "say: %s: %s\n", namesrc, chatText );
+			Com_sprintf( name, sizeof( name ), "%s%c%c"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE );
+			color = COLOR_YELLOW;
+			break;
+
+		case SAY_TEAM:
+			G_LogPrintf( "sayteam: %s: %s\n", namesrc, chatText );
+			if ( ent && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+				Com_sprintf( name, sizeof( name ), EC"(%s%c%c"EC") (%s)"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE, location);
+			}
+			else {
+				Com_sprintf( name, sizeof( name ), EC"(%s%c%c"EC")"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE );
+			}
+			color = COLOR_CYAN;
+			break;
+
+		case SAY_TELL:
+			/* NOTE: Logged in Cmd_Tell_f */
+			if ( g_gametype.integer >= GT_TEAM ) {
+				if ( ( target && ent ) &&
+				     OnSameTeam( target, ent ) &&
+				     Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+					Com_sprintf( name, sizeof( name ), EC"[%s%c%c"EC"] (%s)"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE, location );
+				}
+			}
+			else {
+				Com_sprintf( name, sizeof( name ), EC"[%s%c%c"EC"]"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE );
+			}	
+			color = COLOR_YELLOW;
+			break;
+	}
+
+	Q_strncpyz( text, chatText, sizeof( text ) );
+
+	if ( target ) {
+		G_SayTo( ent, target, mode, color, name, text );
+		return;
+	}
+
+	/* echo the text to the console */
+	if ( g_dedicated.integer ) {
+		G_Printf( "%s: %s\n", namesrc, text );
+	}
+
+	/* send it to all the apropriate clients */
+	/* NOTE: G_SayTo decides which ones are appropriate */
+	for ( i = 0; i < level.maxclients; i++ ) {
+		other = &g_entities[i];
+		G_SayTo( ent, other, mode, color, name, text );
+	}
 }
+/* end changed */
 
 
 /*

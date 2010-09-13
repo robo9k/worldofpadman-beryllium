@@ -20,24 +20,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "g_local.h"
 
 
-static void BE_Svcmd_Tell_f( void );
+static void BE_Svcmd_Say_f( void );
 static void BE_Svcmd_Cancelvote_f( void );
 static void BE_Svcmd_ShuffleTeams_f( void );
 static void BE_Svcmd_RenamePlayer_f( void );
+static void BE_Svcmd_DropClient_f( void );
+static void BE_Svcmd_ClientCommand_f( void );
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
 int QDECL SortRanks( const void *a, const void *b );
 
 const svcmd_t be_svcmds[] = {
-	{ "tell",			BE_Svcmd_Tell_f			},
-	{ "cancelvote",		BE_Svcmd_Cancelvote_f	},
-	{ "shuffleteams",	BE_Svcmd_ShuffleTeams_f	},
-	{ "rename",			BE_Svcmd_RenamePlayer_f	}
+	{ "stell",			BE_Svcmd_Say_f				},
+	{ "ssay",			BE_Svcmd_Say_f				}, /* NOTE: Gamecode has a "say" in ConsoleCommand in g_cmds.c, engine in SV_ConSay_f in sv_ccmds.c */
+	{ "ssay_team",		BE_Svcmd_Say_f				},
+	{ "cancelvote",		BE_Svcmd_Cancelvote_f		},
+	{ "shuffleteams",	BE_Svcmd_ShuffleTeams_f		},
+	{ "rename",			BE_Svcmd_RenamePlayer_f		},
+	{ "dropclient",		BE_Svcmd_DropClient_f		},
+	{ "scp",			BE_Svcmd_ClientCommand_f	},
+	{ "smp",			BE_Svcmd_ClientCommand_f	},
+	{ "sprint",			BE_Svcmd_ClientCommand_f	}
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
 
 
 /* FIXME: clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
+
+/* TODO: Call IsANumber before atoi and IsValidClientID ? */
 
 
 qboolean BE_ConCmd( const char *cmd ) {
@@ -45,6 +55,9 @@ qboolean BE_ConCmd( const char *cmd ) {
 
 	for ( i = 0; i < NUM_SVCMDS; i++ ) {
 		if ( Q_stricmp( cmd, be_svcmds[i].cmdName ) == 0 ) {
+			/* TODO: Since some handlers are registered for more than one command, we should pass
+			         the actual command id as an argument so they don't need to Q_stricmp again.
+			*/
 			be_svcmds[i].cmdHandler();
 			return qtrue;
 		}
@@ -73,7 +86,7 @@ static void BE_Svcmd_Tell_f( void ) {
 	clientNum = atoi( clientStr );
 
 	if ( !ValidClientID( clientNum, qtrue ) ) {
-		G_Printf( "Cid out of range\n" );
+		G_Printf( "Not a valid client number.\n" );
 		return;
 	}
 
@@ -163,7 +176,7 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 
 			trap_GetUserinfo( sortedClients[i], ci, sizeof ( ci ) );
 			if ( !Info_Validate( ci ) ) {
-				G_Error( "shuffleteams: Invalid userinfo for bot!\n" );
+				G_Error( "shuffleteams: Invalid userinfo for bot %i!\n", i );
 			}
 
 			Info_SetValueForKey( ci, "team", TeamName( team ) );
@@ -196,7 +209,7 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	clientNum = atoi( clientStr );
 
 	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Cid out of range\n" );
+		G_Printf( "Not a valid client number.\n" );
 		return;
 	}
 
@@ -228,3 +241,162 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	trap_SetUserinfo( clientNum, userinfo );
   	ClientUserinfoChanged( clientNum );
 }
+
+
+/*
+	Basically the same as clientkick, but can provide a reason to the kicked client
+*/
+static void BE_Svcmd_DropClient_f( void ) {
+	char clientStr[3], reason[MAX_STRING_CHARS];
+	int clientNum;
+
+
+	if ( trap_Argc() < 2 ) {
+		G_Printf( "Usage: dropclient <cid> (reason)\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+	clientNum = atoi( clientStr );
+
+	/* TODO: Shall we allow world here? */
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Not a valid client number.\n" );
+		return;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		G_Printf( "Client not connected.\n" );
+		return;
+	}
+
+	Q_strncpyz( reason, "was kicked", sizeof( reason ) );
+	if ( trap_Argc() > 2 ) {
+		Com_sprintf( reason, sizeof( reason ), "was kicked: %s", ConcatArgs( 2 ) );
+	}
+	
+	trap_DropClient( clientNum, reason );	
+}
+
+
+/*
+	Serverside chat functions, which look like normal chat to the client
+*/
+static void BE_Svcmd_Say_f( void ) {
+	char arg[MAX_STRING_CHARS];
+
+
+	trap_Argv( 0, arg, sizeof( arg ) );
+
+	if ( Q_stricmp( "ssay", arg ) == 0 ) {
+		if ( trap_Argc() < 2 ) {
+			G_Printf( "Usage: ssay <text>\n" );
+			return;
+		}
+
+		G_Say( NULL, NULL, SAY_ALL, ConcatArgs( 1 ) );
+	}
+	else if ( Q_stricmp( "ssay_team", arg ) == 0 ) {
+		team_t team;
+		int i;
+
+		if ( trap_Argc() < 3 ) {
+			G_Printf( "Usage: ssay_team <team> <text>\n" );
+			return;
+		}
+
+		trap_Argv( 1, arg, sizeof( arg ) );
+		team = TeamFromString( arg );
+
+		if ( TEAM_NUM_TEAMS == team ) {
+			G_Printf( "Unknown team.\n" );
+			return;
+		}
+
+		/* NOTE: G_Say expects two gentity_t, so we just pick one
+		         which has the desired team.
+		*/
+		for ( i = 0; i < level.maxclients; i++ ) {
+			if ( team == level.clients[i].sess.sessionTeam ) {
+				break;
+			}
+		}
+		if ( i == level.maxclients ) {
+			G_Printf( "No players in desired team.\n" );
+			return;
+		}
+
+		/* NOTE: See NOTE in modified G_say! */
+		G_Say( NULL, ( g_entities + i ), SAY_TEAM, ConcatArgs( 2 ) );
+	}
+	else if ( Q_stricmp( "stell", arg ) == 0 ) {
+		int clientNum;
+		if ( trap_Argc() < 3 ) {
+			G_Printf( "Usage: stell <cid> <text>\n" );
+			return;
+		}
+
+		trap_Argv( 1, arg, sizeof( arg ) );
+		clientNum = atoi( arg );
+		/* NOTE: Don't allow world here. say/print should be used instead */
+		if ( !ValidClientID( clientNum, qfalse ) ) {
+			G_Printf( "Not a valid client number.\n" );
+			return;
+		}
+
+		/* TODO: Check for CON_CONNECTED */
+
+		G_Say( NULL, ( g_entities + clientNum ), SAY_TELL, ConcatArgs( 2 ) );
+	}
+	else {
+		G_Error( "Be_Svmcmd_Say_f: Unknown mode %s!\n", arg );
+	}
+}
+
+
+/*
+	A wrapper for SendClientCommand
+*/
+static void BE_Svcmd_ClientCommand_f( void ) {
+	char arg[MAX_STRING_CHARS];
+	int clientNum;
+	clientCommand_t	cmd;
+
+
+	trap_Argv( 0, arg, sizeof( arg ) );
+	if ( Q_stricmp( "scp", arg ) == 0 ) {
+		cmd = CCMD_CP;
+	}
+	else if ( Q_stricmp( "smp", arg ) == 0 ) {
+		cmd = CCMD_MP;
+	}
+	else if ( Q_stricmp( "sprint", arg ) == 0 ) {
+		cmd = CCMD_PRINT;
+	}
+	else {
+		G_Error( "BE_Svcmd_ClientCommand_f: Unknown mode %s!\n", arg );
+	}
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf( "Usage: %s <cid> <text>\n", arg );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	clientNum = atoi( arg );
+	if ( !ValidClientID( clientNum, qtrue ) ) {
+		G_Printf( "No a valid client number.\n" );
+		return;
+	}
+
+	/* See NOTE in SendClientCommand */
+	if ( CCMD_PRINT == cmd ) {
+		Com_sprintf( arg, sizeof( arg ), "%s\n", ConcatArgs( 2 ) );
+	}
+	else {
+		Q_strncpyz( arg, ConcatArgs( 2 ), sizeof( arg ) );
+	}
+
+	SendClientCommand( clientNum, cmd, arg );
+}
+

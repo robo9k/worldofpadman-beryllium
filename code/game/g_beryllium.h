@@ -37,6 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_PLAYERSKIN_S	"default"
 #define PLAYERMODEL_PATH_S		"models/wop_players/"
 
+#define INVALID_PLAYERNAME_DEFAULT_S	"UnnamedPlayer"
+#define RENAMED_PLAYERNAME_S			"RenamedPlayer"
+
 enum {
 	GUIDCHECK_EMPTY		= 1,
 	GUIDCHECK_FORMAT	= 2
@@ -64,7 +67,8 @@ extern vmCvar_t	be_checkGUIDs;
 extern vmCvar_t	be_maxConnections;
 
 
-extern char	*ConcatArgs( int start ); /* FIXME: Add this to game headers? Declared in g_cmds.c */
+extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
+extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
 
 
 /* "Exported" Functions */

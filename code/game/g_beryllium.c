@@ -139,7 +139,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
 		char newname[MAX_NETNAME];
 		for ( i = 0; i < level.maxclients; i++ ) {
-			Com_sprintf( newname, sizeof( newname ), "RenamedPlayer %i", ( i + 1 ) );
+			Com_sprintf( newname, sizeof( newname ), RENAMED_PLAYERNAME_S" %i", ( i + 1 ) );
 			if ( ClientnumFromString( newname ) == CID_NONE ) {
 				Info_SetValueForKey( userinfo, "name", newname );
 				changed = qtrue;

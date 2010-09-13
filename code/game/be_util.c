@@ -44,20 +44,28 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 	Send a command to one or all clients. Basically a wrapper around trap_SendServerCommand()
 	See CG_ServerCommand() in cg_servercmds.c
 */
-void SendClientCommand( const clientNum_t clientNum, const int cmd, const char *str ) {
+void SendClientCommand( const clientNum_t clientNum, const clientCommand_t cmd, const char *str ) {
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 	}
 	/* TODO: Check wheter clientNum is connected */
 
-	if ( cmd & CCMD_CENTERPRINT ) {
-		trap_SendServerCommand( clientNum, va( "cp \"%s\"", str ) );
-	}
-	if ( cmd & CCMD_MESSAGEPRINT ) {
-		trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
-	}
-	if ( cmd & CCMD_PRINT ) {
-		trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
+	switch ( cmd ) {
+		case CCMD_CENTERPRINT:
+			trap_SendServerCommand( clientNum, va( "cp \"%s\"", str ) );
+			break;
+		case CCMD_MESSAGEPRINT:
+			trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
+			break;
+		case CCMD_PRINT:
+			/* NOTE: World of Padman v1.2 is flawed with con_notifytime > 0
+			         It'll always remove the last character in CG_Printf in cg_main.c
+			*/
+			trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
+			break;
+
+		default:
+			G_Error( "SendClientCommand: cmd %i out of clientCommand_t range!\n", cmd );
 	}
 }
 
@@ -270,5 +278,66 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 
 
 	return qtrue;	
+}
+
+
+/*
+	Returns a team_t for the given string.
+	SetTeam() has some implementation of this..
+*/
+team_t TeamFromString( const char *s ) {
+	team_t team = TEAM_NUM_TEAMS;
+
+	if ( ( Q_stricmp( "spectator", s ) == 0 ) || ( Q_stricmp( "s", s ) == 0 ) )  {
+		team = TEAM_SPECTATOR;
+	}
+	else if (  ( Q_stricmp( "red", s ) == 0 ) || ( Q_stricmp( "r", s ) == 0 ) ) {
+		team = TEAM_RED;
+	}
+	else if ( ( Q_stricmp( "blue", s ) == 0 ) || ( Q_stricmp( "b", s ) == 0 ) ) {
+		team = TEAM_BLUE;
+	}
+	else if ( ( Q_stricmp( "free", s ) == 0 ) || ( Q_stricmp( "f", s ) == 0 ) ) {
+		team = TEAM_FREE;
+	}
+
+	return team;
+}
+
+
+/*
+	Returns whether given char is a number
+*/
+qboolean Q_isnumeric( char c ) {
+	if ( ( c >= '0' ) && ( c <= '9' ) ) {
+		return qtrue;
+	}
+	else {
+		return qfalse;
+	}
+}
+
+
+/*
+	Returns whether given string is a simple number.
+	Does work with 0362, NOT +.5e3-2f
+	FIXME: Does not work for negative numbers
+*/
+qboolean IsANumber( const char *str ) {
+	int i, l;
+
+	if ( !str ) {
+		return qfalse;
+	}
+
+	l = strlen( str );
+
+	for ( i = 0; i < l; i++ ) {
+		if ( !Q_isnumeric( str[i] ) ) {
+			return qfalse;
+		}
+	}
+
+	return qtrue;
 }
 

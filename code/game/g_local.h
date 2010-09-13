@@ -227,6 +227,16 @@ typedef struct {
 #define MAX_NETNAME			36
 #define	MAX_VOTE_COUNT		3
 
+/* added beryllium */
+/* FIXME: This should go into be_vote.h, which is included too late */
+typedef enum {
+	VOTE_NONE,
+	VOTE_YES,
+	VOTE_NO,
+	VOTE_DONTCARE
+} vote_t;
+/* end added */
+
 // client data that stays across multiple respawns, but is cleared
 // on each level change or team change at ClientBegin()
 typedef struct {
@@ -247,6 +257,7 @@ typedef struct {
 	/* added beryllium */
 	/* FIXME: Use unsigned int? */
 	int			voteTime;
+	vote_t		voted;
 
 	int			nameChanges;
 	int			nameChangeTime;

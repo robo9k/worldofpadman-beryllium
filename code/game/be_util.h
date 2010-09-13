@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _BE_UTIL_H
 
 
-enum {
+typedef enum {
 	CCMD_CENTERPRINT	= 1,
 	CCMD_MESSAGEPRINT	= 2,
 	CCMD_PRINT			= 4,
@@ -29,7 +29,7 @@ enum {
 	CCMD_CP				= CCMD_CENTERPRINT,
 	CCMD_MP				= CCMD_MESSAGEPRINT,
 	CCMD_PRT			= CCMD_PRINT
-};
+} clientCommand_t;
 
 /* NOTE: Anything from 0 to MAX_CLIENTS-1 is a valid client id
          (but not neccessarily a valid/connected client).
@@ -49,7 +49,7 @@ enum {
 typedef signed int clientNum_t;
 
 
-void SendClientCommand( const clientNum_t clientNum, const int cmd, const char *str );
+void SendClientCommand( const clientNum_t clientNum, const clientCommand_t cmd, const char *str );
 
 gametype_t StringToGametype( const char *str );
 char* GametypeToString( const gametype_t gt );
@@ -67,6 +67,10 @@ clientNum_t ClientnumFromString( const char *name );
 qboolean fileExists( const char *path );
 
 qboolean validPlayermodel( const char *model, const char *headModel );
+
+team_t TeamFromString( const char *s );
+
+qboolean IsANumber( const char *str );
 
 #endif
 
