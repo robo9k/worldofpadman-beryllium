@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _BE_SVCMDS_H
 
 
+/* TODO: Maybe we should use structs similar to those in be_vote? */
 typedef struct {
     char		*cmdName;
     void		( *cmdHandler )( void );

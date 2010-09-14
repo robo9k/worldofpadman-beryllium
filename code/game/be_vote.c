@@ -21,43 +21,84 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 /* Internal functions */
-static qboolean VoteH_Map( const gentity_t *ent );
-static qboolean VoteH_Kick( const gentity_t *ent );
-static qboolean VoteH_Gametype( const gentity_t *ent );
-static qboolean VoteH_Misc( const gentity_t *ent );
-
-static qboolean IsAllowedVote( const char *str );
+static qboolean VoteH_Map( const gentity_t *ent, voteID_t id );
+static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id );
+static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id );
+static qboolean VoteH_Misc( const gentity_t *ent, voteID_t id );
 
 
-const voteHandler_t voteHandler[] = {
-	{ "nextmap",			VoteH_Map		},
-	{ "map",				VoteH_Map		},
-	{ "map_restart",		VoteH_Map		},
-	{ "kick",				VoteH_Kick		},
-	{ "clientkick",			VoteH_Kick		},
-	{ "timelimit",			VoteH_Misc		},
-	{ "pointlimit",			VoteH_Misc		},
-	{ "g_gametype",			VoteH_Gametype	},
-	{ "setgametype",		VoteH_Gametype	},
-/*	{ "g_dowarmup",			VoteH_Misc		},*/ /* This is just too stupid to be votable */
-	{ "fastgamespeed",		VoteH_Misc		},
-	{ "normalgamespeed",	VoteH_Misc 		},
-	{ "shuffleteams",		VoteH_Misc		}
+const voteEntry_t VOTES[] = {
+	{ { "nextmap",		VOTEID_NEXTMAP		}, VoteH_Map		},
+	{ { "map",			VOTEID_MAP			}, VoteH_Map		},
+	{ { "map_restart",	VOTEID_MAP_RESTART	}, VoteH_Map		},
+	{ { "kick",			VOTEID_KICK			}, VoteH_Kick		},
+	{ { "clientkick",	VOTEID_CLIENTKICK	}, VoteH_Kick		},
+	{ { "pointlimit",	VOTEID_POINTLIMIT	}, VoteH_Misc		},
+	{ { "timelimit",	VOTEID_TIMELIMIT	}, VoteH_Misc		},
+	{ { "setgametype",	VOTEID_SETGAMETYPE	}, VoteH_Gametype	},
+	{ { "g_gametype",	VOTEID_G_GAMETYPE	}, VoteH_Gametype	},
+	{ { "shuffleteams",	VOTEID_SHUFFLETEAMS	}, VoteH_Misc		}
 };
-const unsigned int NUM_VOTEH = ( sizeof( voteHandler ) / sizeof( voteHandler[0] ) );
+const unsigned int NUM_VOTES = ( sizeof( VOTES ) / sizeof( VOTES[0] ) );
 
 
-/* TODO: Add an ID to every vote and return this instead of true/false for isAllowed/getVote.
-         This removes all these for-loops and might even allow easy pluggable external
-         help to be printed.
-*/
+static const char *GetVoteStr( voteID_t id ) {
+	int i;
 
-static qboolean IsAllowedVote( const char *str ) {
-	char needle[MAX_STRING_TOKENS];
 
-	Com_sprintf( needle, sizeof( needle ), "/%s/", str );
+	for ( i = 0; i < NUM_VOTES; i++ ) {
+		if ( id == VOTES[i].ident.id ) {
+			return VOTES[i].ident.str;
+		}
+	}
 	
-	return ( Q_stristr( be_allowedVotes.string, needle ) != NULL );
+	return NULL;
+}
+
+
+static voteID_t GetVoteID( const char *str ) {
+	int i;
+
+
+	for ( i = 0; i < NUM_VOTES; i++ ) {
+		if ( Q_stricmp( str, VOTES[i].ident.str ) == 0 ) {
+			return VOTES[i].ident.id;
+		}
+	}
+	
+	return VOTE_NONE;
+}
+
+
+static voteFunc_t GetVoteHandler( voteID_t id ) {
+	int i;
+
+
+	for ( i = 0; i < NUM_VOTES; i++ ) {
+		if ( id == VOTES[i].ident.id ) {
+			return VOTES[i].func;
+		}
+	}
+	
+	return (voteFunc_t)0;
+}
+
+
+static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
+	if ( ( id <= VOTEID_NONE ) || ( id >= VOTEID_NUM_VOTES ) ) {
+		return qfalse;
+	}
+
+	if ( limit ) {
+		const char *str = GetVoteStr( id );
+		/* FIXME: Due to cvar.string MAX_CVAR_VALUE_STRING limit, we
+		          can't have many votes. Use some sort of config, use bitmask?
+		          At least add a qboolean allowed to VOTES.
+		*/
+		return InList( be_allowedVotes.string, str );
+	}
+	
+	return qtrue;
 }
 
 
@@ -123,20 +164,21 @@ static void PrintValidVotes( const gentity_t *ent ) {
 	int i;
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
 
-	for ( i = 0; i < NUM_VOTEH; i++ ) {
-		if ( !IsAllowedVote( voteHandler[i].str ) ) {
+	for ( i = 0; i < NUM_VOTES; i++ ) {
+		/* FIXME: This is a horribly duplicated and nested, but somewhat clean implementation.. */
+		if ( !IsAllowedVote( VOTES[i].ident.id, ( ent ? qtrue : qfalse  ) ) ) {
 			/* FIXME: Handle case when there are no allowed votes? Set g_allowVote 0? */
 			continue;
 		}			
 
 		/* This is not actually "bold", but needs to differ from the "italic" hint */
 		Q_strcat( validVoteString, sizeof( validVoteString ),
-				  va( S_COLOR_BOLD"%s"S_COLOR_ITALIC", ", voteHandler[i].str ) );
+				  va( S_COLOR_BOLD"%s"S_COLOR_ITALIC", ", VOTES[i].ident.str ) );
 	}
 	/* Hackity, because I'm too lazy to detect last vote properly */
 	Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
 
-	SendClientCommand( ( ent - g_entities ), CCMD_PRT, validVoteString );
+	PrintMessage( ent, validVoteString );
 }
 
 
@@ -148,46 +190,53 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	char	arg2[MAX_STRING_TOKENS];
 	char	*c;
 	int		i;
+	voteID_t	id;
+	voteFunc_t	handler;
 
-	if ( !g_allowVote.integer ) {
+
+	/* Console is always allowed to callvote */
+	if ( ent && !g_allowVote.integer ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Voting not allowed here.\n" );
 		return;
 	}
 
 	if ( level.voteTime ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"A vote is already in progress.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"A vote is already in progress.\n" );
 		return;
 	}
 
-	/*if ( ent->client->pers.voteCount >= MAX_VOTE_COUNT ) {*/
-	if ( ent->client->pers.voteCount >= be_maxVotes.integer ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You have called the maximum number of votes.\n" );
-		return;
-	}
-
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not allowed to call a vote as spectator.\n" );
-		return;
-	}
-
-	if ( level.voteEnd &&
-	     ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
-
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"One can not call a vote so short after the previous one.\n" );
-
-		TimeToString( ( ( be_votePause.integer * 1000 ) - ( level.time - level.voteEnd ) ), arg1, sizeof( arg1 ) );
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
-		return;
-	}
-
-	if ( ent->client->pers.voteTime && 
-	     ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
-
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not call a new vote so short after your previous one.\n" );
-
-		TimeToString( ( ( be_voteRate.integer * 1000 ) - ( level.time - ent->client->pers.voteTime ) ), arg1, sizeof( arg1 ) );
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
-		return;
+	/* Following tests should only be applied when called by a player */
+	if ( ent ) {
+		if ( ent->client->pers.voteCount >= be_maxVotes.integer ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You have called the maximum number of votes.\n" );
+			return;
+		}
+	
+		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not allowed to call a vote as spectator.\n" );
+			return;
+		}
+	
+		/* TODO: This *could* be checked for rcon callvote aswell */
+		if ( level.voteEnd &&
+		     ( level.time - level.voteEnd ) <= ( be_votePause.integer * 1000 ) ) {
+	
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"One can not call a vote so short after the previous one.\n" );
+	
+			TimeToString( ( ( be_votePause.integer * 1000 ) - ( level.time - level.voteEnd ) ), arg1, sizeof( arg1 ) );
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
+			return;
+		}
+	
+		if ( ent->client->pers.voteTime && 
+		     ( level.time - ent->client->pers.voteTime ) <= ( be_voteRate.integer * 1000 ) ) {
+	
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not call a new vote so short after your previous one.\n" );
+	
+			TimeToString( ( ( be_voteRate.integer * 1000 ) - ( level.time - ent->client->pers.voteTime ) ), arg1, sizeof( arg1 ) );
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_ITALIC"You need to wait %s.\n", arg1 ) );
+			return;
+		}
 	}
 
 	/* make sure it is a valid command to vote on */
@@ -201,21 +250,22 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 			case '\n':
 			case '\r':
 			case ';':
-				SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Invalid vote string.\n" );
+				PrintMessage( ent, S_COLOR_NEGATIVE"Invalid vote string.\n" );
 				return;
 			break;
 		}
 	}
 
-	if ( !IsAllowedVote( arg1 ) ) {
-		if ( strlen( arg1 ) > 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote is not allowed or invalid.\n" );
+	id = GetVoteID( arg1 );
+
+	if ( !IsAllowedVote( id, ( ent ? qtrue : qfalse ) ) ) {
+		if ( trap_Argc() > 1 ) {
+			PrintMessage( ent, S_COLOR_NEGATIVE"Vote is not allowed or invalid.\n" );
 		}
 		PrintValidVotes( ent );
 		return;
 	}
 
-	
 	/* if there is still a vote to be executed */
 	if ( level.voteExecuteTime ) {
 		level.voteExecuteTime = 0;
@@ -226,65 +276,71 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	}
 
 
-	for ( i = 0; i < NUM_VOTEH; i++ ) {
-		if ( Q_stricmp( arg1, voteHandler[i].str ) == 0 ) {
-			/* Legitimate vote
-			   Any error handling, message printing etc must be done in VoteH_
-			*/
-			if ( voteHandler[i].cmdHandler( ent ) ) {
+	handler = GetVoteHandler( id );
+	if ( !handler ) {
+		G_Error( "BE_Cmd_CallVote_f: GetVoteHandler() returned 0!\n" );
+		return;
+	}
+	if ( handler( ent, id ) ) {
 
-				/* FIXME: There is a problem clientside when displaying a votestring with double " inside.
-				          voteDisplayString is also S_COLOR_ITALIC
-				*/
-				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
-	                                                 ent->client->pers.netname, level.voteDisplayString ) );
-				/* TODO: Create a seperate BE_Printf( type, level, text ).
-				         Use voteString or voteDisplayString?
-				*/
-				G_LogPrintf( "callvote %i: '%s'\n", ( ent - g_entities ), level.voteString );
-
-
-				/* start the voting, the caller autoamtically votes yes */
-				level.voteTime = level.time;
-				level.voteYes = 1;
-				level.voteNo = 0;
-
-				for ( i = 0 ; i < level.maxclients ; i++ ) {
-					level.clients[i].ps.eFlags &= ~EF_VOTED;
-					level.clients[i].pers.voted = VOTE_NONE;
-				}
-				ent->client->ps.eFlags |= EF_VOTED;
-				ent->client->pers.voteCount++;
-
-				ent->client->pers.voteTime = level.time;
-
-				ent->client->pers.voted = VOTE_YES;
-
-
-				/* A littly hackity to get votes with variable time.
-				   The client has a hardcoded duration of VOTE_TIME, which
-				   is 30s. So we need to send a modified level.voteTime to the client
-				   to get its time being displayed correctly, while still having
-				   the correct voteTime in game.
-				*/
-				/* voteDuration is needed so changing the cvar doesn't fuck up current vote
-				   Cvar is in seconds.
-				*/
-				level.voteDuration = ( be_voteDuration.integer * 1000 );
-				i = ( level.voteTime + ( level.voteDuration - VOTE_TIME ) );	
-
-				trap_SetConfigstring( CS_VOTE_TIME, va( "%i", i ) );
-				trap_SetConfigstring( CS_VOTE_STRING, level.voteDisplayString );	
-				trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
-				trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
-
-				return;
-			}
-			else {
-				/* Error inside vote handler. Error output is done in handler itself, so nothing to do */
-				return;
-			}
+		/* FIXME: There is a problem clientside when displaying a votestring with double " inside.
+		          voteDisplayString is also S_COLOR_ITALIC
+		*/
+		SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
+                                                ( ent ? ent->client->pers.netname : "server" ), level.voteDisplayString ) );
+		/* TODO: Create a seperate BE_Printf( type, level, text ).
+		         Use voteString or voteDisplayString?
+		*/
+		if ( ent ) {
+			G_LogPrintf( "callvote %i: '%s'\n", ( ent - g_entities ), level.voteString );
 		}
+		else {
+			/* FIXME: #define CID_SERVER/use CID_WORLD? */
+			G_LogPrintf( "callvote %i: '%s'\n", -1, level.voteString );
+		}
+
+		/* start vote, the caller autoamtically votes yes */
+		level.voteTime = level.time;
+		level.voteNo = 0;
+
+		for ( i = 0 ; i < level.maxclients ; i++ ) {
+			level.clients[i].ps.eFlags &= ~EF_VOTED;
+			level.clients[i].pers.voted = VOTE_NONE;
+		}
+
+		if ( ent ) {
+			level.voteYes = 1;
+			ent->client->ps.eFlags |= EF_VOTED;
+			ent->client->pers.voted = VOTE_YES;
+			ent->client->pers.voteCount++;
+			ent->client->pers.voteTime = level.time;
+		}
+
+				
+		/* A littly hackity to get votes with variable time.
+		   The client has a hardcoded duration of VOTE_TIME, which
+		   is 30s. So we need to send a modified level.voteTime to the client
+		   to get its time being displayed correctly, while still having
+		   the correct voteTime in game.
+		*/
+		/* voteDuration is needed so changing the cvar doesn't fuck up current vote.
+		   Furthermore, each vote *can* have an individual time that way, maybe one day
+		   Callvote( displayString, string, duration ) instead of this beast.
+		   Cvar is in seconds.
+		*/
+		level.voteDuration = ( be_voteDuration.integer * 1000 );
+		i = ( level.voteTime + ( level.voteDuration - VOTE_TIME ) );
+
+		trap_SetConfigstring( CS_VOTE_TIME, va( "%i", i ) );
+		trap_SetConfigstring( CS_VOTE_STRING, level.voteDisplayString );	
+		trap_SetConfigstring( CS_VOTE_YES, va( "%i", level.voteYes ) );
+		trap_SetConfigstring( CS_VOTE_NO, va( "%i", level.voteNo ) );
+
+		return;
+	}
+	else {
+		/* Error inside vote handler. Error output is done in handler itself, so nothing to do */
+		return;
 	}
 
 }
@@ -355,58 +411,59 @@ void BE_CheckVote( void ) {
 /*
 	Handler for g_gametype and setgametype vote
 */
-static qboolean VoteH_Gametype( const gentity_t *ent ) {
-	char	arg1[MAX_STRING_TOKENS];
+static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 
 
-	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
 
 	/* Special: A variant of g_gametype vote */
-	if ( Q_stricmp( arg1, "setgametype" ) == 0 ) {
+	if ( VOTEID_SETGAMETYPE == id ) {
 		gametype_t gt;
 
 		if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a gametype keyword.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a gametype keyword.\n" );
 			return qfalse;
 		}
 
 		gt = StringToGametype( ConcatArgs( 2 ) );
 
 		if ( GT_MAX_GAME_TYPE == gt ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Couldn't find a gametype with the keywords.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"Couldn't find a gametype with the keywords.\n" );
 			return qfalse;
 		}
 
 		/* Gametype found, now "convert" into g_gametype vote */
-		Q_strncpyz( arg1, "g_gametype", sizeof( arg1 ) );
+		id = VOTEID_G_GAMETYPE;
 		Com_sprintf( arg2, sizeof( arg2 ), "%i", gt );
 	}
 
+	if ( VOTEID_G_GAMETYPE != id ) {
+		G_Error( "VoteH_Gametype: Invalid id %i!\n", id );
+	}
 	
 	/* Now we have a g_gametype vote */
 	if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a gametype number.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a gametype number.\n" );
 			return qfalse;
 	}
 
 	if ( !IsANumber( arg2 ) ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 			return qfalse;		
 	}
 
 	i = atoi( arg2 );
 
 	if( ( GT_SINGLE_PLAYER == i ) || ( i < GT_FFA ) || ( i >= GT_MAX_GAME_TYPE ) ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Invalid gametype.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"Invalid gametype.\n" );
 		return qfalse;
 	}
 
 	if ( g_gametype.integer == i ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"This is the current gametype.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"This is the current gametype.\n" );
 		return qfalse;
 	}
 
@@ -421,74 +478,76 @@ static qboolean VoteH_Gametype( const gentity_t *ent ) {
 /*
 	Handler for clientkick and kick vote
 */
-static qboolean VoteH_Kick( const gentity_t *ent ) {
-	char	arg1[MAX_STRING_TOKENS];
+static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 
 
-	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
 
 	/* Special: A variant of clientkick vote */
-	if ( Q_stricmp( arg1, "kick" ) == 0 ) {
+	if ( VOTEID_KICK == id ) {
 		int id;
 
 		if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a client name.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a client name.\n" );
 			return qfalse;
 		}
 
 		id = ClientnumFromString( arg2 );
 
 		if ( CID_NONE == id ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"No player found with that name. Check for typos or use 'clientkick' instead.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"No player found with that name. Check for typos or use 'clientkick' instead.\n" );
 			return qfalse;
 		}
 		else if ( CID_MULTIPLE == id ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Multiple players found with that name. Use 'clientkick' instead.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"Multiple players found with that name. Use 'clientkick' instead.\n" );
 			return qfalse;
 		}
 
 		if ( level.clients[id].pers.localClient ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
 			return qfalse;
 		}
 
 		/* We've got one, convert into clientkick vote
 		   TODO: Display old and current name in votestring?
 		*/
-		Q_strncpyz( arg1, "clientkick", sizeof( arg1 ) );
+		id = VOTEID_CLIENTKICK;
 		Com_sprintf( arg2, sizeof( arg2 ), "%i", id );
+	}
+
+	if ( VOTEID_CLIENTKICK != id ) {
+		G_Error( "VoteH_Kick: Invalid id %i!\n", id );
 	}
 
 
 	/* Now we have a clientkick vote */
 	if ( strlen( arg2 ) == 0 ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a client number.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a client number.\n" );
 		return qfalse;
 	}
 
 	if ( !IsANumber( arg2 ) ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 			return qfalse;		
 	}
 
 	i = atoi( arg2 );
 
 	if ( !ValidClientID( i, qfalse ) ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not a valid client number.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"Not a valid client number.\n" );
 		return qfalse;
 	}
 
 	if ( CON_DISCONNECTED == level.clients[i].pers.connected ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Client not connected.\n" );
+		PrintMessage( ent, S_COLOR_NEGATIVE"Client not connected.\n" );
 		return qfalse;
 	}
 
-	if ( ( ent - g_entities ) == i ) {
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not kick yourself.\n" );
+	if ( ent && ( ( ent - g_entities ) == i ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRINT, S_COLOR_NEGATIVE"You can not kick yourself.\n" );
 		return qfalse;
 	}
 
@@ -517,32 +576,30 @@ static qboolean VoteH_Kick( const gentity_t *ent ) {
 /*
 	Handler for map, nextmap and map_restart vote.
 */
-static qboolean VoteH_Map( const gentity_t *ent ) {
-	char	arg1[MAX_STRING_TOKENS];
+static qboolean VoteH_Map( const gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 
 
-	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
 
-	if ( Q_stricmp( arg1, "map" ) == 0 ) {
+	if ( VOTEID_MAP == id ) {
 		char s[128];
 
 		if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a map name.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a map name.\n" );
 			return qfalse;
 		}
 
 		/* Does map exist at all? */
 		if ( !fileExists( va( "maps/%s.bsp", arg2 ) ) ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Map not found.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"Map not found.\n" );
 			return qfalse;
 		}
 
 		trap_Cvar_VariableStringBuffer( "mapname", s, sizeof( s ) );
 		if ( Q_stricmp( arg2, s ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"This is the current map. Use 'map_restart' if you want to restart.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"This is the current map. Use 'map_restart' if you want to restart.\n" );
 			return qfalse;
 		}		
 		
@@ -558,13 +615,13 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 
 		return qtrue;
 	}
-	else if ( Q_stricmp( arg1, "nextmap" ) == 0 ) {
+	else if ( VOTEID_NEXTMAP == id ) {
 		char s[128];
 
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
 		if ( !*s ) {
 			/* This is unlikely to happen, since nextmap will usually be "map_restart 0" */
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"nextmap is not set on the server.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"nextmap is not set on the server.\n" );
 			return qfalse;
 		}
 
@@ -574,67 +631,67 @@ static qboolean VoteH_Map( const gentity_t *ent ) {
 
 		return qtrue;
 	}
-	else if ( Q_stricmp( arg1, "map_restart" ) == 0 ) {
+	else if ( VOTEID_MAP_RESTART == id ) {
 		Q_strncpyz( level.voteString, "map_restart", sizeof( level.voteDisplayString ) );
 		Q_strncpyz( level.voteDisplayString,
 		            S_COLOR_ITALIC"Restart map"S_COLOR_DEFAULT, sizeof( level.voteDisplayString ) );
 
 		return qtrue;
 	}
-
-	/* Uh? */
-	return qfalse;
+	else {
+		G_Error( "VoteH_Map: Unknown id %i!\n", id );
+		return qfalse;
+	}
 }
 
 
 /*
 	Handler for any other vote
 */
-static qboolean VoteH_Misc( const gentity_t *ent ) {
-	char	arg1[MAX_STRING_TOKENS];
+static qboolean VoteH_Misc( const gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
+	char	variable[64]; /* Should be enough to hold common cvar/vote names */
 
-
-	trap_Argv( 1, arg1, sizeof( arg1 ) );
+	Q_strncpyz( variable, GetVoteStr( id ), sizeof( variable ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
 
 
-	if ( ( Q_stricmp( arg1, "pointlimit" ) == 0 ) ||
-	     ( Q_stricmp( arg1, "timelimit" ) == 0 ) ) {
+	if ( ( VOTEID_POINTLIMIT == id ) ||
+	     ( VOTEID_TIMELIMIT == id ) ) {
 
 		if ( strlen( arg2 ) == 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_NEGATIVE"You must supply a %s.\n", arg1 ) );
+			PrintMessage( ent, va( S_COLOR_NEGATIVE"You must supply a %s.\n", variable ) );
 			return qfalse;
 		}
 
 		if ( !IsANumber( arg2 ) ) {
-				SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a number.\n" );
+				PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 				return qfalse;		
 		}
 
 		i = atoi( arg2 );
 
 		if ( i < 0 ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_NEGATIVE"Invalid %s.\n", arg1 ) );
+			PrintMessage( ent, va( S_COLOR_NEGATIVE"Invalid %s.\n", variable ) );
 			return qfalse;
 		}
 
-		if ( trap_Cvar_VariableIntegerValue( arg1 ) == i ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, va( S_COLOR_NEGATIVE"This is the current %s.\n", arg1 ) );
+		if ( trap_Cvar_VariableIntegerValue( variable ) == i ) {
+			PrintMessage( ent, va( S_COLOR_NEGATIVE"This is the current %s.\n", variable ) );
 			return qfalse;
 		}
 
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", arg1, i );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", variable, i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 		             S_COLOR_ITALIC"%s"S_COLOR_DEFAULT, level.voteString );
 
 		return qtrue;
 	}
 	/* NOTE: New server command implemented in beryllium's gamecode */
-	else if ( Q_stricmp( arg1, "shuffleteams" ) == 0 ) {
+	else if ( VOTEID_SHUFFLETEAMS == id ) {
 		if ( g_gametype.integer < GT_TEAM ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not in a team gametype.\n" );
+			PrintMessage( ent, S_COLOR_NEGATIVE"Not in a team gametype.\n" );
 			return qfalse;
 		}
 
@@ -645,24 +702,8 @@ static qboolean VoteH_Misc( const gentity_t *ent ) {
 		return qtrue;
 	}
 	else {
-		/* FIXME: This is ugly. I'd prefer some sort of array. Also re-enable g_doWarmup? */
-		char *cmd;
-		if ( Q_stricmp( arg1, "fastgamespeed" ) == 0 ) {
-			cmd = "set g_speed 320";
-		}
-		else if ( Q_stricmp( arg1, "normalgamespeed" ) == 0 ) {
-			cmd = ( "set g_speed "DEFAULT_GSPEED_STR );
-		}
-		else {
-			G_Error( "VoteH_Misc: Unhandled vote %s\n", arg1 );
-		}
-
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s", cmd );
-		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
-		             S_COLOR_ITALIC"%s"S_COLOR_DEFAULT, arg1 );
-
-		return qtrue;
+		G_Error( "VoteH_Misc: Unknown id %i\n", id );
+		return qfalse;
 	}
-
 }
 

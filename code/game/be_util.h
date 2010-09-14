@@ -49,18 +49,18 @@ enum {
 typedef signed int clientNum_t;
 
 
-void SendClientCommand( const clientNum_t clientNum, const clientCommand_t cmd, const char *str );
+void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str );
 
 gametype_t StringToGametype( const char *str );
-char* GametypeToString( const gametype_t gt );
+char* GametypeToString( gametype_t gt );
 
 
-char* TimeToString( const int time, char *str, const size_t size );
+char* TimeToString( int time, char *str, size_t size );
 
 
 const char	*Q_stristr( const char *s, const char *find);
 
-qboolean ValidClientID( const int clientNum, const qboolean allowWorld );
+qboolean ValidClientID( int clientNum, const qboolean allowWorld );
 
 clientNum_t ClientnumFromString( const char *name );
 
@@ -71,6 +71,10 @@ qboolean validPlayermodel( const char *model, const char *headModel );
 team_t TeamFromString( const char *s );
 
 qboolean IsANumber( const char *str );
+
+void PrintMessage( const gentity_t *ent, const char *msg );
+
+qboolean InList( const char *needle, const char *haystack );
 
 #endif
 

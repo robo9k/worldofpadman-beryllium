@@ -22,10 +22,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define VOTE_EXECUTEDELAY 3000
 
+
+typedef enum {
+	VOTEID_NONE,
+	VOTEID_NEXTMAP,
+	VOTEID_MAP,
+	VOTEID_MAP_RESTART,
+	VOTEID_KICK,
+	VOTEID_CLIENTKICK,
+	VOTEID_TIMELIMIT,
+	VOTEID_POINTLIMIT,
+	VOTEID_G_GAMETYPE,
+	VOTEID_SETGAMETYPE,
+	VOTEID_SHUFFLETEAMS,
+	VOTEID_NUM_VOTES
+} voteID_t;
+
+typedef qboolean(*voteFunc_t)( const gentity_t *ent, voteID_t id );
+
+/* NOTE: Should be unique */
 typedef struct {
-	char		*str;
-	qboolean	( *cmdHandler)( const gentity_t *ent );
-} voteHandler_t;
+	char 		*str;
+	voteID_t	id;
+} voteIdentifier_t;
+
+typedef struct {
+	voteIdentifier_t	ident;
+	voteFunc_t			func;
+} voteEntry_t;
 
 
 void BE_Cmd_Vote_f( const gentity_t *ent );

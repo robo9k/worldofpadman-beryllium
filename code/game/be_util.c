@@ -44,7 +44,7 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 	Send a command to one or all clients. Basically a wrapper around trap_SendServerCommand()
 	See CG_ServerCommand() in cg_servercmds.c
 */
-void SendClientCommand( const clientNum_t clientNum, const clientCommand_t cmd, const char *str ) {
+void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 	}
@@ -93,7 +93,7 @@ gametype_t StringToGametype( const char *str ) {
 	Converts a gametype into a string.
 	Might return NULL if no match
 */
-char* GametypeToString( const gametype_t gt ) {
+char* GametypeToString( gametype_t gt ) {
 	int i;
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
@@ -110,7 +110,7 @@ char* GametypeToString( const gametype_t gt ) {
 	Converts a time into a short string.
 	Assumes time is given in ms
 */
-char* TimeToString( const int time, char *str, const size_t size ) {
+char* TimeToString( int time, char *str, size_t size ) {
 	int min, tens, sec;
 
 	if ( ( str == NULL ) || ( size <= 0 ) ) {
@@ -169,7 +169,7 @@ const char *Q_stristr( const char *s, const char *find)
 	range from 0 to MAX_CLIENTS-1.
 	Does not do any other sanity checks!
 */
-qboolean ValidClientID( const int clientNum, const qboolean allowWorld ) {
+qboolean ValidClientID( int clientNum, qboolean allowWorld ) {
 	if ( ( clientNum < 0 ) || ( clientNum >= MAX_CLIENTS ) ) {
 		if ( allowWorld && ( CID_WORLD == clientNum ) ) {
 			return qtrue;
@@ -339,5 +339,45 @@ qboolean IsANumber( const char *str ) {
 	}
 
 	return qtrue;
+}
+
+
+/*
+	If ent is given, will use CCMD_PRINT, otherwise G_Printf.
+	This is usefull for functions that can be used by both clients
+	and rcon.
+
+	TODO: Use fmt and .. once va functions are buffer safe?
+*/
+void PrintMessage( const gentity_t *ent, const char *msg ) {
+	if ( !msg ) {
+		return;
+	}
+
+	if ( NULL == ent ) {
+		/* TODO: Strip colors with Q_CleanStr (violate const / buffer)? */
+		G_Printf( msg );
+	}
+	else {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRINT, msg );
+	}
+}
+
+
+/*
+	Returns whether given string is in "/string/string2/" list
+	Used in be_allowedVotes cvar
+*/
+qboolean InList( const char *haystack, const char *needle ) {
+	char pattern[MAX_STRING_TOKENS];
+
+	/* Should no needle but haystack return qtrue? :D */
+	if ( !needle || !haystack ) {
+		return qfalse;
+	}
+
+	Com_sprintf( pattern, sizeof( pattern ), "/%s/", needle );
+
+	return ( Q_stristr( haystack, pattern ) != NULL );
 }
 

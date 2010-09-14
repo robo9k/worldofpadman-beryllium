@@ -738,8 +738,15 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 		invalid = qtrue;
 	}
 
-	/* Numerical names as in client numbers */
+	/* NOTE: Problematic names below don't harm votes in beryllium anymore,
+	         yet none should use them as names.
+	*/
+	/* "kick 42". Numerical names as in client numbers */
 	if ( IsANumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
+		invalid = qtrue;
+	}
+	/* "kick all", "kick allbots" */
+	if ( Q_stricmp( "all", cleanName ) == 0 ) {
 		invalid = qtrue;
 	}
 

@@ -26,6 +26,7 @@ static void BE_Svcmd_ShuffleTeams_f( void );
 static void BE_Svcmd_RenamePlayer_f( void );
 static void BE_Svcmd_DropClient_f( void );
 static void BE_Svcmd_ClientCommand_f( void );
+static void BE_Svcmd_Callvote_f( void );
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
 int QDECL SortRanks( const void *a, const void *b );
@@ -40,7 +41,8 @@ const svcmd_t be_svcmds[] = {
 	{ "dropclient",		BE_Svcmd_DropClient_f		},
 	{ "scp",			BE_Svcmd_ClientCommand_f	},
 	{ "smp",			BE_Svcmd_ClientCommand_f	},
-	{ "sprint",			BE_Svcmd_ClientCommand_f	}
+	{ "sprint",			BE_Svcmd_ClientCommand_f	},
+	{ "scallvote",		BE_Svcmd_Callvote_f			}
 };
 const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
 
@@ -398,5 +400,14 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 	}
 
 	SendClientCommand( clientNum, cmd, arg );
+}
+
+
+/*
+	A wrapper around BE_Cmd_CallVote_f, which had to be modified to
+	work without ent
+*/
+static void BE_Svcmd_Callvote_f( void ) {
+	BE_Cmd_CallVote_f( NULL );
 }
 

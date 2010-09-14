@@ -26,13 +26,12 @@ Implement a ccmd /players, which lists players with their cid, name, (time, scor
 
 Is a command to pause the entire game usefull? Certainly quite some dirty code all around involved
 
-Rename player command?
-
 There are quite a bunch of commands which are fun, but not actually usefull: slap, fling, disorient, freeze, kill, swapteams, spec999
 
 Save scores on teamchange between real teams?
 
 Add new votes, like shuffleteams.
+Maybe also read custom votes from a file. Allow scallvote to have voteString, voteDisplayString, voteDuration as parameters?
 
 Do more sanity checks and calls to G_Error plus some debug output.
 
@@ -49,16 +48,13 @@ Also check say/say_team for our (lateron) added custom client commands?
 Create sort of a help system, which at least explains votes and newly added commands.
 
 Take care of special vote situations:
-- Only two players connected; one calls vote and joins spectators/leaves
 - Most players are connecting, one fully connected calls a vote
 
 Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
 
 splitChat
 
-Implement a guid filter like sv_banFile. Also disallow empty/malformed guids
+Implement a guid filter like sv_banFile
 
 Properly sync the versionstring in README with the actual current version (in code/game/Makefile plus svn rev).
-
-Implement scallvote. Basically check for ent everywhere
 
