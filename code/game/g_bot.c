@@ -306,9 +306,15 @@ int G_RemoveRandomBot( int team ) {
 		if ( team >= 0 && cl->sess.sessionTeam != team ) {
 			continue;
 		}
+		/* changed beryllium */
+		/*
 		strcpy(netname, cl->pers.netname);
 		Q_CleanStr(netname);
 		trap_SendConsoleCommand( EXEC_INSERT, va("kick %s\n", netname) );
+		*/
+		/* Original code has problems with spaces in name. Clientkick is better anyways */
+		trap_SendConsoleCommand( EXEC_INSERT, va( "dropclient %i \"enough humans\"", i ) );
+		/* end changed */
 		return qtrue;
 	}
 	return qfalse;

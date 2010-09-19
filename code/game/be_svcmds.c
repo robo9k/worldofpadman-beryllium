@@ -70,40 +70,6 @@ qboolean BE_ConCmd( const char *cmd ) {
 
 
 /*
-	Print text to one or all clients. Text is displayed in
-	the client's log as it is passed to the function
-	(except for some weird double quotes with " )
-*/
-static void BE_Svcmd_Tell_f( void ) {
-	char clientStr[3];
-	int clientNum;
-
-	if ( trap_Argc() < 3 ) {
-		/* TODO: Move counting of arguments and help into BE_ConCmd() ? */
-		G_Printf( "Usage: tell <cid> <text>\n" );
-		return;
-	}
-
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-	clientNum = atoi( clientStr );
-
-	if ( !ValidClientID( clientNum, qtrue ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	/* Client needs to be fully connected to see message */
-	if ( ( clientNum != CID_ALL ) &&
-	     level.clients[clientNum].pers.connected != CON_CONNECTED ) {
-			G_Printf( "Client not connected.\n" );
-			return;
-	}
-
-	trap_SendServerCommand( clientNum, va( "print \"%s\n\"", ConcatArgs( 2 ) ) );
-}
-
-
-/*
 	Cancel a currently running vote, i.e. emulate everyone
 	voted no. This doesn't work with teamvotes, as they are not
 	actually used by the game.
@@ -239,6 +205,8 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	}
 	level.clients[clientNum].pers.nameChangeTime = 0;
 
+	/* TODO: Also log this? */
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 	Info_SetValueForKey( userinfo, "name", newname );
 	trap_SetUserinfo( clientNum, userinfo );
@@ -277,6 +245,8 @@ static void BE_Svcmd_DropClient_f( void ) {
 	if ( trap_Argc() > 2 ) {
 		Com_sprintf( reason, sizeof( reason ), "was kicked: %s", ConcatArgs( 2 ) );
 	}
+
+	/* TODO: Also log this? */
 	
 	trap_DropClient( clientNum, reason );	
 }
@@ -401,6 +371,7 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 	else {
 		Q_strncpyz( arg, ConcatArgs( 2 ), sizeof( arg ) );
 	}
+
 
 	SendClientCommand( clientNum, cmd, arg );
 }
