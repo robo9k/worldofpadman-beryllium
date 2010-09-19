@@ -173,12 +173,13 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 		cl->sess.sessionTeam = team;
 
 		/* Bots' team is quite different */
-		if ( (g_entities + sortedClients[i])->r.svFlags & SVF_BOT ) {
+		if ( ( g_entities + sortedClients[i] )->r.svFlags & SVF_BOT ) {
 			char ci[MAX_INFO_STRING];
 
 			trap_GetUserinfo( sortedClients[i], ci, sizeof ( ci ) );
 			if ( !Info_Validate( ci ) ) {
 				G_Error( "shuffleteams: Invalid userinfo for bot %i!\n", i );
+				return;
 			}
 
 			Info_SetValueForKey( ci, "team", TeamName( team ) );
@@ -352,6 +353,7 @@ static void BE_Svcmd_Say_f( void ) {
 	}
 	else {
 		G_Error( "Be_Svmcmd_Say_f: Unknown mode %s!\n", arg );
+		return;
 	}
 }
 
@@ -377,6 +379,7 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 	}
 	else {
 		G_Error( "BE_Svcmd_ClientCommand_f: Unknown mode %s!\n", arg );
+		return;
 	}
 
 	if ( trap_Argc() < 3 ) {

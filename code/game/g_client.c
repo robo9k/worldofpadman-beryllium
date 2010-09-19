@@ -734,7 +734,7 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	}
 
 	/* Used in serverside chat messages */
-	if ( Q_stricmp( "server", cleanName ) == 0 ) {
+	if ( Q_stricmp( CHAT_SERVER_NAME, cleanName ) == 0 ) {
 		invalid = qtrue;
 	}
 

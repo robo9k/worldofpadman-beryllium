@@ -442,6 +442,7 @@ static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id ) {
 
 	if ( VOTEID_G_GAMETYPE != id ) {
 		G_Error( "VoteH_Gametype: Invalid id %i!\n", id );
+		return qfalse;
 	}
 	
 	/* Now we have a g_gametype vote */
@@ -520,6 +521,7 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 
 	if ( VOTEID_CLIENTKICK != id ) {
 		G_Error( "VoteH_Kick: Invalid id %i!\n", id );
+		return qfalse;
 	}
 
 

@@ -968,8 +968,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 	/* Beryllium's calls don't have a valid entity */
 	if ( !ent ) {
-		/* TODO: Make this a forbidden name for clients */
-		namesrc = "server";
+		namesrc = CHAT_SERVER_NAME;
 	}
 	else {
 		namesrc = ent->client->pers.netname;

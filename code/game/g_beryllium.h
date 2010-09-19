@@ -40,6 +40,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INVALID_PLAYERNAME_DEFAULT_S	"UnnamedPlayer"
 #define RENAMED_PLAYERNAME_S			"RenamedPlayer"
 
+#define CHAT_SERVER_NAME	"server"
+
 enum {
 	GUIDCHECK_EMPTY		= 1,
 	GUIDCHECK_FORMAT	= 2

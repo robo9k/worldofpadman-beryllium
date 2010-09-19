@@ -10,7 +10,7 @@
 
    The usual distribution includes a file called qagame.qvm. You need to
    copy this file into a vm/ folder below your mod's folder.
-   The full path depends on your fs_homepath and fs_game ( and fs_basepath )
+   The full path depends on your fs_homepath (and fs_basepath) and fs_game (and fs_basegame )
    setting.
    Since this is a serverside mod, you do not need to serve beryllium's
    files via autodownload.
@@ -36,19 +36,19 @@
 
    be_votePass       - How many clients need to vote yes for a vote to pass.
                        This is a minimum, i.e. the actual number of clients
-                       has to be above. This is a fraction from 0.0 to 1.0.
+                       has to be above. This is a fraction from 0.0 to 1.0
 
    be_respawnProtect - After respawning, clients don't take and handle damage.
                        Time is in seconds. There is no notification whether
                        you or a target are (still) protected.
 
    be_maxVotes       - Maximum number of votes per client. This gets reset
-                       at map- or team-change.
+                       at map change or restart.
 
    be_switchTeamTime - Minimum pause between team changes for players in seconds.
 
-   be_maxNameChanges - Number of times a client can rename. Does not apply to
-                       automatic during connect. Will stick to the last name
+   be_maxNameChanges - Number of times a client can rename. Does not apply while
+                       players are connecting. Will stick to the last name
                        before hitting limit. Set to -1 for unlimited (default
                        behaviour) renames.
 
@@ -89,7 +89,7 @@
          Serverside say chat.
 
       ssay_team team text
-         Serverside team chat. Use "red"/"r" etc. as teamname.
+         Serverside team chat. Use red/r etc. as teamname.
 
       scp cid text
          Centerprint text to a client.
@@ -104,7 +104,7 @@
          Text will be printed to the upper left chat area.
 
       
-      You can use -1 for scp, smp and sprint to send to every client.
+      You can use -1 as client id for scp, smp and sprint to send to every client.
       Messages sent with stell, ssay and ssay_team will use "server" as playername.
 
 
@@ -120,14 +120,14 @@
          In team gametypes try to even teams by splitting players
          evenly across teams.
          This does not restart the game or reset scores, except
-         on players (since they are currently not saved on team
-         changes).
+         on players (since their scores are currently not saved on
+         team changes).
 
       rename cid newname
          Rename given client to newname.
          be_maxNameChanges setting does not apply to this,
          other limits like invalid characters in name
-         or multiple names do still apply!
+         or multiple names do still apply (afterwards)!
          This does not add to the client's rename counter.
 
       scallvote vote
@@ -138,12 +138,14 @@
    .: Other changes :.
 
    Beryllium automatically renames players, preventing multiple players having the same name.
+   Several names are now forbidden, e.g. "server".
    Players should no longer be able to use non-existant skins.
+   Quite a few sanity checks are being run against votes.
 
 
    .: Versions :.
 
-   This README applies to the current version of Beryllium, which is 0.05a-r52.
+   This README applies to the current version of Beryllium, which is 0.05a-r53.
    The code bases upon World of Padman's v1.2 gamecode and is thus only compatible
    with this version of the game. Due to its generic nature, it could also be applied
    to other versions or even other ioquake3 based games though.

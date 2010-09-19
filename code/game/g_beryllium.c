@@ -135,29 +135,34 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	          after the original ClientUserinfoChanged() returns. So we need to set and reset
 	          to the new name in userinfo.
 	*/
-	Q_strncpyz( ent->client->pers.netname, name, sizeof( ent->client->pers.netname ) );
-	if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
-		char newname[MAX_NETNAME];
-		for ( i = 0; i < level.maxclients; i++ ) {
-			Com_sprintf( newname, sizeof( newname ), RENAMED_PLAYERNAME_S" %i", ( i + 1 ) );
-			if ( ClientnumFromString( newname ) == CID_NONE ) {
-				Info_SetValueForKey( userinfo, "name", newname );
-				changed = qtrue;
-				Q_strncpyz( ent->client->pers.netname, newname, sizeof( ent->client->pers.netname ) );
-				/* NOTE: This happens a lot while client connects, only print when intentionally renaming in-game.
-				         Also note that original ClientUserinfoChanged() will not detect this renaming, so we "need" to print some info anyways.
-				*/
-				if ( CON_CONNECTED == ent->client->pers.connected ) {
-					SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n", oldname, newname ) );
+	/* Hectic dislikes renamed bots.. */
+	if ( !( ent->r.svFlags & SVF_BOT ) ) {
+		Q_strncpyz( ent->client->pers.netname, name, sizeof( ent->client->pers.netname ) );
+		if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
+			char newname[MAX_NETNAME];
+			for ( i = 0; i < level.maxclients; i++ ) {
+				Com_sprintf( newname, sizeof( newname ), RENAMED_PLAYERNAME_S" %i", ( i + 1 ) );
+				if ( ClientnumFromString( newname ) == CID_NONE ) {
+					Info_SetValueForKey( userinfo, "name", newname );
+					changed = qtrue;
+					Q_strncpyz( ent->client->pers.netname, newname, sizeof( ent->client->pers.netname ) );
+					/* NOTE: This happens a lot while client connects, only print when intentionally renaming in-game.
+					         Also note that original ClientUserinfoChanged() will not detect this renaming, so we "need" to print some info anyways.
+					*/
+					if ( CON_CONNECTED == ent->client->pers.connected ) {
+						SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n", oldname, newname ) );
+					}
+					break;
 				}
-				break;
 			}
 		}
+		else {
+			/* Revert hax above to comply with original ClientUserinfoChanged() rename behavior */
+			Q_strncpyz( ent->client->pers.netname, oldname, sizeof( ent->client->pers.netname ) );
+		}
+
 	}
-	else {
-		/* Revert hax above to comply with original ClientUserinfoChanged() rename behavior */
-		Q_strncpyz( ent->client->pers.netname, oldname, sizeof( ent->client->pers.netname ) );
-	}
+
 
 	/* TODO: Check whether client wants to change ip or guid, then drop him? */
 

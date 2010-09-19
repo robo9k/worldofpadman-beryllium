@@ -47,6 +47,7 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
+		return;
 	}
 	/* TODO: Check wheter clientNum is connected */
 
@@ -66,6 +67,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 
 		default:
 			G_Error( "SendClientCommand: cmd %i out of clientCommand_t range!\n", cmd );
+			return;
 	}
 }
 
