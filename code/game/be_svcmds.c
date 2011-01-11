@@ -55,6 +55,10 @@ const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) )
 qboolean BE_ConCmd( const char *cmd ) {
 	unsigned int i;
 
+
+	assert( cmd );
+
+
 	for ( i = 0; i < NUM_SVCMDS; i++ ) {
 		if ( Q_stricmp( cmd, be_svcmds[i].cmdName ) == 0 ) {
 			/* TODO: Since some handlers are registered for more than one command, we should pass
@@ -99,6 +103,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
           Maybe also use kills-deaths/time instead of simply current points to get best
 	      players.
 */
+/* TODO: assert() any pointer dereferencing */
 static void BE_Svcmd_ShuffleTeams_f( void ) {
 	int i, p, team;
 	int count = 0;
@@ -304,6 +309,7 @@ static void BE_Svcmd_Say_f( void ) {
 	}
 	else if ( Q_stricmp( "stell", arg ) == 0 ) {
 		int clientNum;
+
 		if ( trap_Argc() < 3 ) {
 			G_Printf( "Usage: stell <cid> <text>\n" );
 			return;

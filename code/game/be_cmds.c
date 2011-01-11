@@ -38,6 +38,12 @@ const unsigned int NUM_CCMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
 qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
+
+	assert( ent );
+	assert( ent->client );
+	assert( cmd );
+
+
 	for ( i = 0; i < NUM_CCMDS; i++ ) {
 		if ( Q_stricmp( cmd, be_ccmds[i].cmdName ) == 0 ) {
 			/* do tests here to reduce the amount of repeated code */

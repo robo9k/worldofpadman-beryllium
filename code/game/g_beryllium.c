@@ -52,6 +52,12 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
 
+	assert( targ );
+	assert( attacker );
+	assert( mod );
+	assert( damage );
+
+
 	/* We are only interested in clients' damage */
 	if ( !( targ->client ) || !( attacker->client ) ) {
 		return;
@@ -87,6 +93,10 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	char name[MAX_NETNAME], oldname[MAX_NETNAME];
 
 
+	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+	assert( ent->client );
+
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 
@@ -96,7 +106,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	         It seems like team_model and team_headmodel are transmitted as userinfo, but the server never uses
 	         them for player configstrings.
 	*/
-	if ( !validPlayermodel( Info_ValueForKey (userinfo, "model"), Info_ValueForKey (userinfo, "headmodel") ) ) {
+	if ( !validPlayermodel( Info_ValueForKey( userinfo, "model" ), Info_ValueForKey( userinfo, "headmodel" ) ) ) {
 		Info_SetValueForKey( userinfo, "model", DEFAULT_PLAYERMODEL_S );
 		Info_SetValueForKey( userinfo, "headmodel", DEFAULT_PLAYERMODEL_S );
 		changed = qtrue;
@@ -104,7 +114,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 
 
 	/* Used twice below */
-	ClientCleanName( Info_ValueForKey (userinfo, "name"), name, sizeof( name ) );
+	ClientCleanName( Info_ValueForKey( userinfo, "name" ), name, sizeof( name ) );
 	Q_strncpyz( oldname, ent->client->pers.netname, sizeof( oldname ) );
 
 	/* Limit renaming */
@@ -185,6 +195,9 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	char userinfo[MAX_INFO_STRING];
 	char *value;
 	char ip[16], guid[33];
+
+
+	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );

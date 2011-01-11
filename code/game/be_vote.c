@@ -60,6 +60,9 @@ static voteID_t GetVoteID( const char *str ) {
 	int i;
 
 
+	assert( str );
+
+
 	for ( i = 0; i < NUM_VOTES; i++ ) {
 		if ( Q_stricmp( str, VOTES[i].ident.str ) == 0 ) {
 			return VOTES[i].ident.id;
@@ -107,6 +110,10 @@ static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
 */
 void BE_Cmd_Vote_f( const gentity_t *ent ) {
 	char msg[8];
+
+
+	assert( ent );
+	assert( ent->client );
 
 
 	if ( !level.voteTime ) {
@@ -164,6 +171,9 @@ static void PrintValidVotes( const gentity_t *ent ) {
 	int i;
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
 
+
+	/* NOTE: No assert( ent ) here, since console might call this */
+
 	for ( i = 0; i < NUM_VOTES; i++ ) {
 		/* FIXME: This is a horribly duplicated and nested, but somewhat clean implementation.. */
 		if ( !IsAllowedVote( VOTES[i].ident.id, ( ent ? qtrue : qfalse  ) ) ) {
@@ -192,6 +202,9 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 	int		i;
 	voteID_t	id;
 	voteFunc_t	handler;
+
+	
+	/* TODO: If ent is given, assert( ent->client ) etc? */
 
 
 	/* Console is always allowed to callvote */
@@ -301,7 +314,7 @@ void BE_Cmd_CallVote_f( const gentity_t *ent ) {
 
 		/* start vote, the caller autoamtically votes yes */
 		level.voteTime = level.time;
-		level.voteNo = 0;
+		level.voteNo = level.voteYes = 0;
 
 		for ( i = 0 ; i < level.maxclients ; i++ ) {
 			level.clients[i].ps.eFlags &= ~EF_VOTED;
@@ -508,6 +521,7 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 		}
 
 		if ( level.clients[id].pers.localClient ) {
+			/* NOTE: localClient is only set for clients connected to their own computer, not LAN clients in general */
 			PrintMessage( ent, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
 			return qfalse;
 		}

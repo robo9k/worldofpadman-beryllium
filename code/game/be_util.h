@@ -21,6 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _BE_UTIL_H
 
 
+/* assert macros for game logic, will only be used when compiled as debug version */
+#if NDEBUG
+	#define assert(_e)		((void)0)
+	#define massert(_e,_m)	((void)0)
+#else
+	/* standard assert macro */
+	#define assert(_e)		((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, #_e))
+	/* assert variant which prints a custom message */
+	#define massert(_e, _m)	((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, _m))
+#endif
+
+
 typedef enum {
 	CCMD_CENTERPRINT	= 1,
 	CCMD_MESSAGEPRINT	= 2,

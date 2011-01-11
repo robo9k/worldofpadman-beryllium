@@ -45,6 +45,9 @@ const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
 	See CG_ServerCommand() in cg_servercmds.c
 */
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
+	assert( str );
+
+
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 		return;
@@ -79,7 +82,11 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 /* FIXME: Use partial match?
 */
 gametype_t StringToGametype( const char *str ) {
-	int i;	
+	int i;
+
+
+	assert( str );
+
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( Q_stricmp( gametypeRemap[i].str, str ) == 0 ) {
@@ -115,6 +122,8 @@ char* GametypeToString( gametype_t gt ) {
 char* TimeToString( int time, char *str, size_t size ) {
 	int min, tens, sec;
 
+
+	/* FIXME: Replace check below with assert()? */
 	if ( ( str == NULL ) || ( size <= 0 ) ) {
 		return NULL;
 	}
@@ -198,6 +207,11 @@ clientNum_t ClientnumFromString( const char *name ) {
 	char		cleanName[MAX_NETNAME];
 	int			id = CID_NONE, matches = 0, i;
 
+
+	assert( name );
+
+	/* FIXME: Return as soon as matches > 1? */
+
 	for ( i = 0; i < level.maxclients; i++ ) {
 		player = &level.clients[i];
 
@@ -238,18 +252,23 @@ clientNum_t ClientnumFromString( const char *name ) {
 	Helper function to check whether a file exists serverside
 */
 qboolean fileExists( const char *path ) {
+	assert( path );
+
+
 	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
 }
 
 
 /*
-	Helper function to fix models like padman/doesntexist
+	Helper function to fix models like "padman/doesntexist"
 	which basically use a non existing skin.
 */
 qboolean validPlayermodel( const char *model, const char *headModel ) {
 	char base[MAX_QPATH];
 	char *skin;
 
+
+	/* FIXME: Replace check below with assert()? */
 	if ( ( model == NULL ) || ( headModel == NULL ) ) {
 		return qfalse;
 	}
@@ -290,6 +309,10 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 team_t TeamFromString( const char *s ) {
 	team_t team = TEAM_NUM_TEAMS;
 
+
+	assert( s );
+
+
 	if ( ( Q_stricmp( "spectator", s ) == 0 ) || ( Q_stricmp( "s", s ) == 0 ) )  {
 		team = TEAM_SPECTATOR;
 	}
@@ -328,6 +351,8 @@ qboolean Q_isnumeric( char c ) {
 qboolean IsANumber( const char *str ) {
 	int i, l;
 
+
+	/* FIXME: Replace check below with assert()? */
 	if ( !str ) {
 		return qfalse;
 	}
@@ -352,6 +377,7 @@ qboolean IsANumber( const char *str ) {
 	TODO: Use fmt and .. once va functions are buffer safe?
 */
 void PrintMessage( const gentity_t *ent, const char *msg ) {
+	/* FIXME: Replace check below with assert()? */
 	if ( !msg ) {
 		return;
 	}
@@ -373,7 +399,9 @@ void PrintMessage( const gentity_t *ent, const char *msg ) {
 qboolean InList( const char *haystack, const char *needle ) {
 	char pattern[MAX_STRING_TOKENS];
 
+
 	/* Should no needle but haystack return qtrue? :D */
+	/* FIXME: Replace check below with assert()? */
 	if ( !needle || !haystack ) {
 		return qfalse;
 	}
