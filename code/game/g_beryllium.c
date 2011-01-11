@@ -93,6 +93,8 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	/* Fix wrong player skins */
 	/* NOTE: Clients who have cg_forceModel set might still see wrong models, since we
 	         can not change their clientside setting (needs clientside fixing - should use userinfo as well ).
+	         It seems like team_model and team_headmodel are transmitted as userinfo, but the server never uses
+	         them for player configstrings.
 	*/
 	if ( !validPlayermodel( Info_ValueForKey (userinfo, "model"), Info_ValueForKey (userinfo, "headmodel") ) ) {
 		Info_SetValueForKey( userinfo, "model", DEFAULT_PLAYERMODEL_S );

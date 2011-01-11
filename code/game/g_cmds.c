@@ -960,6 +960,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	char		name[MAX_NETNAME], *namesrc;
 	char		text[MAX_SAY_TEXT];
 	char		location[64];
+	qboolean	realEnt;
 
 	/* TODO: With split chat, keep team (and send to spectator/free) */
 	if ( g_gametype.integer < GT_TEAM && mode == SAY_TEAM ) {
@@ -969,13 +970,15 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	/* Beryllium's calls don't have a valid entity */
 	if ( !ent ) {
 		namesrc = CHAT_SERVER_NAME;
+		realEnt = qfalse;
 	}
 	else {
 		namesrc = ent->client->pers.netname;
+		realEnt = qtrue;
 	}
 
 	/* Hackity: In order for the above to work, beryllium sets target rather than ent for SAY_TEAM */
-	if ( SAY_TEAM == mode ) {
+	if ( !realEnt && ( SAY_TEAM == mode ) ) {
 		ent = target;
 		target = NULL;
 	}
@@ -995,7 +998,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 		case SAY_TEAM:
 			G_LogPrintf( "sayteam: %s: %s\n", namesrc, chatText );
-			if ( ent && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+			if ( ent && realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
 				Com_sprintf( name, sizeof( name ), EC"(%s%c%c"EC") (%s)"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE, location);
 			}
 			else {
@@ -1007,7 +1010,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		case SAY_TELL:
 			/* NOTE: Logged in Cmd_Tell_f */
 			if ( g_gametype.integer >= GT_TEAM ) {
-				if ( ( target && ent ) &&
+				if ( ( target && ent && realEnt ) &&
 				     OnSameTeam( target, ent ) &&
 				     Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
 					Com_sprintf( name, sizeof( name ), EC"[%s%c%c"EC"] (%s)"EC": ", namesrc, Q_COLOR_ESCAPE, COLOR_WHITE, location );

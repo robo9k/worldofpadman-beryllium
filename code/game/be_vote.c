@@ -606,6 +606,7 @@ static qboolean VoteH_Map( const gentity_t *ent, voteID_t id ) {
 		}		
 		
 		/* Backup and re-apply current nextmap */
+		/* FIXME: This is copied from original code. Is it neccessary? "/map x" does not affect nextmap cvar */
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
 		if ( *s ) {
 			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s; set nextmap \"%s\"", arg2, s );
