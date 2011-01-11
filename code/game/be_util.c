@@ -411,3 +411,23 @@ qboolean InList( const char *haystack, const char *needle ) {
 	return ( Q_stristr( haystack, pattern ) != NULL );
 }
 
+
+/*
+	Used to spit out some debug information, even in release builds.
+*/
+/* NOTE: This is an almost exact copy of G_Printf */
+void QDECL G_DPrintf( const char *fmt, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	/* FIXME: Rather add a new g_debug/g_developer cvar and loglevels for it? */
+	if ( !trap_Cvar_VariableIntegerValue( "developer" ) ) {
+		return;
+	}
+
+	va_start( argptr, fmt );
+	vsprintf( text, fmt, argptr );
+	va_end( argptr );
+
+	trap_Printf( text );
+}

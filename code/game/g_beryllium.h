@@ -68,6 +68,8 @@ extern vmCvar_t	be_checkGUIDs;
 
 extern vmCvar_t	be_maxConnections;
 
+extern vmCvar_t	g_version;
+
 
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */

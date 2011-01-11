@@ -88,5 +88,7 @@ void PrintMessage( const gentity_t *ent, const char *msg );
 
 qboolean InList( const char *needle, const char *haystack );
 
+void QDECL G_DPrintf( const char *fmt, ... );
+
 #endif
 
