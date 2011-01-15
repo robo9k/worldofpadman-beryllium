@@ -235,6 +235,10 @@ typedef enum {
 	VOTE_NO,
 	VOTE_DONTCARE
 } vote_t;
+
+/* FIXME: These should go into berylliums headers, which are included too late */
+#define NET_ADDRSTRMAXLEN		48 			/* NOTE: Must match NET_ADDRSTRMAXLEN in qcommon.h */
+#define GUIDSTRMAXLEN			33			/* NOTE: Length must match max result of Com_MD5File() / cl_guid */
 /* end added */
 
 // client data that stays across multiple respawns, but is cleared
@@ -262,8 +266,8 @@ typedef struct {
 	int			nameChanges;
 	int			nameChangeTime;
 
-	char		guid[33];
-	char		ip[16];
+	char		guid[GUIDSTRMAXLEN];				
+	char		ip[NET_ADDRSTRMAXLEN];
 	/* end beryllium */
 } clientPersistant_t;
 

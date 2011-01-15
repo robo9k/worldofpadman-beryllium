@@ -962,9 +962,6 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	gclient_t	*client;
 	char		userinfo[MAX_INFO_STRING];
 	gentity_t	*ent;
-	/* added beryllium */
-	char ip[16], guid[33];
-	/* end added */
 
 	ent = &g_entities[ clientNum ];
 
@@ -1026,21 +1023,8 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	/* added beryllium */
 	/* NOTE: See NOTEs in BE_ClientConnect() */
 	/* Copy pasta .. */
-
-	value = Info_ValueForKey( userinfo, "ip" );
-	Q_strncpyz( ip, value, sizeof( ip ) );
-	/* strip port */
-	value = strchr( ip, ':' );
-  	if ( value ) {
-	    *value = '\0';
-	}
-
-	value = Info_ValueForKey( userinfo, "cl_guid" );
-	Q_strncpyz( guid, value, sizeof( guid ) );
-
-
-	Q_strncpyz( client->pers.guid, guid, sizeof( client->pers.guid ) );
-	Q_strncpyz( client->pers.ip, ip, sizeof( client->pers.ip ) );
+	Q_strncpyz( client->pers.guid, Info_ValueForKey( userinfo, "cl_guid" ), sizeof( client->pers.guid ) );
+	Q_strncpyz( client->pers.ip, Info_ValueForKey( userinfo, "ip" ), sizeof( client->pers.ip ) );
 	/* end added */
 
 	

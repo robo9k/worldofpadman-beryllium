@@ -194,7 +194,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	char userinfo[MAX_INFO_STRING];
 	char *value;
-	char ip[16], guid[33];
+	char ip[NET_ADDRSTRMAXLEN], guid[GUIDSTRMAXLEN];
 
 
 	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
@@ -215,11 +215,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	value = Info_ValueForKey( userinfo, "ip" );
 	Q_strncpyz( ip, value, sizeof( ip ) );
-	/* strip port */
-	value = strchr( ip, ':' );
-  	if ( value ) {
-	    *value = '\0';
-	}
+	/* NOTE: Do not strip port anymore, see NOTE about consistency below */
   
 	if( !*ip ) {
     	return "No IP in userinfo.";
@@ -241,8 +237,11 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			other = &level.clients[i];
 			/* NOTE: CON_CONNECTING is only set in original ClientConnect() lateron */
 			if ( other && ( CON_DISCONNECTED != other->pers.connected ) ) {
-				/* NOTE: Ensure that ip is saved consistently, i.e. either with or
-				         without :port!
+				/* NOTE: For proper counting below ensure that ip is saved consistently,
+				         i.e. without :port!
+				         IPv6 addresses include more than one ":". Also note that
+				         recent versions of ioquake do not include the port in ip
+				         userinfo field anymore.
 				*/
 				if ( strcmp( ip, other->pers.ip ) == 0 ) {
 					count++;
