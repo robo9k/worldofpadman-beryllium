@@ -6,15 +6,15 @@
  *****************************************************************************/
 
 #include "g_local.h"
-#include "botlib.h"
-#include "be_aas.h"
-#include "be_ea.h"
-#include "be_ai_char.h"
-#include "be_ai_chat.h"
-#include "be_ai_gen.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ea.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/be_ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
@@ -192,7 +192,7 @@ void BotMatch_WrongWall(bot_state_t* bs, bot_match_t *match){
 	Q_CleanStr( buf );
 	if (!Q_stricmp(Info_ValueForKey(buf, "n"), netname)){
 		// could be someone with same name, so make (more) sure
-		if( BotInSprayroom(bs) ){
+		if( ClientInSprayroom(bs->client) ){
 			bs->which_wall = BotChooseCorrectWall(bs);
 			bs->enemy = -1;
 			// chat
@@ -529,13 +529,13 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 	match.type = 0;
 	//if it is an unknown message
 	if (!trap_BotFindMatch(message, &match, MTCONTEXT_MISC|MTCONTEXT_INITIALTEAMCHAT )) {
-		if(bot_developer.integer == AIDBG_CHAT ){
-			G_Printf("^2no match for %s\n", message);
+		if(bot_developer.integer & AIDBG_CHAT ){
+			G_Printf("^2no match for ^1%s\n", message);
 		}
 		return qfalse;
 	}
 
-	if(bot_developer.integer == AIDBG_CHAT){
+	if(bot_developer.integer & AIDBG_CHAT){
 		G_Printf("^6match %d for^1 %s\n", match.type, message);
 	}
 
@@ -558,21 +558,9 @@ int BotMatchMessage(bot_state_t *bs, char *message) {
 			BotMatch_GetItem(bs, &match);
 			break;
 		}
-		// case MSG_STARTTEAMLEADERSHIP:{	//someone will become the team leader
-		// 	BotMatch_StartTeamLeaderShip(bs, &match);
-		// 	break;
-		// }
-		// case MSG_WHOISTEAMLAEDER:{
-		// 	BotMatch_WhoIsTeamLeader(bs, &match);
-		// 	break;
-		// }
 		case MSG_ENTERGAME:{			//someone entered the game
 			BotMatch_EnterGame(bs, &match);
 			break;
-		}
-		case MSG_NEWLEADER:{
-			// 	BotMatch_NewLeader(bs, &match);
-		 	break;
 		}
 		case MSG_CATCHME:{
 			BotMatch_CatchMe(bs, &match);

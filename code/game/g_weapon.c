@@ -86,9 +86,9 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 	if( ent->client->ps.powerups[PW_BERSERKER] )
 		s_quadFactor *= 10.0f; // one "berserker punchy" hit should kill
 
-	damage = 50 * s_quadFactor;
+	damage = ( DAMAGE_PUNCHY * s_quadFactor );
 	G_Damage( traceEnt, ent, ent, forward, tr.endpos,
-		damage, 0, MOD_GAUNTLET );
+		damage, 0, MOD_PUNCHY );
 
 	return qtrue;
 }
@@ -160,8 +160,6 @@ SHOTGUN
 ======================================================================
 */
 
-#define PUMPER_SPLASHDMG	50 //old: 70
-#define PUMPER_SPLASHRADIUS	80
 //new: g_combat.c(line ~830) 2x knockback with pumper
 void weapon_supershotgun_fire (gentity_t *ent) {
 	vec3_t		end;
@@ -174,10 +172,9 @@ void weapon_supershotgun_fire (gentity_t *ent) {
 	vec3_t		minPumper = {-4.0f,-4.0f,-4.0f};
 	vec3_t		maxPumper = {4.0f,4.0f,4.0f};
 
-	damage = 70 * s_quadFactor;
+	damage = ( DAMAGE_PUMPER * s_quadFactor );
 
-//	VectorMA (muzzle, 8192, forward, end);
-	VectorMA (muzzle, 1024, forward, end);//vq3: lightning has 768
+	VectorMA( muzzle, RANGE_PUMPER, forward, end );
 
 	// trace only against the solids, so the railgun will go through people
 	hits = 0;
@@ -194,7 +191,7 @@ void weapon_supershotgun_fire (gentity_t *ent) {
 				hits++;
 			}
 			damage*=1.0f-(trace.fraction*0.5f);
-			G_Damage (traceEnt, ent, ent, forward, trace.endpos, damage, 0, MOD_SHOTGUN);
+			G_Damage( traceEnt, ent, ent, forward, trace.endpos, damage, 0, MOD_PUMPER );
 		}
 	}
 	// the final trace endpos will be the terminal point of the rail trail
@@ -217,7 +214,7 @@ void weapon_supershotgun_fire (gentity_t *ent) {
 	} else {
 		// make an explosion with radius damage
 		tent->s.eventParm = DirToByte( trace.plane.normal );
-		G_RadiusDamage( trace.endpos, ent, PUMPER_SPLASHDMG, PUMPER_SPLASHRADIUS, traceEnt, MOD_SHOTGUN );
+		G_RadiusDamage( trace.endpos, ent, SPLASHDMG_PUMPER, SPLASHRAD_PUMPER, traceEnt, MOD_PUMPER );
 	}
 	tent->s.clientNum = ent->s.clientNum;
 }
@@ -310,7 +307,6 @@ RAILGUN
 weapon_railgun_fire
 =================
 */
-#define	MAX_RAIL_HITS	4
 void weapon_railgun_fire (gentity_t *ent) {
 	gentity_t	*m;
 
@@ -379,125 +375,128 @@ void Weapon_LightningFire( gentity_t *ent ) {
 /*
 ======================================================================
 
+KMA / Kiss My Ass 97
+
+======================================================================
+*/
+void Weapon_KMA_Fire ( gentity_t *ent ) {
+	gentity_t	*m;
+
+	
+	m = fire_kma( ent, muzzle, forward );
+	m->damage *= s_quadFactor;
+	m->splashDamage *= s_quadFactor;
+	m->s.clientNum = ent->s.clientNum;
+}
+
+/*
+======================================================================
+
 SPRAY PISTOL
 
 ======================================================================
 */
 
-void check_sprayawards(gentity_t *ent)
-{
+static void check_sprayawards( gentity_t *ent ) {
 	ent->client->logocounter++;
 
-	if(ent->client->logocounter==5)
-	{
-		ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT]=(ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT] & 0xFF00)|((ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT]+1) & 0xFF);
+	// FIXME: Less magical constants
+	if ( ent->client->logocounter == 5 ) {
+		ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT] = ( ( ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT] & 0xFF00 ) | 
+		                                                       ( ( ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT] + 1 ) & 0xFF ) );
 		// add the sprite over the player's head
-		ent->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-		ent->client->ps.eFlags |= EF_AWARD_SPRAYKILLER;
-		ent->client->rewardTime = level.time + SPRAYREWARD_SPRITE_TIME;
-		PrintMsg(NULL,"%s" S_COLOR_MAGENTA " is a SprayKiller\n",ent->client->pers.netname);
+		SetAward( ent->client, AWARD_SPRAYKILLER );
 
-		AddScore(ent,ent->client->ps.origin,10);//old:5
-		if(g_gametype.integer==GT_SPRAY)
-			AddTeamScore(ent->client->ps.origin,ent->client->sess.sessionTeam,10);//old:5
+		PrintMsg( NULL, "%s"S_COLOR_MAGENTA" is a SprayKiller!\n", ent->client->pers.netname );
+
+		AddScore( ent,ent->client->ps.origin, SCORE_BONUS_SPRAYKILLER, SCORE_BONUS_SPRAYKILLER_S );
+		if ( g_gametype.integer == GT_SPRAY ) {
+			AddTeamScore( ent->client->ps.origin, ent->client->sess.sessionTeam, SCORE_BONUS_SPRAYKILLER, SCORE_BONUS_SPRAYKILLER_S );
+		}
 	}
-	else if(ent->client->logocounter==8)
-	{
-		ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT]+=0x100;
+	else if ( ent->client->logocounter == 8 ) {
+		ent->client->ps.persistant[PERS_SPRAYAWARDS_COUNT] += 0x100;
+
 		// add the sprite over the player's head
-		ent->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-		ent->client->ps.eFlags |= EF_AWARD_SPRAYGOD;
-		ent->client->rewardTime = level.time + SPRAYREWARD_SPRITE_TIME;
-		PrintMsg(NULL,"%s" S_COLOR_MAGENTA " is a SprayGod\n",ent->client->pers.netname);
+		SetAward( ent->client, AWARD_SPRAYGOD );
 
-		AddScore(ent,ent->client->ps.origin,25);//old:10
-		if(g_gametype.integer==GT_SPRAY)
-			AddTeamScore(ent->client->ps.origin,ent->client->sess.sessionTeam,25);//old:25
+		PrintMsg( NULL, "%s"S_COLOR_MAGENTA" is a SprayGod!\n", ent->client->pers.netname );
 
-		ent->client->logocounter=0;
+		AddScore( ent,ent->client->ps.origin, SCORE_BONUS_SPRAYGOD, SCORE_BONUS_SPRAYGOD_S );
+		if ( g_gametype.integer == GT_SPRAY ) {
+			AddTeamScore( ent->client->ps.origin, ent->client->sess.sessionTeam, SCORE_BONUS_SPRAYGOD, SCORE_BONUS_SPRAYGOD_S );
+		}
+
+		ent->client->logocounter = 0;
 	}
 }
 
-void weapon_spraypistol_fire(gentity_t *ent)
-{
-	vec3_t		end,tmpv3;
+void weapon_spraypistol_fire( gentity_t *ent ) {
+	vec3_t		end, tmpv3;
 	trace_t		tr;
 	gentity_t	*tent;
-	const char *team_strs[] = {"Free","Red","Blue","Spec"};
 
-	ent->client->ps.generic1=ent->client->ps.ammo[WP_SPRAYPISTOL];
+	// FIXME: Remove that double storing. Less magical constants, more documentation.
+	ent->client->ps.generic1 = ent->client->ps.ammo[WP_SPRAYPISTOL];
 
-	VectorMA (muzzle, 256, forward, end);
-	trap_Trace(&tr, muzzle, NULL, NULL, end, 0, MASK_SHOT );
+	VectorMA( muzzle, 256, forward, end);
+	trap_Trace( &tr, muzzle, NULL, NULL, end, ENTITYNUM_NONE, MASK_SHOT );
 
-	///AddScore ??? was bekommt der einzelne player für ein logo ... bzw was bekommt er bei der falschen wand =)
-	if(g_gametype.integer==GT_SPRAY)
-	{
-		if(&g_entities[tr.entityNum]==level.rspraywall)
-		{
-			if(ent->client->sess.sessionTeam==TEAM_RED)
-			{
-				AddTeamScore(tr.endpos,TEAM_RED,5);
-				AddScore(ent,tr.endpos,5);
-				check_sprayawards(ent);
+	if ( g_gametype.integer == GT_SPRAY ) {
+		if ( &g_entities[tr.entityNum] == level.rspraywall ) {
+			if ( ent->client->sess.sessionTeam == TEAM_RED ) {
+				AddTeamScore( tr.endpos, TEAM_RED, SCORE_SPRAY, SCORE_SPRAY_S );
+				AddScore( ent, tr.endpos, SCORE_SPRAY, SCORE_SPRAY_S );
+				check_sprayawards( ent );
 			}
-			else
-			{
-				AddScore(ent,tr.endpos,-5);
-				trap_SendServerCommand( -1, va("cdi 1 %i",(int)(random()*3.9999f)));
+			else {
+				AddScore( ent,tr.endpos, SCORE_SPRAY_WRONGWALL, SCORE_SPRAY_WRONGWALL_S );
+				// FIXME: Use an event rather than that crap
+				trap_SendServerCommand( -1, va( "cdi 1 %i",(int)( random() * 3.9999 ) ) );
 				
-				PrintMsg(NULL,"%s" S_COLOR_MAGENTA "(Blue-Team) sprayed on the WRONG WALL!!!\n",ent->client->pers.netname);
+				PrintMsg( NULL, "%s"S_COLOR_MAGENTA" (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) );
 			}
-//			Com_Printf("a logo at the redwall! ... by the %s Team\n",team_strs[ent->client->sess.sessionTeam]);
-			CalculateRanks();//Update Teamscore ... and do some other things ;)
 		}
-		else if(&g_entities[tr.entityNum]==level.bspraywall)
-		{
-			if(ent->client->sess.sessionTeam==TEAM_BLUE)
-			{
-				AddTeamScore(tr.endpos,TEAM_BLUE,5);
-				AddScore(ent,tr.endpos,5);
-				check_sprayawards(ent);
+		else if ( &g_entities[tr.entityNum] == level.bspraywall ) {
+			if ( ent->client->sess.sessionTeam == TEAM_BLUE ) {
+				AddTeamScore( tr.endpos, TEAM_BLUE, SCORE_SPRAY, SCORE_SPRAY_S );
+				AddScore( ent, tr.endpos, SCORE_SPRAY, SCORE_SPRAY_S );
+				check_sprayawards( ent );
 			}
-			else
-			{
-				AddScore(ent,tr.endpos,-5);
-				trap_SendServerCommand( -1, va("cdi 1 %i",(int)(random()*3.9999f)));
+			else {
+				AddScore( ent, tr.endpos, SCORE_SPRAY_WRONGWALL, SCORE_SPRAY_WRONGWALL_S );
+				trap_SendServerCommand( -1, va( "cdi 1 %i",(int)( random() * 3.9999 ) ) );
 
-				PrintMsg(NULL,"%s" S_COLOR_MAGENTA "(Red-Team) sprayed on the WRONG WALL!!!\n",ent->client->pers.netname);
+				PrintMsg( NULL, "%s"S_COLOR_MAGENTA " (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) );
 			}
-//			Com_Printf("a logo at the bluewall! ... by the %s Team\n",team_strs[ent->client->sess.sessionTeam]);
-			CalculateRanks();//Update Teamscore ... and do some other things ;)
 		}
 	}
-	else //spray ffa
-	{
+	// Syc "ffa"
+	else {
 		//all spraywalls give the same points
-		if(&g_entities[tr.entityNum]==level.rspraywall || &g_entities[tr.entityNum]==level.bspraywall || &g_entities[tr.entityNum]==level.nspraywall)
-		{
-			AddScore(ent,tr.endpos,5);
-			CalculateRanks();//Update score
-			check_sprayawards(ent);
+		if ( ( &g_entities[tr.entityNum] == level.rspraywall ) ||
+		     ( &g_entities[tr.entityNum] == level.bspraywall ) ||
+		     ( &g_entities[tr.entityNum] == level.nspraywall ) ) {
+			AddScore( ent, tr.endpos, SCORE_SPRAY, SCORE_SPRAY_S );
+			check_sprayawards( ent );
 		}
 	}
 
-	//graphic-stuff ... taken from the rail-shot
+
 	// snap the endpos to integers to save net bandwidth, but nudged towards the line
 	SnapVectorTowards( tr.endpos, muzzle );
 
-	// send railgun beam effect
+	// send beam effect
 	tent = G_TempEntity( tr.endpos, EV_SPRAYLOGO );
 
 	tent->r.svFlags |= SVF_BROADCAST;
 
-	tmpv3[0]=tr.endpos[0]-ent->s.pos.trBase[0];
-	tmpv3[1]=tr.endpos[1]-ent->s.pos.trBase[1];
-	tmpv3[2]=tr.endpos[2]-ent->s.pos.trBase[2];
+	VectorSubtract( tr.endpos, ent->s.pos.trBase, tmpv3 );
 
-	//vvvvvvvvvvvvvvv missbrauch :ugly: ;)
-	tent->s.angles[0]=sqrt(tmpv3[0]*tmpv3[0]+tmpv3[1]*tmpv3[1]+tmpv3[2]*tmpv3[2])/200;//256
+	// angles[0] is the scaled distance from spraywall
+	// and used to scale radius for the spraylogo clientside
+	tent->s.angles[0] = ( sqrt( VectorLengthSquared( tmpv3 ) ) / 200 );
 
-	// set player number for custom colors on the railtrail
 	tent->s.clientNum = ent->s.clientNum;
 
 	VectorCopy( muzzle, tent->s.origin2 );
@@ -506,13 +505,17 @@ void weapon_spraypistol_fire(gentity_t *ent)
 	VectorMA( tent->s.origin2, -1, up, tent->s.origin2 );
 
 	// no explosion at end if SURF_NOIMPACT, but still make the trail
-	if ( tr.surfaceFlags & SURF_NOIMPACT || tr.fraction == 1.0f) {
+	if ( ( tr.surfaceFlags & SURF_NOIMPACT ) || ( tr.fraction == 1.0 ) ) {
 		tent->s.eventParm = 255;	// don't make the explosion at the end
-	} else {
+	}
+	else {
 		tent->s.eventParm = DirToByte( tr.plane.normal );
 	}
-	if(tr.entityNum!=ENTITYNUM_WORLD)
-		tent->s.generic1=0x23;//ungebrauchte vars tut man missbrauchen ;)
+
+	// Hit a spraywall
+	if ( tr.entityNum != ENTITYNUM_WORLD ) {
+		tent->s.generic1 = 0x23; //ungebrauchte vars tut man missbrauchen ;)
+	}
 }
 
 //======================================================================
@@ -635,6 +638,9 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 	case WP_IMPERIUS:
 		BFG_Fire( ent );
+		break;
+	case WP_KMA97:	// "Kiss My Ass 97"
+		Weapon_KMA_Fire( ent );
 		break;
 
 	case WP_GRAPPLING_HOOK:

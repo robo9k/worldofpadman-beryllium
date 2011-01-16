@@ -6,15 +6,15 @@
  *****************************************************************************/
 
 #include "g_local.h"
-#include "botlib.h"
-#include "be_aas.h"
-#include "be_ea.h"
-#include "be_ai_char.h"
-#include "be_ai_chat.h"
-#include "be_ai_gen.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ea.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/be_ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
@@ -32,7 +32,7 @@
 #define GFL_AIR			128
 
 #define LOOKAHEAD_DISTANCE			300
-#define DEFENDAWAY_RANGE			750
+#define DEFENDAWAY_RANGE			1000
 
 extern vmCvar_t bot_thinktime;
 // cyr, positions for reachability test mode
@@ -42,6 +42,7 @@ vec3_t testreach_end;
 int numnodeswitches;
 char nodeswitch[MAX_NODESWITCHES+1][144];
 
+extern bot_state_t	*botstates[MAX_CLIENTS];
 
 int BotClientTravelTimeToGoal(int client, bot_goal_t *goal) {
 	playerState_t ps;
@@ -329,6 +330,35 @@ int BotReachedGoal(bot_state_t *bs, bot_goal_t *goal) {
 	return qfalse;
 }
 
+
+
+
+qboolean BotChooseSpawnGoal(bot_state_t* bs){
+	vec3_t spawn;
+	bot_goal_t goal;
+
+	memset(&goal, 0, sizeof(bot_goal_t));
+
+	GetASpawnPosition(bs->origin, spawn);
+	VectorCopy(spawn, goal.origin);
+	VectorSet(goal.mins, -256, -256, -32);
+	VectorSet(goal.maxs, 256, 256, 32);
+	goal.areanum = BotPointAreaNum( goal.origin );
+	goal.entitynum = 0;
+	goal.number = 0;
+	goal.flags = GFL_ROAM;
+	goal.iteminfo = 0;
+	if(goal.areanum) {
+		//push the goal on the stack
+		trap_BotPushGoal(bs->gs, &goal);
+//		Com_Printf("new spawnpoint-roam-goal\n");
+		return qtrue;
+	}
+	else {
+		return qfalse;
+	}
+}
+
 /*
 ==================
 BotGetItemLongTermGoal
@@ -354,7 +384,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 		//BotAI_Print(PRT_MESSAGE, "%6.1f client %d: BotChooseLTGItem\n", FloatTime(), bs->client);
 		
 		
-		if (trap_BotChooseLTGItem(bs->gs, bs->origin, bs->inventory, tfl)) {
+		if (trap_BotChooseLTGItem(bs->gs, bs->origin, bs->inventory, tfl) || BotChooseSpawnGoal(bs)) {
 			
 			char buf[128];
 			//get the goal at the top of the stack
@@ -366,7 +396,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 				return trap_BotGetTopGoal(bs->gs, goal);
 			
 
-			bs->ltg_time = FloatTime() + 20;
+			bs->ltg_time = FloatTime() + 20;//FIXME: I think giving up the goal after 20secs are a bit short ... or?
 		}
 		else {//the bot gets sorta stuck with all the avoid timings, shouldn't happen though
 			//
@@ -407,7 +437,7 @@ void BotBathScript(bot_state_t* bs, bot_goal_t* goal) {
     strncpy(mapname, Info_ValueForKey( info, "mapname" ), sizeof(mapname)-1);
     mapname[sizeof(mapname)-1] = '\0';
 
-	if( !Q_stricmp(mapname, "wop_cybbath") && bs->cur_ps.stats[STAT_INSPRAYROOMSEKS] ){
+	if( !Q_stricmp(mapname, "wop_cybbath") && bs->cur_ps.stats[STAT_SPRAYROOMSECS] ){
 		int tmp;
 		tmp = BotClientTravelTimeToGoal(bs->client, goal);
 
@@ -450,7 +480,6 @@ void SelfTeamGoal(bot_state_t* bs){
 	VectorSet(bs->teamgoal.mins, -8, -8, -8);
 	VectorSet(bs->teamgoal.maxs, 8, 8, 8);
 }
-//cyr2}
 
 /*
 ==================
@@ -514,6 +543,9 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		//get entity information of the companion
 		BotEntityInfo(bs->teammate, &entinfo);
+		if(!entinfo.valid)	// should not happen...
+			return qfalse;
+
 		//if the companion is visible
 		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
 			//update visible time
@@ -570,6 +602,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		if (bs->teammatevisible_time < FloatTime() - 10) bs->ltgtype = 0;
 		//get entity information of the companion
 		BotEntityInfo(bs->teammate, &entinfo);
+		if(!entinfo.valid)
+			return qfalse;
 		//if the team mate is visible
 		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
 			//if close just stand still there
@@ -615,6 +649,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		//get entity information of the companion
 		BotEntityInfo(bs->teammate, &entinfo);
+		if(!entinfo.valid)
+			return qfalse;
 		//if the companion is visible
 		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
 			//update visible time
@@ -625,6 +661,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				// if the client being followed bumps into this bot then
 				// the bot should back up
 				BotEntityInfo(bs->entitynum, &botinfo);
+				if(!entinfo.valid)
+					return qfalse;
 				// if the followed client is not standing ontop of the bot
 				if (botinfo.origin[2] + botinfo.maxs[2] > entinfo.origin[2] + entinfo.mins[2]) {
 					// if the bounding boxes touch each other
@@ -660,7 +698,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				}
 				//don't crouch when swimming
 				if (trap_AAS_Swimming(bs->origin)) bs->attackcrouch_time = FloatTime() - 1;
-				//if not arrived yet or arived some time ago
+				/*//if not arrived yet or arived some time ago
 				if (bs->arrive_time < FloatTime() - 2) {
 					//if not arrived yet
 					if (!bs->arrive_time) {
@@ -678,7 +716,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 						//do a gesture :)
 						trap_EA_Gesture(bs->client);
 					}
-				}
+				}*/
 				//if just arrived look at the companion
 				if (bs->arrive_time > FloatTime() - 2) {
 					VectorSubtract(entinfo.origin, bs->origin, dir);
@@ -749,40 +787,36 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 
 		// tell the hud
-		if(bot_developer.integer & AIDBG_GAMETYPE){
-			BotAddInfo(bs, "defrange", va("%d", traveltime) );
-		}
+		BotAddInfo(bs, va("defrange %d", traveltime), AIDBG_GAMETYPE );		
 
 		if( bs->defendaway_time < FloatTime() ){
 			//set the bot goal
 			memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
 			
 			// tell the hud
-			if(bot_developer.integer & AIDBG_GAMETYPE){
-				BotAddInfo(bs, "defmode", va("moving back to goal") );
-			}
-
+			BotAddInfo(bs, va("defmode: moving back to goal %d", goal->entitynum), AIDBG_GAMETYPE );
+			
 			//very close? ... go roam
-			VectorSubtract(goal->origin, bs->origin, dir);
-			if (VectorLengthSquared(dir) < Square(120)) {
+			if ( traveltime && traveltime < DEFENDAWAY_RANGE/20 ) //VectorLengthSquared(dir) < Square(120))
+			{
 				trap_BotResetAvoidReach(bs->ms);
 				bs->defendaway_time = FloatTime() + 10 + 3 * random();
 			}
 
-			// balloon visible? go roam
-			if(BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, goal->entitynum)){
+			// balloon visible and bot is near?
+			if( traveltime && traveltime < DEFENDAWAY_RANGE/3 &&
+				BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, goal->entitynum) )
+			{
 				trap_BotResetAvoidReach(bs->ms);
-				bs->defendaway_time = FloatTime() + 10 + 3 * random();
+				bs->defendaway_time = FloatTime() + 10 + 3 * random();				
 			}
 			
 			return qtrue;
 		}
 		else{
-			// tell the hud that you roam
-			if(bot_developer.integer & AIDBG_GAMETYPE){
-				BotAddInfo(bs, "defmode", va("roam for %.1f sec", bs->defendaway_time - FloatTime() ) );
-			}
-
+			// tell the hud that you roam			
+			BotAddInfo(bs, va("defmode: roam for %.1f sec", bs->defendaway_time - FloatTime() ), AIDBG_GAMETYPE );
+			
 			// prolong defendaway_time if loon is visible from current pos
 			if( random() < (float)bot_thinktime.integer/1000.0f ){	// about once per second
 				if(BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, goal->entitynum)){
@@ -827,54 +861,255 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		return qtrue;
 	}
 	if(gametype == GT_CTF){
-		if(bs->ltgtype == LTG_RUSHBASE){
-			switch(BotTeam(bs)) {
-				case TEAM_RED: memcpy(goal, &ctf_redflag, sizeof(bot_goal_t)); break;
-				case TEAM_BLUE: memcpy(goal, &ctf_blueflag, sizeof(bot_goal_t)); break;
-				default: bs->ltgtype = 0; return qfalse;
+		if(bs->ltgtype == LTG_CAPTUREFLAG){
+			bot_goal_t* base_flag = NULL;
+			int tt;
+			int flagstatus;
+
+			//if not carrying the flag anymore, or timer hits
+			if ( !BotCTFCarryingFlag(bs) || bs->teamgoal_time < FloatTime() ){
+				bs->ltgtype = 0;
+				return qfalse;
 			}
-			//if not carrying the flag anymore
-			if (!BotCTFCarryingFlag(bs)) bs->ltgtype = 0;
-			//quit rushing after 2 minutes
-			if (bs->teamgoal_time < FloatTime()) bs->ltgtype = 0;
-			//if touching the base flag the bot should loose the enemy flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
-				//if the bot is still carrying the enemy flag then the
-				//base flag is gone, now just walk near the base a bit
-				if (BotCTFCarryingFlag(bs)) {
-					trap_BotResetAvoidReach(bs->ms);
-					bs->rushbaseaway_time = FloatTime() + 5 + 10 * random();
-					//FIXME: add chat to tell the others to get back the flag
+
+			// stop wandering around if your flag is back home
+			flagstatus = Team_GetFlagStatus( BotTeam(bs) );
+			if( flagstatus == FLAG_ATBASE )
+				bs->rushbaseaway_time = 0;
+
+			if( bs->rushbaseaway_time < FloatTime() )
+			{
+				// set base flag goal
+				if(BotTeam(bs) == TEAM_RED )
+					base_flag = &ctf_redflag;
+				else
+					base_flag = &ctf_blueflag;
+				
+				// go for items if your flag is not at base
+				if( flagstatus != FLAG_ATBASE )
+				{
+					tt = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, base_flag->areanum, bs->tfl);
+					if( tt < 400 )
+					{
+						bs->rushbaseaway_time = FloatTime() + 30;
+					}
 				}
-				else {
-					bs->ltgtype = 0;
+
+
+				// do we have a waypoint system?
+				if( !numwaypoints ){
+
+					memcpy(goal, base_flag, sizeof(bot_goal_t));
+
+					//if touching the base flag the bot should loose the enemy flag
+					if (trap_BotTouchingGoal(bs->origin, goal)) {
+						//if the bot is still carrying the enemy flag then the
+						//base flag is gone, now just walk near the base a bit
+						if (BotCTFCarryingFlag(bs)) {
+							trap_BotResetAvoidReach(bs->ms);
+							bs->rushbaseaway_time = FloatTime() + 5 + 10 * random();
+							//FIXME: add chat to tell the others to get back the flag
+						}
+						else {
+							bs->ltgtype = 0;
+						}
+					}				
+					return qtrue;
+				}	// oldschool system
+				else{
+					float wpDist_sqr;	// squared distance to the next waypoint
+					int tt;
+
+					// do we have a valid waypoint?
+					if( !BotWpValid(bs) ){						
+						FindWp( bs, qtrue );
+					}
+
+					// if you are going for the final waypoint, go for the flag instead
+					if( !BotWpHasSuccessor(bs, qtrue) ){
+
+						BotAddInfo(bs, "final wp", AIDBG_GAMETYPE);
+						memcpy( goal, base_flag, sizeof(bot_goal_t) );
+						bs->wptime = level.time;
+						return qtrue;
+					}
+					
+					// are we close enough to proceed to the next wp?
+					tt = trap_AAS_AreaTravelTimeToGoalArea( bs->areanum, bs->origin, bs->wp->goal.areanum, bs->tfl);	
+					if( tt ){
+						if( tt < 10 )
+							GetNextWp( bs, qtrue );
+					}
+					else{	// tt is invalid, fall back to 3d distance
+						wpDist_sqr = DistanceSquared( bs->wp->goal.origin, bs->origin );
+						if( wpDist_sqr < 40000 )	// Square(200)
+							GetNextWp( bs, qtrue );
+					}
+					
+					BotAddInfo(bs, va("wp %s", bs->wp->name), AIDBG_GAMETYPE);
+					
+					bs->wptime = level.time;
+
+					memcpy( goal, &bs->wp->goal, sizeof(bot_goal_t) );
+					return qtrue;				
 				}
 			}
-			//BotAlternateRoute(bs, goal);
-			return qtrue;
 		}
 		if(bs->ltgtype == LTG_GETFLAG){
-			
-			switch(BotTeam(bs)) {
-				case TEAM_RED: memcpy(goal, &ctf_blueflag, sizeof(bot_goal_t)); break;
-				case TEAM_BLUE: memcpy(goal, &ctf_redflag, sizeof(bot_goal_t)); break;
-				default: bs->ltgtype = 0; return qfalse;
-			}
-			
-			//if touching the flag
-			if (trap_BotTouchingGoal(bs->origin, goal)) {
-				// make sure the bot knows the flag isn't there anymore
-				/*switch(BotTeam(bs)) {
-					case TEAM_RED: bs->blueflagstatus = 1; break;
-					case TEAM_BLUE: bs->redflagstatus = 1; break;
-				}*/
-				bs->ltgtype = 0;
-			}
+			int status;
+
 			//stop after 3 minutes
 			if (bs->teamgoal_time < FloatTime()) {
 				bs->ltgtype = 0;
 			}
-			//BotAlternateRoute(bs, goal);
+
+			status = Team_GetFlagStatus( BotOppositeTeam(bs) );
+			BotAddInfo(bs, va("nmy flag %d", status), AIDBG_GAMETYPE);
+			if( status == FLAG_TAKEN ){
+				bs->ltgtype = 0;
+				return qfalse;
+			}
+			else if( status == FLAG_DROPPED )
+			{
+				memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t) );
+				// reset ltg if bot touches the goal.. to cover the case where the flag 
+				//got picked up and dropped again between two AI frames
+				VectorSubtract(goal->origin, bs->origin, dir);
+				if(VectorLengthSquared(dir) < Square(7) )
+				{
+					bs->ltgtype = 0;
+					return qfalse;
+				}
+				return qtrue;			
+			}
+			else
+			{			
+				if( !numwaypoints ){
+					switch(BotTeam(bs)) {
+						case TEAM_RED: memcpy(goal, &ctf_blueflag, sizeof(bot_goal_t)); break;
+						case TEAM_BLUE: memcpy(goal, &ctf_redflag, sizeof(bot_goal_t)); break;
+						default: bs->ltgtype = 0; return qfalse;
+					}
+				}
+				else{
+					float wpDist_sqr;					// squared distance to the next waypoint
+					int tt;
+
+					// do we have a valid waypoint?
+					if( !BotWpValid(bs) )
+					{
+						FindWp( bs, qfalse );
+					}
+
+					// if you are going for the final waypoint, go for the flag instead
+					if( !BotWpHasSuccessor(bs, qfalse) ){
+
+						BotAddInfo(bs, "final wp", AIDBG_GAMETYPE);
+						if(BotTeam(bs) == TEAM_RED )
+							memcpy( goal, &ctf_blueflag, sizeof(bot_goal_t) );
+						else
+							memcpy( goal, &ctf_redflag, sizeof(bot_goal_t) );
+						bs->wptime = level.time;
+						return qtrue;
+					}
+					
+					// are we close enough to proceed to the next wp?
+					tt = trap_AAS_AreaTravelTimeToGoalArea( bs->areanum, bs->origin, bs->wp->goal.areanum, bs->tfl);	
+					if( tt ){
+						if( tt < 10 )
+							GetNextWp( bs, qfalse );
+					}
+					else{	// tt is invalid, fall back to 3d distance
+						wpDist_sqr = DistanceSquared( bs->wp->goal.origin, bs->origin );
+						if( wpDist_sqr < 40000 )	// Square(200)
+							GetNextWp( bs, qfalse );
+					}
+					
+					BotAddInfo(bs, va("wp %s", bs->wp->name), AIDBG_GAMETYPE);	//va("%d", GetWpID(bs->wp) ) );
+					
+					bs->wptime = level.time;
+
+					memcpy( goal, &bs->wp->goal, sizeof(bot_goal_t) );
+				}
+				return qtrue;
+			}
+		}
+		if(bs->ltgtype == LTG_PICKUPFLAG){
+			int status;
+
+			// time's up?
+			if( bs->teamgoal_time < FloatTime() ){
+				bs->ltgtype = 0;
+				return qfalse;
+			}
+
+			// flag is no longer there?
+			status = Team_GetFlagStatus( BotTeam(bs) );
+			if( status != FLAG_DROPPED ){
+				bs->ltgtype = 0;
+				return qfalse;
+			}
+			
+			memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
+			return qtrue;
+		}
+		if( bs->ltgtype == LTG_PLANTBOOMIE)
+		{
+			if(bs->teamgoal_time < FloatTime() )
+			{
+				bs->ltgtype = 0;
+				return qfalse;
+			}
+
+			// reached?
+			//VectorSubtract(bs->teamgoal.origin, bs->origin, dir);
+			//if(VectorLengthSquared(dir) < Square(10) )
+			if( trap_BotTouchingGoal(bs->origin, &bs->teamgoal) )
+			{
+				vec3_t bAngles;
+				float diffPitch, diffYaw;
+
+				VectorCopy( boomiespots[bs->teammate].angles, bAngles );
+				VectorCopy( bAngles, bs->ideal_viewangles );
+				bs->flags |= BFL_IDEALVIEWSET;
+				diffPitch = AngleDifference(bs->viewangles[0], bs->ideal_viewangles[0]);
+				diffYaw = AngleDifference(bs->viewangles[1], bs->ideal_viewangles[1]);
+
+				//BotAddInfo(bs, va("looking at goal %d %d %d", (int)bAngles[0], (int)bAngles[1], (int)bAngles[2]), AIDBG_GAMETYPE );
+				// do eeett
+				if( diffPitch < 5.f && diffYaw < 5.f )
+				{
+					BotAddInfo(bs, "planting", AIDBG_GAMETYPE );
+					trap_EA_Use(bs->client);
+				}				
+			}
+			else
+				BotAddInfo(bs, "moving to goal", AIDBG_GAMETYPE );
+
+			memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t) );
+			return qtrue;
+		}
+		if( bs->ltgtype == LTG_PLANTBAMBAM)
+		{
+			if(bs->teamgoal_time < FloatTime() )
+			{
+				bs->ltgtype = 0;
+				return qfalse;
+			}
+
+			// reached?
+			//VectorSubtract(goal->origin, bs->origin, dir);
+			//if(VectorLengthSquared(dir) < Square(10) )
+			if( trap_BotTouchingGoal(bs->origin, &bs->teamgoal) )
+			{
+				BotAddInfo(bs, "planting", AIDBG_GAMETYPE );
+				// do eeett
+				trap_EA_Use(bs->client);
+			}
+			else
+				BotAddInfo(bs, "moving to goal", AIDBG_GAMETYPE );
+
+			memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t) );
 			return qtrue;
 		}
 	}
@@ -948,7 +1183,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 
                 BotChooseWeapon(bs);
                 BotAimAtEnemy(bs);
-				if( BotPoorCheckAttack(bs) ){   // to far or obstacle or weaponswitching
+				if( BotSprayWallCheckAttack(bs) ){   // to far or obstacle or weaponswitching
                     vec3_t dir;
                     // walk on toward wall...
 					// if very close, change target
@@ -1003,7 +1238,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 					trap_EA_Gesture(bs->client);
 			}
 			// out of sprayroom  ?
-            if( trap_BotTouchingGoal(bs->origin, goal) || !BotInSprayroom(bs)){
+			if( trap_BotTouchingGoal(bs->origin, goal) || !ClientInSprayroom(bs->client)){
                 bs->ltgtype = 0;
 				bs->enemy = -1;
                 return qfalse;
@@ -1042,10 +1277,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
             }
         }
 
-		if(bot_developer.integer & AIDBG_GAMETYPE){
-			BotAddInfo(bs, "attack loon", "...");
-		}
-
+		BotAddInfo(bs, "attacking loon", AIDBG_GAMETYPE);
+		
         //set the bot goal
         if(!mateatgoal){
             memcpy(goal, &bs->teamgoal, sizeof(bot_goal_t));
@@ -1074,7 +1307,8 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		return qtrue;
 	}
 
-// eigene cyr}
+	// no LTG
+
 	//normal goal stuff
 	return BotGetItemLongTermGoal(bs, tfl, goal);
 }
@@ -1328,11 +1562,6 @@ int AINode_Respawn(bot_state_t *bs) {
 			trap_BotEnterChat(bs->cs, 0, bs->chatto);
 			bs->enemy = -1;
 		}
-// cyr_20055
-		if(gametype == GT_BALLOON){
-			BotAI_BotInitialChat(bs, "whatsnext", NULL);
-			trap_BotEnterChat(bs->cs, bs->decisionmaker, CHAT_TELL);
-		}
 	}
 	if (bs->respawnchat_time && bs->respawnchat_time < FloatTime() - 0.5) {
 		trap_EA_Talk(bs->client);
@@ -1451,6 +1680,11 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 	if (targetvisible) {
 		// get the entity info of the entity the bot is shooting at
 		BotEntityInfo(goal->entitynum, &entinfo);
+		if(!entinfo.valid)
+		{
+			AIEnter_Seek_LTG(bs, "activate entity: invalid goal entity");
+			return qfalse;
+		}
 		// if the entity the bot shoots at moved
 		if (!VectorCompare(bs->activatestack->origin, entinfo.origin)) {
 #ifdef DEBUG
@@ -1786,13 +2020,146 @@ void CheckHealth(bot_state_t* bs){
 	}
 }
 
+/*bot_state_t* BotStateForName( char* botname ){
+	int i;
+	char buf[MAX_INFO_STRING];
+	char name[MAX_INFO_STRING];
+	bot_state_t* bs;
 
+	for( i=0; i<MAX_CLIENTS; i++ ){
+		trap_GetConfigstring(CS_PLAYERS+i, buf, sizeof(buf));
+		strncpy(name, Info_ValueForKey(buf, "n"), MAX_INFO_STRING-1);
+		name[MAX_INFO_STRING-1] = '\0';
+		Q_CleanStr( name );
+		if( !Q_stricmp(name, botname) )
+			break;
+	}
+
+	if( i == MAX_CLIENTS) 
+		return NULL;
+
+	bs = botstates[i];
+	if(!bs->inuse) 
+		return NULL;
+	return bs;
+}*/
+
+bot_state_t* BotStateForEntNum(int ent){
+	if( !g_entities[ent].inuse || !g_entities[ent].client || !(g_entities[ent].r.svFlags & SVF_BOT) )
+		return NULL;
+
+	return botstates[ent];
+}
 
 void Pos2Goal(vec3_t pos, bot_goal_t *goal){
 	VectorCopy(pos, goal->origin);
 	goal->areanum = BotPointAreaNum(pos);
 	VectorSet(goal->mins, -8, -8, -8);
 	VectorSet(goal->maxs, 8, 8, 8);
+}
+
+void BotCamMoveTo(int ent, vec3_t pos){
+	bot_state_t* bs = BotStateForEntNum(ent);
+	
+	if(!bs)
+		return;
+
+	Pos2Goal(pos, &bs->teamgoal);
+	if( !bs->teamgoal.areanum ) return;
+	bs->cam_movement = BCM_MOVETO;
+}
+
+void BotCamTaunt(int id)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	bs->cam_taunt = qtrue;
+}
+
+void BotCamFire(int id)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	bs->cam_fire = qtrue;
+}
+
+void BotChooseWeap(int id, int weap)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	bs->weaponnum = weap;
+}
+
+void BotCamViewEntitiy(int id, int otherId)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	bs->cam_viewmode = CWM_ENTITY;
+	bs->cam_target = otherId;
+}
+
+void BotCamViewTarget(int id, vec3_t pos)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	vec3_t dir;
+	bs->cam_viewmode = CWM_TARGET;
+	VectorSubtract(pos, bs->origin, dir);
+	vectoangles(dir, bs->cam_angles); 
+}
+
+void BotCamViewangles(int id, vec3_t angles)
+{
+	bot_state_t* bs = BotStateForEntNum(id);
+	bs->cam_viewmode = CWM_ANGLES;
+	VectorCopy(angles, bs->cam_angles);
+}
+
+int AINode_Cam( bot_state_t* bs){
+	
+	if( bs->cam_taunt ){
+		trap_EA_Gesture( bs->client );
+		bs->cam_taunt = qfalse;
+	}
+	if( bs->cam_fire ){
+		trap_EA_Attack( bs->client );
+		bs->cam_fire = qfalse;
+	}
+
+	switch( bs->cam_movement ){
+		case BCM_IDLE:
+			break;
+		case BCM_MOVETO:
+			{
+				bot_moveresult_t moveresult;
+				vec3_t target, dir;
+				BotSetupForMovement(bs);
+				//move towards the goal
+				trap_BotMoveToGoal(&moveresult, bs->ms, &bs->teamgoal, TFL_DEFAULT);
+				if (trap_BotMovementViewTarget(bs->ms, &bs->teamgoal, TFL_DEFAULT, 300, target)) {
+					VectorSubtract(target, bs->origin, dir);
+					vectoangles(dir, bs->ideal_viewangles);
+				}
+
+				if (trap_BotTouchingGoal(bs->origin, &bs->teamgoal))
+					bs->cam_movement = BCM_IDLE;
+			}
+			break;
+		default:	// nothing
+			break;
+	}
+
+	switch( bs->cam_viewmode ){
+		case CWM_MOVEMENT:
+			break;	// movement sets viewangles allready
+		case CWM_ENTITY:
+			{
+				bot_state_t* bs2 = BotStateForEntNum( bs->cam_target );
+				vec3_t dir;
+				VectorSubtract( bs2->origin, bs->origin, dir);
+				vectoangles( dir, bs->ideal_viewangles );
+				break;
+			}
+		case CWM_TARGET:
+		case CWM_ANGLES:
+			VectorCopy( bs->cam_angles, bs->ideal_viewangles );			
+	}
+	return qtrue;
 }
 
 /*
@@ -1902,7 +2269,9 @@ int AINode_Seek_LTG(bot_state_t *bs)
 
 	//check for nearby goals periodicly
 	if (bs->check_time < FloatTime()) {
+		int tt_ltg;	// traveltime to LTG
 		bs->check_time = FloatTime() + 0.5;
+
 
 		if (bs->ltgtype == LTG_DEFENDKEYAREA) range = 400;
 		else range = 150;
@@ -1918,9 +2287,24 @@ int AINode_Seek_LTG(bot_state_t *bs)
 
             //range *= scorealert[BotTeam(bs)];
         }
+
+		if( bs->ltgtype == LTG_CAPTUREFLAG ) //|| bs->ltgtype == LTG_GETFLAG )
+			range = 20;
+
+		// make sure to never to for a NBG that is further away from the bot than the LTG
+		tt_ltg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, goal.areanum, bs->tfl);
+		if( tt_ltg && tt_ltg < range)
+			range = tt_ltg;
+			
 		
 		//
 		if (BotNearbyGoal(bs, bs->tfl, &goal, range)) {
+			bot_goal_t nbg;
+			int tt_nbg;
+			trap_BotGetTopGoal(bs->gs, &nbg);
+			tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, nbg.areanum, bs->tfl);
+			if( bot_developer.integer & AIDBG_NBG )
+				G_Printf("^2going for NBG with tt: %d, LTG has %d, range %d \n", tt_nbg, tt_ltg, range);
 			trap_BotResetLastAvoidReach(bs->ms);
 			//get the goal at the top of the stack
 			//trap_BotGetTopGoal(bs->gs, &tmpgoal);
@@ -1951,13 +2335,16 @@ int AINode_Seek_LTG(bot_state_t *bs)
 	//
 	BotAIBlocked(bs, &moveresult, qtrue);
 
+	
 	//if the viewangles are used for the movement
 	if (moveresult.flags & (MOVERESULT_MOVEMENTVIEWSET|MOVERESULT_MOVEMENTVIEW|MOVERESULT_SWIMVIEW)) {
 		VectorCopy(moveresult.ideal_viewangles, bs->ideal_viewangles);
+		BotAddInfo(bs, "angles: moveresult viewset", AIDBG_MOVE);
 	}
 	//if waiting for something
 	else if (moveresult.flags & MOVERESULT_WAITING) {
 		if (random() < bs->thinktime * 0.8) {
+			BotAddInfo(bs, "angles: random roam goal", AIDBG_MOVE);
 			BotRoamGoal(bs, target);
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
@@ -1965,6 +2352,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 		}
 	}
 	else if (!(bs->flags & BFL_IDEALVIEWSET)) {
+		BotAddInfo(bs, "angles: look at goal", AIDBG_MOVE);
 		if (trap_BotMovementViewTarget(bs->ms, &goal, bs->tfl, 300, target)) {
 			VectorSubtract(target, bs->origin, dir);
 			vectoangles(dir, bs->ideal_viewangles);
@@ -1980,6 +2368,10 @@ int AINode_Seek_LTG(bot_state_t *bs)
 			bs->ideal_viewangles[2] *= 0.5;
 		}
 		bs->ideal_viewangles[2] *= 0.5;
+	}
+	else
+	{
+		BotAddInfo(bs, "angles: independant", AIDBG_MOVE);
 	}
 	//if the weapon is used for the bot movement
 	if (moveresult.flags & MOVERESULT_MOVEMENTWEAPON) bs->weaponnum = moveresult.weapon;
@@ -2036,17 +2428,16 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "battle fight: bot dead");
 		return qfalse;
 	}
-// cyr_zIMP{
+
 	if(BotCheckChargedImp(bs)){
 		return qtrue;
 	}
-// cyr_zIMP}
-//cyr{
-	if( BotInSprayroom(bs) ){	// cyr_zLPS
+
+	if( ClientInSprayroom(bs->client) ){
 		AIEnter_Seek_LTG(bs, "battle fight: ran into sprayroom");
 		return qfalse;
 	}
-//cyr}
+
 	//if there is another better enemy
 	if (BotFindEnemy(bs, bs->enemy)) {
 #ifdef DEBUG
@@ -2068,6 +2459,12 @@ int AINode_Battle_Fight(bot_state_t *bs) {
 
 	//
 	BotEntityInfo(bs->enemy, &entinfo);
+	if(!entinfo.valid)
+	{
+		AIEnter_Seek_LTG(bs, "battle fight: enemy invalid");
+		return qfalse;
+	}
+
 	//if the enemy is dead
 	if (bs->enemydeath_time) {
 		if (bs->enemydeath_time < FloatTime() - 1.0) {
@@ -2233,12 +2630,12 @@ int AINode_Battle_Chase(bot_state_t *bs)
 		AIEnter_Seek_LTG(bs, "battle chase: no enemy area");
 		return qfalse;
 	}
-//cyr{
-	if( BotInSprayroom(bs) ){	// cyr_zLPS
+
+	if( ClientInSprayroom(bs->client) ){
 		AIEnter_Seek_LTG(bs, "battle chase: ran into sprayroom");
 		return qfalse;
 	}
-//cyr}
+
 	//
 	bs->tfl = TFL_DEFAULT;
 /*	if( bs->inventory[INVENTORY_JUMPER] ){
@@ -2260,6 +2657,11 @@ int AINode_Battle_Chase(bot_state_t *bs)
 	VectorSet(goal.maxs, 8, 8, 8);
 	if(gametype == GT_LPS){	// bot knows enemies current position //cyr 20055
 		BotEntityInfo(bs->enemy, &entinfo);
+		if(!entinfo.valid)
+		{
+			AIEnter_Seek_LTG(bs, "battle fight: enemy invalid");
+			return qfalse;
+		}
 		goal.areanum = BotPointAreaNum(entinfo.origin);
 		VectorCopy(entinfo.origin, goal.origin);
 	}
@@ -2366,17 +2768,16 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 		AIEnter_Respawn(bs, "battle retreat: bot dead");
 		return qfalse;
 	}
-// cyr_zIMP{
+
 	if(BotCheckChargedImp(bs)){
 		return qtrue;
 	}
-// cyr_zIMP}
-//cyr{
-	if( BotInSprayroom(bs) ){	// cyr_zLPS
+
+	if( ClientInSprayroom(bs->client) ){
 		AIEnter_Seek_LTG(bs, "battle retreat: ran into sprayroom");
 		return qfalse;
 	}
-//cyr}
+
 	//if no enemy
 	if (bs->enemy < 0 || BotNmyTurnedInvalid(bs) ) {
 		AIEnter_Seek_LTG(bs, "battle retreat: no enemy");
@@ -2384,7 +2785,8 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	//
 	BotEntityInfo(bs->enemy, &entinfo);
-	if (EntityIsDead(&entinfo)) {
+
+	if ( !entinfo.valid || EntityIsDead(&entinfo) ) {
 		AIEnter_Seek_LTG(bs, "battle retreat: enemy dead");
 		return qfalse;
 	}
@@ -2483,8 +2885,10 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
 	}
 	//initialize the movement state
 	BotSetupForMovement(bs);
-//cyr{
-	if(gametype == GT_BALLOON && (bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_BALLCAMP) ){
+
+
+	if(gametype == GT_BALLOON && (bs->ltgtype == LTG_ATTACKENEMYBASE || bs->ltgtype == LTG_BALLCAMP) )
+	{
         vec3_t dir;
         VectorSubtract(bs->teamgoal.origin, bs->origin, dir);
         //if dist < radius, attackmove, else movetogoal
@@ -2493,11 +2897,40 @@ int AINode_Battle_Retreat(bot_state_t *bs) {
         else
             trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
     }
-    else{
+	else if( IsBambam( bs->enemy) )
+	{
+		moveresult = BotAttackMove(bs, bs->tfl);
+	}
+	else if( IsBoomie(bs->enemy) )
+	{
+		// freeze if enemy is boomie and bot is close to the trigger
+		aas_entityinfo_t info;
+		vec3_t dir;
+		BotEntityInfo(bs->enemy, &info);
+		if(info.valid)
+		{
+			VectorSubtract( info.origin, bs->origin, dir);
+			if( VectorLengthSquared(dir) < Square(BOOMIES_TRIGGERBOX*4) )
+			{
+				moveresult = BotAttackMove(bs, bs->tfl);
+			}
+			else
+			{
+				trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+			}	
+		}
+		else
+		{
+			trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
+		}
+	}
+    else
+	{
         //move towards the goal
         trap_BotMoveToGoal(&moveresult, bs->ms, &goal, bs->tfl);
     }
-//cyr}
+
+
 	//if the movement failed
 	if (moveresult.failure) {
 		//reset the avoid reach, otherwise bot is stuck in current area
@@ -2577,11 +3010,11 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 		return qfalse;
 	}
 
-// cyr_zIMP{
+
 	if(BotCheckChargedImp(bs)){
 		return qtrue;
 	}
-// cyr_zIMP}
+
 
 	//if no enemy
 	if (bs->enemy < 0 || BotNmyTurnedInvalid(bs) ) {
@@ -2590,16 +3023,16 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	}
 	//
 	BotEntityInfo(bs->enemy, &entinfo);
-	if (EntityIsDead(&entinfo)) {
+	if ( !entinfo.valid || EntityIsDead(&entinfo) ) {
 		AIEnter_Seek_NBG(bs, "battle nbg: enemy dead");
 		return qfalse;
 	}
-//cyr{
-	if( BotInSprayroom(bs) ){	// cyr_zLPS
+
+	if( ClientInSprayroom(bs->client) ){
 		AIEnter_Seek_LTG(bs, "battle nbg: ran into sprayroom");
 		return qfalse;
 	}
-//cyr}
+
 	//
 	bs->tfl = TFL_DEFAULT;
 /*	if( bs->inventory[INVENTORY_JUMPER] ){

@@ -14,6 +14,7 @@
 #define CTF
 
 #define MAX_ITEMS					256
+
 //bot flags
 #define BFL_STRAFERIGHT				1	//strafe to the right
 #define BFL_ATTACKED				2	//bot has attacked last ai frame
@@ -38,9 +39,13 @@
 #define LTG_ATTACKENEMYBASE			13	//attack the enemy base
 #define LTG_GO_FOR_HEALTH			14
 #define LTG_MAKELOVE_ONTOP			15
-#define LTG_GIVECART				16	// cyr_drop
-#define LTG_FETCHCART				17	// cyr_drop
+#define LTG_GIVECART				16
+#define LTG_FETCHCART				17
 #define LTG_JOINMATE				18
+#define LTG_CAPTUREFLAG				19
+#define LTG_PICKUPFLAG				20
+#define LTG_PLANTBOOMIE				21
+#define LTG_PLANTBAMBAM				22
 
 //some goal dedication times
 
@@ -52,12 +57,12 @@
 #define TEAM_DEFENDKEYAREA_TIME		600	//10 minutes ctf defend base time
 #define TEAM_CAMP_TIME				600	//10 minutes camping time
 #define TEAM_GETITEM_TIME			60	//1 minute
-#define SYC_CART_EXCHANGE_TIME		15	// cyr_drop
+#define SYC_CART_EXCHANGE_TIME		15
 #define RUSHBASE_TIME				120	//2 minutes
 #define CTF_RUSHBASE_TIME			120	//2 minutes ctf rush base time
 #define CTF_RETURNFLAG_TIME			180	//3 minutes to return the flag
 
-#define PUSHCART_DIST 160		// cyr_drop
+#define PUSHCART_DIST 160
 
 //copied from the aas file header
 #define PRESENCE_NONE				1
@@ -71,11 +76,14 @@
 
 extern vmCvar_t bot_developer;
 
-// cyr, ai debug modes
+// ai debug modes
 #define AIDBG_CHAT			8
 #define AIDBG_ROUTES		16
 #define AIDBG_GAMETYPE		32
 #define AIDBG_MOVE			64
+#define AIDBG_NBG			128
+#define AIDBG_COMBAT		256
+#define AIDBG_ALL			32767
 
 typedef struct bot_activategoal_s
 {
@@ -94,7 +102,7 @@ typedef struct bot_activategoal_s
 	struct bot_activategoal_s *next;		//next activate goal on stack
 } bot_activategoal_t;
 
-// cyr{	// enemy info
+/*
 typedef struct nmyinfo_s{
 int client;			// id
 int	maxhealth;		// pessimistic guess, depending on painsounds
@@ -102,7 +110,70 @@ vec3_t lastpos;		// where last seen/heard
 vec3_t lasttime;	// when last seen/heard
 int	   flags;		// waffen, items...
 }nmy_info_t;
-// cyr}
+*/
+
+typedef enum
+{
+	CWM_MOVEMENT,
+	CWM_ENTITY,
+	CWM_TARGET,
+	CWM_ANGLES
+} cam_viewmode_t;
+
+typedef enum{
+	BCM_IDLE,
+	BCM_MOVETO
+} cam_movement_t;
+
+typedef enum{
+	WPLINKRED,
+	WPLINKBLUE,
+	WPLINKLATERAL,
+	WPLINKNUMTYPES
+};
+
+typedef struct ctf_waypoint_s ctf_waypoint_t;
+typedef struct waypointlinks_s waypointlinks_t;
+
+#define MAX_LINKSPERTYPE	5
+struct waypointlinks_s{
+	ctf_waypoint_t* link[MAX_LINKSPERTYPE];
+	int				num;
+};
+
+struct ctf_waypoint_s{
+	waypointlinks_t links[WPLINKNUMTYPES];
+	bot_goal_t		goal;
+	//int travelTime[3];
+	char name[128];
+};
+
+typedef struct bambamspot_s
+{
+	bot_goal_t goal;
+	team_t team;
+	gentity_t* occupied;
+}bambamspot_t;
+
+typedef struct boomiespot_s
+{
+	bot_goal_t goal;
+	vec3_t angles;
+	team_t team;
+	gentity_t* occupied;
+}boomiespot_t;
+
+#define MAX_WAYPOINTS	64
+extern ctf_waypoint_t waypoints[MAX_WAYPOINTS];
+extern int numwaypoints;
+
+#define MAX_BAMBAMSPOTS 64
+extern bambamspot_t bambamspots[MAX_BAMBAMSPOTS];
+extern int numbambamspots;
+
+#define MAX_BOOMIESPOTS 64
+extern boomiespot_t boomiespots[MAX_BOOMIESPOTS];
+extern int numboomiespots;
 
 //bot state
 typedef struct bot_state_s
@@ -246,20 +317,31 @@ typedef struct bot_state_s
 	float sprayTimer;	 // current spraytarget is best before this time (3 sec)
 	int stuckcounter; 	 // bathscript, increased every frame the bot is stuck (his traveltime is the same as last frame)
 	int curtt;			 // bathscript, current traveltime
-	qboolean takecart;	 // cyr_drop stop going for mate, go for NBG
-	float checkcarttime; // cyr_drop  search for weak cart carrying mates - time interval
+	qboolean takecart;	 // stop going for mate, go for NBG
+	float checkcarttime; // search for weak cart carrying mates - time interval
 	float checkhealth_time;
 	qboolean cartthrown;
 	int orderclient;	// teamleader AI, if this is == -1 order only this client
-	int frametime;		// cyr, clock frame duration
+	int frametime;		// clock frame duration
 	float duckuse_time;	// dont use ducks till that time
 	//int blueflagstatus;
 	//int redflagstatus;
 	int observed;
-	char hudinfo[MAX_INFO_STRING];
+	cam_movement_t cam_movement;
+	qboolean cam_taunt;
+	qboolean cam_fire;
+	cam_viewmode_t cam_viewmode;
+	int cam_target;
+	vec3_t cam_angles;
 //	nmyinfo_t nmys[4];
+	ctf_waypoint_t*	wp;
+	int				wptime;
+	char log[10][MAX_SAY_TEXT];
+	int logHead;
+	char hudinfo[MAX_INFO_STRING];
 } bot_state_t;
 
+float AngleDifference(float ang1, float ang2);
 //resets the whole bot state
 void BotResetState(bot_state_t *bs);
 //returns the number of bots in the game
@@ -267,13 +349,20 @@ int NumBots(void);
 //returns info about the entity
 void BotEntityInfo(int entnum, aas_entityinfo_t *info);
 
+qboolean BotWpValid( bot_state_t* bs );
+qboolean FindWp( bot_state_t* bs, qboolean direction_home );
+qboolean GetNextWp( bot_state_t* bs, qboolean );
+qboolean BotWpHasSuccessor(bot_state_t* bs, qboolean direction_home);
+int GetWpID(ctf_waypoint_t* wp);
+void WaypointInit();
+
 extern float floattime;
 #define FloatTime() floattime
 
 // from the game source
-void	BotAddInfo(bot_state_t* bs, char* key, char* value );
-void	QDECL BotAI_Print(int type, char *fmt, ...);
-void	QDECL QDECL BotAI_BotInitialChat( bot_state_t *bs, char *type, ... );
+void	BotAddInfo(bot_state_t* bs, char* value, int dbgFlags );
+void	QDECL BotAI_Print(int type, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+void	QDECL QDECL BotAI_BotInitialChat( bot_state_t *bs, char *type, ... ) __attribute__ ((format (printf, 2, 3)));
 void	BotAI_Trace(bsp_trace_t *bsptrace, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int passent, int contentmask);
 int		BotAI_GetClientState( int clientNum, playerState_t *state );
 int		BotAI_GetEntityState( int entityNum, entityState_t *state );

@@ -11,15 +11,15 @@ int muh;
 #else
 
 #include "g_local.h"
-#include "botlib.h"
-#include "be_aas.h"
-#include "be_ea.h"
-#include "be_ai_char.h"
-#include "be_ai_chat.h"
-#include "be_ai_gen.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ea.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/be_ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
@@ -34,7 +34,7 @@ int muh;
 
 //cyr{
 int lastorderedgoal[MAX_CLIENTS];	// leader AI, aviod spamming humans with the same MSG
-int lastballoonstate[MAX_BALLONS];
+int lastballoonstate[MAX_BALLOONS];
 //cyr}
 
 
@@ -190,7 +190,7 @@ void BotBalloonOrders(bot_state_t *bs) {
 	int i, j;
 	int index;
 	int state;
-	int capstate[MAX_BALLONS];
+	int capstate[MAX_BALLOONS];
 	int nummates;
 	int mates[MAX_CLIENTS];
 	int numcap, numnmycap;
@@ -377,7 +377,7 @@ void BotTeamAI(bot_state_t *bs) {
 				bs->forceorders = qfalse;
 			}
 			// balloon status changed since last frame?
-			for(i = 0; i < MAX_BALLONS; i++){
+			for(i = 0; i < MAX_BALLOONS; i++){
 				if(lastballoonstate[i] != level.balloonState[i]){
 					lastballoonstate[i] = level.balloonState[i];
 					bs->teamgiveorders_time = FloatTime();	// orders für "balloon attacked" überspringen wenns geht

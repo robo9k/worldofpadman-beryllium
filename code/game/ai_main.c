@@ -7,16 +7,16 @@
 
 
 #include "g_local.h"
-#include "q_shared.h"
-#include "botlib.h"		//bot lib interface
-#include "be_aas.h"
-#include "be_ea.h"
-#include "be_ai_char.h"
-#include "be_ai_chat.h"
-#include "be_ai_gen.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
+//#include "../qcommon/q_shared.h"
+#include "../botlib/botlib.h"		//bot lib interface
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ea.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/be_ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
@@ -35,6 +35,16 @@
 
 //bot states
 bot_state_t	*botstates[MAX_CLIENTS];
+
+ctf_waypoint_t waypoints[MAX_WAYPOINTS];
+int numwaypoints;
+
+bambamspot_t bambamspots[MAX_BAMBAMSPOTS];
+int numbambamspots;
+
+boomiespot_t boomiespots[MAX_BOOMIESPOTS];
+int numboomiespots;
+
 //number of bots
 int numbots;
 //floating point time
@@ -66,11 +76,554 @@ vmCvar_t bot_showreachesto;
 
 void ExitLevel( void );
 
+void ResetWaypoints(){
+	numwaypoints = 0;
+	memset( waypoints, 0, sizeof(waypoints) );
 
-// cyr: append key-value pair to bot's CS
-void BotAddInfo(bot_state_t* bs, char* key, char* value ){    
-    if( !bot_developer.integer ) return;
-    Info_SetValueForKey(bs->hudinfo, key, value );
+	numbambamspots = 0;
+	memset( bambamspots, 0, sizeof(bambamspots) );
+
+	numboomiespots = 0;
+	memset( boomiespots, 0, sizeof(boomiespots) );
+}
+
+//! does the bot have a valid waypoint
+qboolean BotWpValid( bot_state_t* bs ){
+	static const int validspan = 1000;	// invalidate wp if it was chosen more than 1 sec ago
+	return( bs->wp && bs->wptime && level.time - bs->wptime < validspan );
+}
+
+ctf_waypoint_t* FindNearestWP( bot_state_t* bs){
+	int i;
+	int best = -1;
+	int travelTime;
+	int bestTravelTime = INT_MAX;
+
+	if( !numwaypoints )
+		return NULL;
+
+	if( !trap_AAS_AreaReachability(bs->areanum) )
+		return NULL;
+
+	for(i=0; i<numwaypoints; i++){
+		travelTime = trap_AAS_AreaTravelTimeToGoalArea( bs->areanum, bs->origin, waypoints[i].goal.areanum, bs->tfl );
+		if(!travelTime) continue;
+
+		if( travelTime < bestTravelTime ){
+			bestTravelTime = travelTime;
+			best = i;
+		}
+	}
+
+	if( INT_MAX == bestTravelTime )
+		return NULL;
+
+	return &waypoints[best];
+}
+
+qboolean FindWp( bot_state_t* bs, qboolean direction_home ){
+	int i; 
+	int tt_bot = -1;
+	int tt_wp = -1;
+	ctf_waypoint_t* successor;
+	ctf_waypoint_t* nearest = FindNearestWP(bs);
+	int team = (direction_home) ? BotTeam(bs) : BotOppositeTeam(bs);
+	team -= 1;	
+
+	if( !nearest )
+		return qfalse;
+	// first assume nearest == best
+	bs->wp = nearest;
+
+	// see if we are between nearest and one of its successors
+	for( i=0; i < nearest->links[team].num; i++){
+		successor = nearest->links[team].link[i];
+		tt_bot = trap_AAS_AreaTravelTimeToGoalArea( bs->areanum, bs->origin, successor->goal.areanum, bs->tfl );
+		tt_wp = trap_AAS_AreaTravelTimeToGoalArea( nearest->goal.areanum, nearest->goal.origin, successor->goal.areanum, bs->tfl );
+		if( tt_bot && tt_wp && tt_bot < tt_wp ){
+			bs->wp = successor;
+			break;
+		}
+	}
+
+	if( bot_developer.integer & AIDBG_GAMETYPE ) 
+	{
+		Com_Printf("FindWp: nearest %s (%d), choose %s (%d)\n", nearest->name, tt_wp, bs->wp->name, tt_bot);
+	}
+
+	bs->wptime = level.time;
+	return qtrue;
+}
+
+int GetWpID(ctf_waypoint_t* wp){
+	if(!wp) return 0;
+	return wp - waypoints;
+}
+
+//! take the bots waypoint (if he has none, find one) and randomly choose 
+//! one of its leaving links and assign its waypoint to the bot. prefer good 
+//! links over lateral ones
+qboolean GetNextWp( bot_state_t* bs, qboolean direction_home ){
+	int linkid;
+	int team = (direction_home) ? BotTeam(bs) : BotOppositeTeam(bs);
+	team -= 1;	
+
+	if( team < 0 )	// team free
+		return qfalse;
+
+	// make sure the wp is valid
+	if( !BotWpValid(bs) )
+		if( !FindWp(bs, direction_home) )
+			return qfalse;
+
+	if( !bs->wp->links[team].num ){	// no good link? try a lateral one
+		if( !bs->wp->links[WPLINKLATERAL].num ){
+			return qfalse;
+		}
+		linkid = randomindex( bs->wp->links[WPLINKLATERAL].num );
+		bs->wp = bs->wp->links[WPLINKLATERAL].link[ linkid ];
+		return qtrue;
+	}
+
+	linkid = randomindex( bs->wp->links[ team ].num );
+	bs->wp = bs->wp->links[ team ].link[linkid ];
+	bs->wptime = level.time;
+	return qtrue;
+}
+
+// true if the bots wp has outgoing links
+qboolean BotWpHasSuccessor(bot_state_t* bs, qboolean direction_home){
+
+	int team = (direction_home) ? BotTeam(bs) : BotOppositeTeam(bs);
+	team -= 1;
+
+	if( team<0 )
+		return qfalse;
+	if( !bs->wp )
+		return qfalse;
+
+	return ( bs->wp->links[team].num || bs->wp->links[WPLINKLATERAL].num );
+}
+
+
+/*
+// wp traveltimes don't make much sense as they are. 
+// also they can't be initialized at level start, because AAS init is not done at this point
+void InitWpTravelTimes()
+{
+	int i;
+	ctf_waypoint_t* wp;
+
+	wp = &waypoints[0];
+	for(i=0; i<numwaypoints; i++,wp++)
+	{
+		if( !trap_AAS_AreaReachability( wp->goal.areanum ) )
+		{
+			G_Printf("waypoint %s unreachable\n", wp->name);
+			wp->travelTime[TEAM_RED] = wp->travelTime[TEAM_RED] = 99999;
+			continue;
+		}
+		wp->travelTime[TEAM_RED] = trap_AAS_AreaTravelTimeToGoalArea( 
+			wp->goal.areanum, wp->goal.origin, ctf_redflag.areanum, TFL_DEFAULT);
+
+		if( !wp->travelTime[TEAM_RED] )
+			G_Printf("^1 waypoint %s has no route to the red flag \n", wp->name);
+
+
+		wp->travelTime[TEAM_BLUE] = trap_AAS_AreaTravelTimeToGoalArea( 
+			wp->goal.areanum, wp->goal.origin, ctf_blueflag.areanum, TFL_DEFAULT);
+
+		if( !wp->travelTime[TEAM_BLUE] )
+			G_Printf("^1 waypoint %s has no route to the blue flag \n", wp->name);
+	}
+}
+*/
+
+
+char* ParseLink( char* buf, int type ){
+	char wpfrom[128];
+	char wpto[128];
+	int i, from, to;
+	//qboolean gotfrom, gotto;
+	waypointlinks_t* links;
+	char* token;
+
+	token = COM_Parse( &buf );
+	if( !*token ){
+		G_Printf("missing link origin name \n");
+		return NULL;
+	}
+	Q_strncpyz( wpfrom, token, sizeof( wpfrom ) );
+
+	token = COM_Parse( &buf );
+	if( !*token ){
+		G_Printf("missing link target name \n");
+		return NULL;
+	}
+	Q_strncpyz( wpto, token, sizeof( wpto ) );
+
+	// find the according waypoints
+	from = to = -1;
+	
+	for( i=0; i<numwaypoints; i++ ){
+		// both found?
+		if( from != -1 && to != -1 )
+			break;
+
+		if( from == -1 ){
+			if( !Q_stricmp(waypoints[i].name, wpfrom ) ){
+				from = i;
+				continue;
+			}
+		}
+
+		if( to == -1 ){
+			if( !Q_stricmp(waypoints[i].name, wpto ) ){
+				to = i;
+			}
+		}
+	}
+
+	if( from == -1 || to == -1 ){
+		G_Printf("no match found for %s or %s \n", wpfrom, wpto );
+		return NULL;
+	}
+
+	links = &waypoints[from].links[type];
+	if( links->num >= MAX_LINKSPERTYPE ){
+		G_Printf("waypoint %s can't have more links of type %d \n", wpfrom, type);
+		return NULL;
+	}
+
+	links->link[ links->num++ ] = &waypoints[to];
+	return buf;
+}
+
+char* ParseBambam(char* buf)
+{
+	char* token;
+	team_t team;
+	vec3_t pos;
+	int i;
+	bambamspot_t* spot;
+
+	// format: bambam red|blue x y z 
+
+	// red|blue
+	token = COM_Parse( &buf );
+	if( !*token ){
+		G_Printf("parsing bambam %d: missing team \n", numbambamspots);
+		return NULL;
+	}
+
+	if( token[0] == 'r' )
+		team = TEAM_RED;
+	else if( token[0] == 'b' )
+		team = TEAM_BLUE;
+	else
+	{
+		G_Printf("parsing bambam %d: unknown team \n", numbambamspots);
+		return NULL;
+	}
+
+	for( i=0; i<3; i++ ){
+		token = COM_Parse( &buf );
+		if( !*token )
+		{
+			G_Printf("parsing bambam %d: missing coordinate %d \n", numbambamspots, i);
+			return NULL;
+		}
+		pos[i] = atoi(token);		
+	}
+	
+	// register
+	if( numbambamspots >= MAX_BAMBAMSPOTS )
+	{
+		G_Printf("parsing bambam %d: too many bambamspots \n", numbambamspots);
+		return NULL;
+	}
+
+	spot = &bambamspots[ numbambamspots++];
+	spot->team = team;
+	VectorCopy( pos, spot->goal.origin );
+	VectorSet( spot->goal.mins, -8, -8, -8 );
+	VectorSet( spot->goal.maxs, 8, 8, 8 );
+	spot->goal.areanum = trap_AAS_BestReachableArea( spot->goal.origin, spot->goal.mins, spot->goal.maxs, spot->goal.origin );
+	if( !spot->goal.areanum || !trap_AAS_AreaReachability(spot->goal.areanum) )
+	{
+		G_Printf("bambam %d is not in a valid area \n", numbambamspots );
+		numbambamspots--; // remove it
+	}
+
+	return buf;
+}
+
+char* ParseBoomie(char* buf)
+{
+	char* token;
+	team_t team;
+	vec3_t pos;
+	vec3_t angles;
+	int i;
+	boomiespot_t* spot;
+
+	// format: boomie red|blue x y z pitch yaw
+
+	// red|blue
+	token = COM_Parse( &buf );
+	if( !*token ){
+		G_Printf("parsing boomie %d: missing team \n", numboomiespots);
+		return NULL;
+	}
+
+	if( token[0] == 'r' )
+		team = TEAM_RED;
+	else if( token[0] == 'b' )
+		team = TEAM_BLUE;
+	else
+	{
+		G_Printf("parsing boomie %d: unknown team \n", numboomiespots);
+		return NULL;
+	}
+
+	// x y z coords
+	for( i=0; i<3; i++ ){
+		token = COM_Parse( &buf );
+		if( !*token )
+		{
+			G_Printf("parsing boomie %d: missing coordinate %d \n", numboomiespots, i);
+			return NULL;
+		}
+		pos[i] = atoi(token);		
+	}
+
+	// pitch
+	for( i=0; i<2; i++)
+	{
+		token = COM_Parse( &buf );
+		if( !*token )
+		{
+			G_Printf("parsing boomie %d: missing angle \n", numboomiespots);
+			return NULL;
+		}
+		angles[i] = atoi( token );
+	}
+
+	angles[2] = 0;
+
+	// register boomie
+	if( numboomiespots >= MAX_BOOMIESPOTS )
+	{
+		G_Printf("parsing boomie %d: too many boomiespots \n", numboomiespots);
+		return NULL;
+	}
+
+	spot = &boomiespots[ numboomiespots++ ];
+	spot->team = team;
+	VectorCopy( angles, spot->angles );
+	VectorCopy( pos, spot->goal.origin );
+	VectorSet( spot->goal.mins, -8, -8, -8 );
+	VectorSet( spot->goal.maxs, 8, 8, 8 );
+	spot->goal.areanum = trap_AAS_BestReachableArea( spot->goal.origin, spot->goal.mins, spot->goal.maxs, spot->goal.origin );
+	if( !spot->goal.areanum || !trap_AAS_AreaReachability(spot->goal.areanum) )
+	{
+		G_Printf("boomie %d is not in a valid area \n", numboomiespots );
+		numboomiespots--; // remove it
+	}
+
+	return buf;
+}
+
+void ParseWaypointFile( char* buf ){
+	char* token;
+	ctf_waypoint_t* wp;
+	int i;
+	qboolean eof = qfalse;
+
+	// reset waypoints
+	ResetWaypoints();
+
+	while(1){
+		token = COM_Parse( &buf );
+		if( !*token ){	// eof
+			eof = qtrue;
+			break;	
+		}
+		if( !Q_stricmp(token,"waypoint") ){
+
+			if( numwaypoints >= MAX_WAYPOINTS ){
+				G_Printf("waypoint limit exceeded \n");
+				break;
+			}
+
+			wp = &waypoints[ numwaypoints++ ];
+			// waypoint name
+			token = COM_Parse( &buf );
+			if( !*token ){
+				G_Printf("missing waypoint name\n");
+				break;
+			}
+			Q_strncpyz( wp->name, token, sizeof( wp->name ) );
+
+			for( i=0; i<3; i++ ){
+				token = COM_Parse( &buf );
+				if( !*token ) break;
+				wp->goal.origin[i] = atoi( token );
+			}
+			// exit if less then 3 tokens were read
+			if(i<3){
+				G_Printf("3 coordinates for waypoint %s needed, only %d present\n", wp->name, i);
+				break;
+			}
+			// finish setting up the goal
+			VectorSet( wp->goal.mins, -8, -8, -8 );
+			VectorSet( wp->goal.maxs,  8,  8,  8 );
+			wp->goal.areanum = trap_AAS_BestReachableArea( wp->goal.origin, wp->goal.mins, wp->goal.maxs, wp->goal.origin );
+			if( !wp->goal.areanum || !trap_AAS_AreaReachability(wp->goal.areanum) )
+				G_Printf("warning: waypoint %s is not in a valid area \n", wp->name );
+
+		}
+		else if( !Q_stricmp(token,"bambam") ){
+			buf = ParseBambam( buf );
+			if(!buf) break;
+		}
+		else if( !Q_stricmp(token,"boomie") ){
+			buf = ParseBoomie( buf );
+			if(!buf) break;
+		}
+		else if( !Q_stricmp(token,"linkred") ){
+			buf = ParseLink( buf, WPLINKRED );
+			if( !buf ) break;
+		}
+		else if( !Q_stricmp(token,"linkblue") ){
+			buf = ParseLink( buf, WPLINKBLUE );
+			if( !buf ) break;
+		}
+		else if( !Q_stricmp(token,"linklateral") ){
+			buf = ParseLink( buf, WPLINKLATERAL );
+			if( !buf ) break;
+		}
+		else{
+			G_Printf("unknown token %s \n", token );
+		}
+	}
+
+	if( !eof )
+	{
+		numwaypoints = 0;
+		G_Printf("malformatted waypoint file\n");
+	}
+	else
+	{
+		G_Printf("parsed %d waypoints %d bambams %d boomies \n", numwaypoints, numbambamspots, numboomiespots);
+	}
+}
+
+void ReadWaypointFile(){
+	int				len;
+	fileHandle_t	f;
+	char			buf[8192];
+	char			mapname[MAX_QPATH];
+	char			filename[MAX_QPATH];
+	char			serverinfo[MAX_INFO_STRING];
+	
+	trap_GetServerinfo( serverinfo, sizeof(serverinfo) );
+	Q_strncpyz( mapname, Info_ValueForKey( serverinfo, "mapname" ), sizeof(mapname) );
+	Com_sprintf( filename, sizeof(filename), "maps/%s.wp", mapname );
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( !f ) {
+		trap_Printf( va( S_COLOR_RED "file not found: %s\n", filename ) );
+		return;
+	}
+	if ( len >= 8192 ) {
+		trap_Printf( va( S_COLOR_RED "file too large: %s is %i, max allowed is %i", filename, len, 8192 ) );
+		trap_FS_FCloseFile( f );
+		return;
+	}
+
+	trap_FS_Read( buf, len, f );
+	buf[len] = 0;
+	trap_FS_FCloseFile( f );
+
+	ParseWaypointFile( buf );
+}
+
+void WaypointInit( ){
+	ReadWaypointFile();	
+	//InitWpTravelTimes();
+}
+
+void AI_AddBoomie(gentity_t* pEnt1, gentity_t* pEnt2)
+{	
+	int id = pEnt1 - g_entities;
+	bot_state_t* bs = botstates[id];
+
+	// if it wasn't built by a bot, we are done
+	if( !bs || !bs->inuse )
+		return;
+
+	// sanity checks
+	if( bs->ltgtype != LTG_PLANTBOOMIE )
+		return;
+
+	if( bs->teammate < 0 || bs->teammate >= numboomiespots )
+		return;
+
+	boomiespots[ bs->teammate ].occupied = pEnt2;
+	bs->ltgtype = 0;
+}
+
+void AI_RemoveBoomie(gentity_t* pEnt)
+{
+	int i;
+	for(i=0; i<numboomiespots; i++)
+	{
+		if( boomiespots[i].occupied == pEnt )
+		{
+			boomiespots[i].occupied = NULL;
+			return;
+		}
+	}
+}
+
+void AI_AddBambam(gentity_t* pEnt1, gentity_t* pEnt2)
+{
+	int id = pEnt1 - g_entities;
+	bot_state_t* bs = botstates[id];
+
+	// if it wasn't built by a bot, we are done
+	if( !bs || !bs->inuse )
+		return;
+
+	// sanity checks
+	if( bs->ltgtype != LTG_PLANTBAMBAM )
+		return;
+
+	if( bs->teammate < 0 || bs->teammate >= numbambamspots )
+		return;
+
+	bambamspots[ bs->teammate ].occupied = pEnt2;
+	bs->ltgtype = 0;
+}
+
+void AI_RemoveBambam(gentity_t* pEnt)
+{
+	int i;
+	for(i=0; i<numbambamspots; i++)
+	{
+		if( bambamspots[i].occupied == pEnt )
+		{
+			bambamspots[i].occupied = NULL;
+			return;
+		}
+	}
+}
+
+// append info to bot's CS
+void BotAddInfo(bot_state_t* bs, char* value, int dbgFlags ){    
+    if( bot_developer.integer & dbgFlags )
+		StringDump_Push(bs->hudinfo, value);
 }
 
 /*
@@ -281,54 +834,59 @@ void BotAddInfoLtg( bot_state_t *bs ){
 			//get the goal at the top of the stack
 			if(trap_BotGetTopGoal(bs->gs, goal) ){
 				trap_BotGoalName(goal->number, buf, sizeof(buf));
-				BotAddInfo(bs, "ltg", va("item %s",buf) );
+				BotAddInfo(bs, va(" ltg: item %s",buf), AIDBG_ALL );
 			}
 			break;
 		}
         case LTG_RUSHBASE:
-        	if( gametype == GT_CTF )
-        		BotAddInfo(bs, "ltg", "back to base" );
-        	else
-        		BotAddInfo(bs, "ltg", "going for spraywall" );	
+			BotAddInfo(bs, "ltg: going for spraywall", AIDBG_ALL );	
 			break;
-			
+		case LTG_CAPTUREFLAG:
+			BotAddInfo(bs, "ltg: bring flag to base", AIDBG_ALL );
+			break;
         case LTG_GETFLAG:
-        	BotAddInfo(bs, "ltg", "get the enemy flag");
+			BotAddInfo(bs, "ltg: get the enemy flag", AIDBG_ALL );
         	break;
         	
 		case LTG_ATTACKENEMYBASE:
 			if( gametype == GT_BALLOON )
-				BotAddInfo(bs, "ltg", va("attack ball %s", g_entities[ bs->teamgoal.entitynum ].message ) );
+				BotAddInfo(bs, va("ltg: attack ball %s", g_entities[ bs->teamgoal.entitynum ].message ), AIDBG_ALL );
 			else
-				BotAddInfo(bs, "ltg", "leave sprayroom");
+				BotAddInfo(bs, "ltg: leave sprayroom", AIDBG_ALL);
 			break;
 		
 		case LTG_DEFENDKEYAREA:
 			if( gametype == GT_BALLOON )
-				BotAddInfo(bs, "ltg", va("defend ball %s", g_entities[ bs->teamgoal.entitynum ].message ) );	
+				BotAddInfo(bs, va("ltg: defend ball %s", g_entities[ bs->teamgoal.entitynum ].message ), AIDBG_ALL );	
 			else if( gametype == GT_CTF )
-				BotAddInfo(bs, "ltg", "defending flag");
+				BotAddInfo(bs, "ltg: defending flag", AIDBG_ALL );
 			break;
         case LTG_BALLCAMP:
-			BotAddInfo(bs, "ltg", "camp loon" );	
+			BotAddInfo(bs, "ltg: camp loon", AIDBG_ALL );	
 			break;
 		case LTG_FETCHCART:
-			BotAddInfo(bs, "ltg", "fetch cart" );	
+			BotAddInfo(bs, "ltg: fetch cart", AIDBG_ALL );	
 			break;
 		case LTG_GIVECART:	
-			BotAddInfo(bs, "ltg", "give cart" );	
+			BotAddInfo(bs, "ltg: give cart", AIDBG_ALL );	
 			break;
         case LTG_GETITEM:
-            BotAddInfo(bs, "ltg", "collect item" );	
+			BotAddInfo(bs, "ltg: collect item", AIDBG_ALL );	
+			break;
+		case LTG_PLANTBAMBAM:
+			BotAddInfo(bs, "ltg: plant bambam", AIDBG_ALL );
+			break;
+		case LTG_PLANTBOOMIE:
+			BotAddInfo(bs, "ltg: plant boomie", AIDBG_ALL);
 			break;
         case LTG_JOINMATE:{
 			char matename[128];
 			ClientName(bs->client, matename, 128);
-			BotAddInfo(bs, "ltg", va("join mate %s",matename) );	
+			BotAddInfo(bs, va("ltg: join mate %s",matename), AIDBG_ALL );	
 			break;
 		}
         default:
-            BotAddInfo(bs, "ltg", "unknown" );
+			BotAddInfo(bs, "ltg: unknown", AIDBG_ALL );
 	}
 }
 
@@ -351,7 +909,7 @@ void BotAddInfoNode(bot_state_t* bs){
 	else
 		Com_sprintf(ainode, sizeof(ainode),"unknown");
 
-	BotAddInfo(bs, "ainode", ainode);
+	BotAddInfo(bs, va("ainode %s", ainode), AIDBG_ALL);
 }
 
 void BotSetInfoConfigString(bot_state_t *bs) {
@@ -367,7 +925,7 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		trap_BotGetTopGoal(bs->gs, &goal);
 		trap_BotGoalName(goal.number, goalname, sizeof(goalname));
 		Com_sprintf(ltgstr, sizeof(ltgstr), "item %s", goalname);
-		BotAddInfo(bs, "ltg", ltgstr );
+		BotAddInfo(bs, va("ltg %s", ltgstr), AIDBG_ALL );
 	}
 	else
 		BotAddInfoLtg( bs );
@@ -382,16 +940,23 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 		//vec3_t offset;
 
 		ClientName(bs->enemy, nmyname, sizeof(nmyname) );
-		BotAddInfo(bs, "nmy", nmyname );
+		BotAddInfo(bs, va("nmy: %s", nmyname), AIDBG_COMBAT );
 
 		//BotEntityInfo(bs->enemy, &entinfo);
-		//VectorSubtract(bs->origin, entinfo.origin, offset);
-		//BotAddInfo(bs, "nmydist", va("%d",(int)VectorLength(offset) ) );
+		//if(entinfo.valid)
+		//{
+		//	VectorSubtract(bs->origin, entinfo.origin, offset);
+		//	BotAddInfo(bs, va("nmydist %d",(int)VectorLength(offset)), AIDBG_COMBAT );
+		//}
 	}
-	else if( IsDuck( bs->enemy))
-		BotAddInfo(bs, "nmy", "killerduck" );
-	else if( IsWall( bs->enemy))
-		BotAddInfo(bs, "nmy", "spray wall" );
+	else if( IsDuck( bs->enemy ))
+		BotAddInfo(bs, "nmy: killerduck", AIDBG_COMBAT );
+	else if( IsWall( bs->enemy ))
+		BotAddInfo(bs, "nmy: spray wall", AIDBG_COMBAT );
+	else if( IsBoomie( bs->enemy ))
+		BotAddInfo(bs, "nmy: boomie", AIDBG_COMBAT );
+	else if( IsBambam( bs->enemy ))
+		BotAddInfo(bs, "nmy: bambam", AIDBG_COMBAT );
 }
 
 /*
@@ -542,12 +1107,11 @@ BotEntityInfo
 ==============
 */
 void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
-	if(entnum==-1)
+	if(entnum < 0 || entnum >= MAX_GENTITIES)
 	{
-		// vor dem trap abfangen... da es sehr oft vorkommt und sonst warscheinlich die ENTE stoert ;P
 		memset(info,0,sizeof(aas_entityinfo_t));
 		if (bot_developer.integer)
-			BotAI_Print(PRT_ERROR, "BotEntityInfo: entnum -1\n");
+			BotAI_Print(PRT_ERROR, "BotEntityInfo: entnum out of range\n");
 	}
 	else
 		trap_AAS_EntityInfo(entnum, info);
@@ -864,15 +1428,10 @@ int BotAI(int client, float thinktime) {
 			args[strlen(args)-1] = '\0';
 			trap_BotQueueConsoleMessage(bs->cs, CMS_NORMAL, args);
 		}
-		else if (!Q_stricmp(buf, "chat")) {
+		else if (!Q_stricmp(buf, "say"))
+		{
 			//remove first and last quote from the chat message
-			memmove(args, args+1, strlen(args));
-			args[strlen(args)-1] = '\0';
-			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
-		}
-		else if (!Q_stricmp(buf, "tchat")) {
-			//remove first and last quote from the chat message
-			memmove(args, args+1, strlen(args));
+			memmove(args, args+5, strlen(args));
 			args[strlen(args)-1] = '\0';
 			trap_BotQueueConsoleMessage(bs->cs, CMS_CHAT, args);
 		}
@@ -1225,15 +1784,9 @@ int BotAILoadMap( int restart ) {
 
 	if (!restart) {
 		trap_Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-		/* changed beryllium */
-		/*
-		trap_BotLibLoadMap( mapname.string );
-		*/
-		/* return value >  0 means error */
 		if ( trap_BotLibLoadMap( mapname.string ) ) {
 			return qfalse;
 		}
-		/* end beryllium */
 	}
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
@@ -1248,17 +1801,83 @@ int BotAILoadMap( int restart ) {
 	return qtrue;
 }
 
-int BotFindHumanPlayer(void){
+gentity_t* BotFindHumanPlayer(void){
 int i;
 	for(i=0; i<level.maxclients;i++){
 		if(level.clients[i].pers.connected != CON_CONNECTED )
 			continue;
 		if( g_entities[i].r.svFlags & SVF_BOT )
 			continue;
-		return i;
+		return &g_entities[i];
 	}
+	return NULL;
+}
+
+int ScanForCrossHairPlayer( gentity_t* observer ) {
+	trace_t		trace;
+	vec3_t		start, forward, end;
+	int			entnum =  observer - g_entities;
+
+	VectorCopy( observer->s.pos.trBase, start );
+	AngleVectors( observer->client->ps.viewangles, forward, NULL, NULL );
+
+	VectorMA( start, 131072, forward, end );
+
+	trap_Trace( &trace, start, NULL, NULL, end, entnum, CONTENTS_BODY );
+	if ( trace.entityNum < MAX_CLIENTS ) 
+		return trace.entityNum;
 	return -1;
 }
+
+// maintains bot_state_t::observed for all bots
+// find a human player, then find a bot the human player might be interested in
+void BotAIObserve( void ){
+	gentity_t* observer;
+	int observedId;
+	static int lastobserved = -1;
+	int i;
+	
+	if(!bot_developer.integer){
+		trap_SetConfigstring( CS_BOTINFO, '\0');
+		return;
+	}
+
+	// determine bot to observe, if any
+	observedId = -1;
+	observer = BotFindHumanPlayer();
+	
+	if( !observer ){
+		trap_SetConfigstring( CS_BOTINFO, '\0');
+		return;
+	}		
+
+	// specing anyone?
+	if (	observer->client->sess.sessionTeam == TEAM_SPECTATOR &&
+			observer->client->sess.spectatorState == SPECTATOR_FOLLOW )
+	{
+		observedId = observer->client->sess.spectatorClient;
+	}
+	else{	// playing or freecam spectator, check the aim target
+		observedId = ScanForCrossHairPlayer( observer );
+		
+		// none found? fall back to backup
+		if(observedId == -1 && lastobserved != -1)
+			observedId = lastobserved;
+		// do backup
+		lastobserved = observedId;
+	}	
+
+	// tell botlib	
+	trap_BotLibVarSet( "debugclient", va("%d", observedId) );
+	
+	// update all bots
+	for( i = 0; i < MAX_CLIENTS; i++ ) {
+		if( !botstates[i] || !botstates[i]->inuse )
+			continue;
+		botstates[i]->observed = (i == observedId) ? qtrue : qfalse;
+	}
+}
+
 /*
 ==================
 BotAIStartFrame
@@ -1272,7 +1891,6 @@ int BotAIStartFrame(int time) {
 	static int local_time;
 	static int botlib_residual;
 	static int lastbotthink_time;
-	int observedId, observerId;
 
 	G_CheckBotSpawn();
 
@@ -1333,8 +1951,6 @@ int BotAIStartFrame(int time) {
 
 	if(bot_developer.integer & AIDBG_ROUTES)
 		trap_BotLibVarSet("showbotroutes", "1" );	// evt bot client id uebergeben und in movetogoal mit ms->client checken
-
-
 
 // cyr }
 	if (bot_pause.integer) {
@@ -1453,29 +2069,15 @@ int BotAIStartFrame(int time) {
 	}
 
 	floattime = trap_AAS_Time();
-	
-	
-	// determine bot to observe, if any
-	observedId = -1;
-	observerId = BotFindHumanPlayer();
-	if ( observerId != -1 ){
-		if ( level.clients[observerId].sess.sessionTeam == TEAM_SPECTATOR ){
-			observedId = level.clients[observerId].sess.spectatorClient;
-		}	
-	}
-	// no bot observed? empty the CS here
-	if(observedId == -1)
-		trap_SetConfigstring( CS_BOTINFO, '\0');
-	
 
+	BotAIObserve();	// choose a bot to observe
+	
 	// execute scheduled bot AI
 	for( i = 0; i < MAX_CLIENTS; i++ ) {
 		if( !botstates[i] || !botstates[i]->inuse ) {
 			continue;
 		}
-		
-		botstates[i]->observed = ( i == observedId) ? qtrue : qfalse;
-		
+	
 		//
 		botstates[i]->botthink_residual += elapsed_time;
 		//
@@ -1540,6 +2142,7 @@ int BotInitLibrary(void) {
 	trap_BotLibVarSet("g_gametype", buf);
 	//bot developer mode and log file
 	trap_BotLibVarSet("bot_developer", bot_developer.string);
+	trap_Cvar_VariableStringBuffer("logfile", buf, sizeof(buf));
 	trap_BotLibVarSet("log", buf);
 	//no chatting
 	trap_Cvar_VariableStringBuffer("bot_nochat", buf, sizeof(buf));
@@ -1600,7 +2203,7 @@ int BotAISetup( int restart ) {
 	trap_Cvar_Register(&bot_interbreedwrite, "bot_interbreedwrite", "", 0);
 	// cyr
 	trap_Cvar_Register(&bot_cachetest, "bot_cachetest", "0", 0);	
-	trap_Cvar_Register(&bot_roamfactor, "bot_roamfactor", "0", 0);
+	trap_Cvar_Register(&bot_roamfactor, "bot_roamfactor", "1", 0);
 	trap_Cvar_Register(&bot_shownextitem, "bot_shownextitem", "0", 0);
 	trap_Cvar_Register(&bot_shownoitem, "bot_shownoitem", "0", 0);
 	trap_Cvar_Register(&bot_showreachesfrom, "bot_showreachesfrom", "0", 0);
@@ -1613,6 +2216,8 @@ int BotAISetup( int restart ) {
 
 	//initialize the bot states
 	memset( botstates, 0, sizeof(botstates) );
+
+	ResetWaypoints();
 
 	errnum = BotInitLibrary();
 	if (errnum != BLERR_NOERROR) return qfalse;

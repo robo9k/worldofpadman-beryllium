@@ -692,3 +692,60 @@ void DeleteDebugLines(){
 		trap_DebugPolygonDelete(i);
 	}
 }
+
+
+static char *AwardName( award_t award ) {
+	char *name;
+
+	switch ( award ) {
+		case AWARD_EXCELLENT:
+			name = "excellent";
+			break;
+		case AWARD_GAUNTLET:
+			name = "gauntlet";
+			break;
+		case AWARD_CAP:
+			name = "cap";
+			break;
+		case AWARD_IMPRESSIVE:
+			name = "impressive";
+			break;
+		case AWARD_DEFEND:
+			name = "defend";
+			break;
+		case AWARD_ASSIST:
+			name = "assist";
+			break;
+		case AWARD_DENIED:
+			name = "denied";
+			break;
+		case AWARD_SPRAYGOD:
+			name = "spraygod";
+			break;
+		case AWARD_SPRAYKILLER:
+			name = "spraykiller";
+			break;
+
+		default:
+			// Should never happen, since we use award_t
+			// Unless someone extends it and forgets to edit this function :)
+			name = "unkown";
+			break;
+	}
+
+	return name;
+}
+
+// award_t is just an alias for EF_AWARD_
+void SetAward( gclient_t *client, award_t award ) {
+	if ( !client ) {
+		return;
+	}
+
+	client->ps.eFlags &= REMOVE_AWARDFLAGS;
+	client->ps.eFlags |= award;
+	client->rewardTime = ( level.time + REWARD_SPRITE_TIME );
+
+	G_LogPrintf( "Award: %i %s\n", ( client - level.clients ), AwardName( award ) );
+}
+

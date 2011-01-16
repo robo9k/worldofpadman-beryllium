@@ -5,7 +5,7 @@
 	this are code for the padmod reload-stations(health/ammo)
 	... there was never a ammo version ;P
 
-  
+
 missbrauchte entety-vars:
 pos1[0] => timer for full-health-msg
 
@@ -15,8 +15,8 @@ pos2[2] => player touched this station (==0: kein touch seit think, ==1: player 
 
 s.angles2[1] => loading-ring animation (0: no rings, 1: full ring animation)
 s.angles2[2] => health in the station (0: leer, 1:voll ... wird in der cgame genutzt)
-		
-		  
+
+
 ######################## ######################## ########################
 */
 
@@ -61,17 +61,10 @@ static void Think_ReloadStation( gentity_t *ent )
 		ent->s.angles2[2] = 1.0f;
 
 		te = G_TempEntity( ent->s.pos.trBase, EV_GENERAL_SOUND );
-		te->s.eventParm = G_SoundIndex( "sounds/HealthStation/Health Station reloaded.wav" );
+		te->s.eventParm = G_SoundIndex( "sounds/healthstation/station_reloaded.wav" );
 		te->r.svFlags |= SVF_BROADCAST;
 
 		ent->pos2[0]=0.0f;
-
-/*		if(level.lastGhostPadTime==0 || level.lastGhostPadTime+4*60*1000 < level.time)
-		{
-			G_SpawnGhostPad(ent);
-			level.lastGhostPadTime = level.time;
-		}
-*/
 	}
 
 	ent->nextthink = level.time+5;//think in the next frame
@@ -96,7 +89,7 @@ static void Touch_ReloadStation( gentity_t *ent, gentity_t *other, trace_t *trac
 		if(ent->pos1[0]+2000<level.time)
 		{
 			te = G_TempEntity( ent->s.pos.trBase, EV_GENERAL_SOUND );
-			te->s.eventParm = G_SoundIndex( "sounds/HealthStation/Full Energie.wav" );
+			te->s.eventParm = G_SoundIndex( "sounds/healthstation/full_energy.wav" );
 			te->r.svFlags |= SVF_BROADCAST;
 			ent->pos1[0]=(float)level.time;
 		}
@@ -155,8 +148,8 @@ void SP_station_health( gentity_t *ent )
 	ent->inuse = qtrue;
 	trap_LinkEntity (ent);
 
-	G_SoundIndex( "sounds/HealthStation/Full Energie.wav" );
-	G_SoundIndex( "sounds/HealthStation/Health Station reloaded.wav" );
+	G_SoundIndex( "sounds/healthstation/full_energy.wav" );
+	G_SoundIndex( "sounds/healthstation/station_reloaded.wav" );
 
 	ent->s.apos.trDuration = ent->health;
 	ent->s.angles2[2] = (float)ent->health/300.0f;

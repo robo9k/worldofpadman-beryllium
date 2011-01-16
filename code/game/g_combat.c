@@ -57,7 +57,7 @@ AddScore
 Adds score to both the client and his team
 ============
 */
-void AddScore( gentity_t *ent, vec3_t origin, int score ) {
+void AddScore( gentity_t *ent, vec3_t origin, int score, char *reason ) {
 	if ( !ent->client ) {
 		return;
 	}
@@ -72,7 +72,10 @@ void AddScore( gentity_t *ent, vec3_t origin, int score ) {
 	ent->client->ps.persistant[PERS_SCORE] += score;
 	if ( g_gametype.integer == GT_TEAM )
 		level.teamScores[ ent->client->ps.persistant[PERS_TEAM] ] += score;
+
 	CalculateRanks();
+
+	G_LogPrintf( "AddScore: %i %i %s\n", ( ent - g_entities ), score, reason );
 }
 
 /*
@@ -89,7 +92,6 @@ void TossClientItems( gentity_t *self ) {
 	int			i;
 	gentity_t	*drop;
 
-	// drop the weapon if not a gauntlet or machinegun
 	weapon = self->s.weapon;
 
 	// make a special check to see if they are changing to a new
@@ -105,6 +107,14 @@ void TossClientItems( gentity_t *self ) {
 		}
 	}
 
+	// Modifiers
+	// prevent weapon drop in instagib
+	if ( g_modInstagib.integer )
+	{
+		weapon = WP_NONE;
+	}
+	
+	// drop the weapon if not punchy, nipper of spraypistol
 	if ( weapon > WP_NIPPER && weapon != WP_GRAPPLING_HOOK && 
 		weapon != WP_SPRAYPISTOL &&
 		self->client->ps.ammo[ weapon ] )
@@ -165,11 +175,11 @@ void TossClientItems( gentity_t *self ) {
 	}
 
 	// drop all the powerups if not in teamplay
-	if ( g_gametype.integer != GT_TEAM ) {
+	//if ( g_gametype.integer >= GT_TEAM ) {
 		angle = 45;
 		for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ )
 		{
-			if( i == PW_BERSERKER ) continue; // berserker wird nicht gedropt
+			if( i == PW_BERSERKER ) continue; // berserker doesn't get dropped
 
 			if ( self->client->ps.powerups[ i ] > level.time ) {
 				item = BG_FindItemForPowerup( i );
@@ -185,7 +195,19 @@ void TossClientItems( gentity_t *self ) {
 				angle += 45;
 			}
 		}
-	}
+
+		for(i=1;i<HI_NUM_HOLDABLE; i++)
+		{
+			if(bg_itemlist[self->client->ps.stats[STAT_HOLDABLE_ITEM]].giTag == i)
+			{
+				item = BG_FindItemForHoldable( i );
+				if(!item) continue;
+				drop = Drop_Item( self, item, angle );
+				drop->count = self->client->ps.stats[STAT_HOLDABLEVAR];
+				angle += 45;
+			}
+		}
+	//}
 }
 
 /*
@@ -240,31 +262,33 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 	if ( self->health > GIB_HEALTH ) {
 		return;
 	}
-	if ( !g_blood.integer ) {
+	//if ( !g_blood.integer ) {
 		self->health = GIB_HEALTH+1;
 		return;
-	}
+	//}
 
-	GibEntity( self, 0 );
+	//GibEntity( self, 0 );
 }
 
 
 // these are just for logging, the client prints its own messages
+// keep in sync with meansOfDeath_t !!!
 char	*modNames[] = {
 	"MOD_UNKNOWN",
-	"MOD_SHOTGUN",
-	"MOD_GAUNTLET",
-	"MOD_MACHINEGUN",
-	"MOD_GRENADE",
-	"MOD_GRENADE_SPLASH",
-	"MOD_ROCKET",
-	"MOD_ROCKET_SPLASH",
-	"MOD_PLASMA",
-	"MOD_PLASMA_SPLASH",
-	"MOD_RAILGUN",
-	"MOD_LIGHTNING",
-	"MOD_BFG",
-	"MOD_BFG_SPLASH",
+	"MOD_PUMPER",
+	"MOD_PUNCHY",
+	"MOD_NIPPER",
+	"MOD_BALLOONY",
+	"MOD_BALLOONY_SPLASH",
+	"MOD_BETTY",
+	"MOD_BETTY_SPLASH",
+	"MOD_BUBBLEG",
+	"MOD_BUBBLEG_SPLASH",
+	"MOD_SPLASHER",
+	"MOD_BOASTER",
+	"MOD_IMPERIUS",
+	"MOD_IMPERIUS_SPLASH",
+	"MOD_INJECTOR",
 
 	"MOD_KILLERDUCKS",
 
@@ -277,7 +301,10 @@ char	*modNames[] = {
 	"MOD_SUICIDE",
 	"MOD_TARGET_LASER",
 	"MOD_TRIGGER_HURT",
-	"MOD_GRAPPLE"
+	"MOD_GRAPPLE",
+
+	"MOD_BAMBAM",
+	"MOD_BOOMIES"
 };
 
 /*
@@ -416,9 +443,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		obit = modNames[ meansOfDeath ];
 	}
 
-	G_LogPrintf("Kill: %i %i %i: %s killed %s by %s\n", 
-		killer, self->s.number, meansOfDeath, killerName, 
-		self->client->pers.netname, obit );
+	G_LogPrintf( "Kill: %i %s %i\n", killer, obit, self->s.number );
 
 	// broadcast the death event to everyone
 	ent = G_TempEntity( self->r.currentOrigin, EV_OBITUARY );
@@ -431,97 +456,45 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	self->client->ps.persistant[PERS_KILLED]++;
 
-	if(g_gametype.integer==GT_LPS)
-	{
-		if(!level.warmupTime) self->client->sess.livesleft--;
-		self->client->lastDeathTime=level.time;
-
-		if( meansOfDeath == MOD_GAUNTLET ) {
-			// play humiliation on player
-			if(!attacker->client->ps.powerups[PW_BERSERKER])
-			{
-				attacker->client->ps.persistant[PERS_GAUNTLET_FRAG_COUNT]++;
-				BerserkerCheck(attacker);
+	if ( g_gametype.integer == GT_LPS ) {
+		if ( !level.warmupTime ) {
+			self->client->sess.livesleft--;
+			if ( self->client->sess.livesleft < 0 ) {
+				// FIXME: Properly limit lives to 0
+				//        and don't check for "<=" everywhere
+				self->client->sess.livesleft = 0;
 			}
-
-			// add the sprite over the player's head
-			attacker->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-			attacker->client->ps.eFlags |= EF_AWARD_GAUNTLET;
-			attacker->client->rewardTime = level.time + REWARD_SPRITE_TIME;
-
-			// also play humiliation on target
-			self->client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_GAUNTLETREWARD;
+			// AddScore() would call this, but since LPS does not use it midway in the game, we need to do it on our own
+			CalculateRanks();
+			// Update scoreboard clientside. This is also used for the different lps icons clientside!
+			SendScoreboardMessageToAllClients();
 		}
 
-		// check for two kills in a short amount of time
-		// if this is close enough to the last kill, give a reward sound
-		if ( level.time - attacker->client->lastKillTime < CARNAGE_REWARD_TIME ) {
-			// play excellent on player
-			attacker->client->ps.persistant[PERS_EXCELLENT_COUNT]++;
+		ent->s.generic1 = self->client->sess.livesleft; // add lives left info to tmpEntity (for attacker midscreen-msg)
+		self->client->lastDeathTime = level.time;
 
-			G_AddEvent(attacker,EV_HEHE1,0);
-
-			// add the sprite over the player's head
-			attacker->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-			attacker->client->ps.eFlags |= EF_AWARD_EXCELLENT;
-			attacker->client->rewardTime = level.time + REWARD_SPRITE_TIME;
-		}
-
-		CalculateRanks();
-		ent->s.generic1 = self->client->sess.livesleft;//self->client->ps.stats[STAT_LIVESLEFT]-1;
-		if(self->client->sess.livesleft<=0)
-		{
-			vec3_t	spawn_origin, spawn_angles;
-			
-			//wird zwar für das BodyQue-Ent schon gemacht ... aber irgendwie bleibt manchmal das firing -.-
-			self->s.eFlags	= EF_DEAD|EF_HURT;
-			self->s.time	= 0;
-			self->s.weapon	= WP_NONE;
-			self->s.powerups = 0;
-			self->r.contents = CONTENTS_CORPSE;
-			self->s.angles[0] = 0;
-			self->s.angles[2] = 0;
-			self->s.loopSound = 0;
-			self->r.maxs[2] = -8;
-			// remove powerups
-			memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
-
-			//funzt glaub ich nicht ;)
-			self->client->ps.legsAnim = 
-				( ( self->client->ps.legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | BOTH_DEATH2;
-			self->client->ps.torsoAnim = 
-				( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | BOTH_DEATH2;
-
-			G_AddEvent( self, EV_DEATH1 + 1, killer );
-			trap_LinkEntity (self);
-
-			CopyToBodyQue(self);
-
-			self->client->sess.spectatorState = SPECTATOR_FREE;
-			self->client->ps.pm_flags &= ~PMF_FOLLOW;
-			self->client->ps.pm_type = PM_SPECTATOR;
-
-			SelectSpectatorSpawnPoint(spawn_origin, spawn_angles);
-			G_SetOrigin( self, spawn_origin );
-			VectorCopy( spawn_origin, self->client->ps.origin );
-			memset(self->client->ps.velocity,0,sizeof(vec3_t));
-			SetClientViewAngle( self, spawn_angles );
-
-			trap_SendServerCommand( self->s.number, "cdi 2"); // YouLooseSound
-			return;
+		if ( self->client->sess.livesleft <= 0 ) {
+			trap_SendServerCommand( self->s.number, "cdi 2");
 		}
 	}
-	else if (attacker && attacker->client)
+
+	if (attacker && attacker->client)
 	{
 		attacker->client->lastkilled_client = self->s.number;
 
 		if ( attacker == self || OnSameTeam (self, attacker ) ) {
-			AddScore( attacker, self->r.currentOrigin, -1 );
+			if(g_gametype.integer!=GT_LPS)
+				AddScore( attacker, self->r.currentOrigin, SCORE_TEAMKILL, SCORE_TEAMKILL_S );
 		} else {
-			if(g_gametype.integer!=GT_SPRAY && g_gametype.integer!=GT_SPRAYFFA && g_gametype.integer!=GT_BALLOON)
-				AddScore( attacker, self->r.currentOrigin, 1 );
+			/*if(g_gametype.integer!=GT_SPRAY && g_gametype.integer!=GT_SPRAYFFA && g_gametype.integer!=GT_BALLOON && g_gametype.integer!=GT_LPS)
+				AddScore( attacker, self->r.currentOrigin, 1 ); */
+			
+			// Scores for killing only in some non-teamplay gametypes
+			if ( ( g_gametype.integer <= GT_TEAM ) && ( g_gametype.integer != GT_LPS ) && ( !IsSyc() ) ) {
+				AddScore( attacker, self->r.currentOrigin, SCORE_KILL, SCORE_KILL_S );
+			}
 
-			if( meansOfDeath == MOD_GAUNTLET ) {
+			if( meansOfDeath == MOD_PUNCHY ) {
 				
 				// play humiliation on player
 				if(!attacker->client->ps.powerups[PW_BERSERKER])
@@ -531,9 +504,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 				}
 
 				// add the sprite over the player's head
-				attacker->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-				attacker->client->ps.eFlags |= EF_AWARD_GAUNTLET;
-				attacker->client->rewardTime = level.time + REWARD_SPRITE_TIME;
+				SetAward( attacker->client, AWARD_GAUNTLET );
 
 				// also play humiliation on target
 				self->client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_GAUNTLETREWARD;
@@ -548,15 +519,15 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 				G_AddEvent(attacker,EV_HEHE1,0);
 
 				// add the sprite over the player's head
-				attacker->client->ps.eFlags &= REMOVE_AWARDFLAGS;
-				attacker->client->ps.eFlags |= EF_AWARD_EXCELLENT;
-				attacker->client->rewardTime = level.time + REWARD_SPRITE_TIME;
+				SetAward( attacker->client, AWARD_EXCELLENT );
 			}
 			attacker->client->lastKillTime = level.time;
 
 		}
 	} else {
-		AddScore( self, self->r.currentOrigin, -1 );
+		if ( g_gametype.integer != GT_LPS ) {
+			AddScore( self, self->r.currentOrigin, SCORE_SUICIDE, SCORE_SUICIDE_S );
+		}
 	}
 
 	// Add team bonuses
@@ -576,7 +547,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
 	contents = trap_PointContents( self->r.currentOrigin, -1 );
-	if ( !( contents & CONTENTS_NODROP )) {
+	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {
 		TossClientItems( self );
 	}
 	else {
@@ -794,9 +765,13 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		attacker = &g_entities[ENTITYNUM_WORLD];
 	}
 
+	if ( !targ->client && CantDamageTeamitem( targ, attacker ) ) {
+		return;
+	}
+
 	// shootable doors / buttons don't actually have any health
 	if ( targ->s.eType == ET_MOVER ) {
-		if ( targ->use && targ->moverState == MOVER_POS1 ) {
+		if ( targ->use && ( targ->moverState == MOVER_POS1 || targ->moverState == ROTATOR_POS1 ) ) {
 			targ->use( targ, inflictor, attacker );
 		}
 		return;
@@ -822,16 +797,24 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		VectorNormalize(dir);
 	}
 
+    // Modifiers / Instagib
+	// Apply special instagib damage rules to target
+	if ( g_modInstagib.integer )
+	{
+		damage = Instagib_calculateDamage( targ, inflictor, attacker, damage, dflags, mod );
+		dflags |= DAMAGE_NO_ARMOR;
+	}
+
 	knockback = damage;
 
-	if(mod==MOD_BFG_SPLASH && knockback > 100)
-		knockback = 100;
+	if ( ( mod == MOD_IMPERIUS_SPLASH ) && ( knockback > KNOCKBACK_MAX_IMPERIUS ) )
+		knockback = KNOCKBACK_MAX_IMPERIUS;
 
-	if(mod==MOD_SHOTGUN && targ==attacker) // PUMPER
-		knockback *= 2;
+	if ( ( mod == MOD_PUMPER ) && ( targ == attacker ) ) // PUMPER
+		knockback *= KNOCKBACK_MOD_PUMPER;
 
-	if(mod==MOD_GRENADE_SPLASH) // BALLOONY
-		knockback *= 2;
+	if ( mod == MOD_BALLOONY_SPLASH ) // BALLOONY
+		knockback *= KNOCKBACK_MOD_BALLOONY;
 
 	if ( knockback > 200 ) {
 		knockback = 200;
@@ -919,12 +902,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( damage < 1 ) {
 		damage = 1;
 	}
-
-	/* added beryllium */
-	/* FIXME: Call earlier? The minimum damage of 1 is a problem here */
-	BE_Damage( targ, inflictor, attacker, dir, point, &damage, &dflags, &mod );
-	/* end beryllium */
-
 	take = damage;
 	save = 0;
 

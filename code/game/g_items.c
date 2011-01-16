@@ -23,6 +23,9 @@
 #define	RESPAWN_MEGAHEALTH	35//120
 #define	RESPAWN_POWERUP		120
 
+#define RESPAWN_DROPPED_FLAG	30
+#define RESPAWN_DROPPED_ITEM	30
+
 
 //======================================================================
 
@@ -92,23 +95,83 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		// anti-reward
 		client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_DENIEDREWARD;
 	}
+
+	// FIXME: Where's the best place for this?
+	if ( ent->item->giTag == PW_BERSERKER ) {
+		trap_SendServerCommand( ( ent - g_entities ), va( "srwc %i", WP_PUNCHY ) );
+		other->client->pers.cmd.weapon = WP_PUNCHY;
+		other->client->ps.weapon = WP_PUNCHY;
+	}
+
 	return RESPAWN_POWERUP;
 }
 
 //======================================================================
 
 int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
+	int count = 0;
 
-	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ent->item - bg_itemlist;
 
-	if(ent->item->giTag == HI_FLOATER)
-	{
-		other->client->ps.stats[STAT_HOLDABLEVAR] = 30000;
+	if ( ent->count > 0 ) {
+		count = ent->count;
 	}
-	else if(ent->item->giTag == HI_KILLERDUCKS)
-	{
-		other->client->ps.stats[STAT_HOLDABLEVAR] = 5;
+	else {
+		// apply defaults
+		switch ( ent->item->giTag ) {
+			case HI_FLOATER:
+				count = MAX_FLOATER;
+				break;
+			case HI_KILLERDUCKS:
+				count = MAX_KILLERDUCKS;
+				break;
+			case HI_BOOMIES:
+				count = MAX_BOOMIES;
+				break;
+			case HI_BAMBAM:
+				count = MAX_BAMBAMS;
+				break;
+			default:
+				count = 0; // FIXME: Return here?
+				break;
+		}
 	}
+
+	// already has this holdable, add to
+	// NOTE: Basically BG_CanItemBeGrabbed() already ensures this
+	if ( bg_itemlist[other->client->ps.stats[STAT_HOLDABLE_ITEM]].giTag == ent->item->giTag ) {
+		count += other->client->ps.stats[STAT_HOLDABLEVAR];
+	}
+	// apply upper limits
+	switch ( ent->item->giTag ) {
+		case HI_FLOATER:
+			if ( count > MAX_FLOATER ) {
+				count = MAX_FLOATER;
+			}
+			break;
+		case HI_KILLERDUCKS:
+			if ( count > MAX_KILLERDUCKS ) {
+				count = MAX_KILLERDUCKS;
+			}
+			break;
+		case HI_BOOMIES:
+			if ( count > MAX_BOOMIES ) {
+				count = MAX_BOOMIES;
+			}
+			break;
+		case HI_BAMBAM:
+			if ( count > MAX_BAMBAMS ) {
+				count = MAX_BAMBAMS;
+			}
+			break;
+		default:
+			count = 0; // FIXME: Return here?
+			break;
+	}
+
+	// FIXME: Check for NULLs?
+	other->client->ps.stats[STAT_HOLDABLE_ITEM] = ( ent->item - bg_itemlist );
+	other->client->ps.stats[STAT_HOLDABLEVAR] = count;
+
 
 	return RESPAWN_HOLDABLE;
 }
@@ -120,10 +183,12 @@ void Add_Ammo (gentity_t *ent, int weapon, int count)
 {
 	ent->client->ps.ammo[weapon] += count;
 
-	if(weapon==WP_IMPERIUS && ent->client->ps.ammo[weapon] > 5)
-		ent->client->ps.ammo[weapon] = 5;
-	else if ( ent->client->ps.ammo[weapon] > 200 )
-		ent->client->ps.ammo[weapon] = 200;
+	if ( ( weapon == WP_IMPERIUS ) && ( ent->client->ps.ammo[weapon] > MAXAMMO_IMPERIUS ) ) {
+		ent->client->ps.ammo[weapon] = MAXAMMO_IMPERIUS;
+	}
+	else if ( ent->client->ps.ammo[weapon] > MAXAMMO_WEAPON ) {
+		ent->client->ps.ammo[weapon] = MAXAMMO_WEAPON;
+	}
 }
 
 int Pickup_Ammo (gentity_t *ent, gentity_t *other)
@@ -276,7 +341,7 @@ RespawnItem
 ===============
 */
 void RespawnItem( gentity_t *ent ) {
-	// randomly select from teamed entities
+	// select from teamed entities
 	if (ent->team) {
 		gentity_t	*master;
 		int	count;
@@ -285,15 +350,34 @@ void RespawnItem( gentity_t *ent ) {
 		if ( !ent->teammaster ) {
 			G_Error( "RespawnItem: bad teammaster");
 		}
-		master = ent->teammaster;
 
-		for (count = 0, ent = master; ent; ent = ent->teamchain, count++)
-			;
+		if( ent->spawnflags & 2)	// randomly select from the group
+		{
+			master = ent->teammaster;
 
-		choice = rand() % count;
+			for (count = 0, ent = master; ent; ent = ent->teamchain, count++)
+				;
 
-		for (count = 0, ent = master; count < choice; ent = ent->teamchain, count++)
-			;
+			choice = rand() % count;
+
+			for (count = 0, ent = master; count < choice; ent = ent->teamchain, count++)
+				;
+		}
+		else	// loop through the group
+		{
+			if(ent->teamchain)
+				ent = ent->teamchain;
+			else
+				ent = ent->teammaster;
+		}
+	}
+
+	if(ent->team)
+	{
+		if ( !ent->teammaster )
+			G_Error( "RespawnItem: bad teammaster");
+
+
 	}
 
 	ent->r.contents = CONTENTS_TRIGGER;
@@ -312,7 +396,7 @@ void RespawnItem( gentity_t *ent ) {
 		else {
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
 		}
-		te->s.eventParm = G_SoundIndex( "sound/items/poweruprespawn.wav" );
+		te->s.eventParm = G_SoundIndex( "sounds/items/powerup_respawn.wav" );
 		te->r.svFlags |= SVF_BROADCAST;
 	}
 
@@ -491,13 +575,16 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	VectorCopy( velocity, dropped->s.pos.trDelta );
 
 	dropped->s.eFlags |= EF_BOUNCE_HALF;
-	if (g_gametype.integer == GT_CTF && item->giType == IT_TEAM) { // Special case for CTF flags
+	// Special case for CTF flags
+	if ( ( g_gametype.integer == GT_CTF ) && ( item->giType == IT_TEAM ) ) {
 		dropped->think = Team_DroppedFlagThink;
-		dropped->nextthink = level.time + 30000;
+		dropped->nextthink = ( level.time + RESPAWN_DROPPED_FLAG * 1000 );
 		Team_CheckDroppedItem( dropped );
-	} else { // auto-remove after 30 seconds
+	}
+	// auto-remove after timeout
+	else {
 		dropped->think = G_FreeEntity;
-		dropped->nextthink = level.time + 30000;
+		dropped->nextthink = ( level.time + RESPAWN_DROPPED_ITEM * 1000 );
 	}
 
 	dropped->flags = FL_DROPPED_ITEM;
@@ -525,6 +612,9 @@ gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
 	AngleVectors( angles, velocity, NULL, NULL );
 	VectorScale( velocity, 150, velocity );
 	velocity[2] += 200 + crandom() * 50;
+
+	// FIXME: Cartridges call LaunchItem() directly
+	G_LogPrintf( "DropItem: %i %s\n", ( ent - g_entities ), item->classname );
 	
 	return LaunchItem( item, ent->s.pos.trBase, velocity );
 }
@@ -605,6 +695,16 @@ void FinishSpawningItem( gentity_t *ent ) {
 		return;
 	}
 
+	if ( ent->item->giType == IT_HOLDABLE ) {
+		if ( ( ent->item->giTag == HI_BAMBAM ) && ( g_gametype.integer != GT_CTF ) ) {
+			return;
+		}
+		else if ( ( ent->item->giTag == HI_BOOMIES ) &&
+		          ( ( g_gametype.integer != GT_CTF ) && ( g_gametype.integer != GT_BALLOON ) ) ) {
+			return;
+		}
+	}
+
 
 	trap_LinkEntity (ent);
 }
@@ -651,8 +751,9 @@ void ClearRegisteredItems( void ) {
 
 	RegisterItem( BG_FindItemForWeapon( WP_KILLERDUCKS ) );
 
-	if(g_gametype.integer==GT_SPRAY || g_gametype.integer==GT_SPRAYFFA)
+	if ( IsSyc() ) {
 		RegisterItem( BG_FindItemForWeapon( WP_SPRAYPISTOL ) );
+	}
 }
 
 /*
@@ -738,7 +839,7 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 	ent->physicsBounce = 0.50;		// items are bouncy
 
 	if ( item->giType == IT_POWERUP ) {
-		G_SoundIndex( "sound/items/poweruprespawn.wav" );
+		G_SoundIndex( "sounds/items/powerup_respawn.wav" );
 		G_SpawnFloat( "noglobalsound", "0", &ent->speed);
 	}
 
@@ -845,175 +946,5 @@ void G_RunItem( gentity_t *ent ) {
 	}
 
 	G_BounceItem( ent, &tr );
-}
-
-/*
-#######################
-
-  GhostPad
-
-#######################
-*/
-gentity_t* findNextHealthStation(gentity_t* lastEnt)
-{
-	gentity_t* ret=NULL;
-	int i,j;
-
-	if(lastEnt!=NULL)
-		j = lastEnt-g_entities;
-	else
-		j = (rand() % (level.num_entities-MAX_CLIENTS))+MAX_CLIENTS;
-
-	if(j>=level.num_entities || j<MAX_CLIENTS)
-		j = MAX_CLIENTS;
-
-	for(i=j+1;i!=j;++i)
-	{
-		if( i>=level.num_entities )
-			i=MAX_CLIENTS;
-
-		if(g_entities[i].s.eType == ET_STATION)
-		{
-			ret = &g_entities[i];
-			break;
-		}
-	}
-
-	return ret;
-}
-
-#define GHOSTVELOCITY 400 //100
-
-static void GhostPad_Die( gentity_t *ent, gentity_t *inflictor, gentity_t *attacker, int damage, int mod )
-{
-	if(ent->s.eFlags & EF_DEAD)
-		return;
-
-	if(attacker->client)
-	{
-		attacker->health = 200;
-		attacker->client->ps.stats[STAT_HEALTH] = attacker->health;
-		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " got a healthboost from GhostPad\n\"",attacker->client->pers.netname));
-	}
-
-	BG_EvaluateTrajectory( &ent->s.pos, level.time, ent->r.currentOrigin );
-	VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
-	VectorClear(ent->s.pos.trDelta);
-
-	ent->r.contents = 0;
-	ent->s.eFlags = EF_DEAD;
-	ent->s.time = level.time;
-	ent->nextthink = level.time+6500;
-}
-
-static void GhostPad_Pain(gentity_t *self, gentity_t *attacker, int damage)
-{
-	int i;
-
-	for(i=0;i<1+(rand()&3);++i)
-		self->nextTrain = findNextHealthStation(self->nextTrain);
-
-	if(self->nextTrain)
-	{
-		// start "porting"
-		self->s.eFlags = EF_FIRING;
-		self->takedamage = qfalse;
-		self->s.time = level.time;
-		self->nextthink = level.time+2000;
-/*		self->r.currentOrigin[0] = self->nextTrain->r.currentOrigin[0];
-		self->r.currentOrigin[1] = self->nextTrain->r.currentOrigin[1];
-		self->r.currentOrigin[2] = self->nextTrain->r.currentOrigin[2]+128;
-		VectorCopy(self->r.currentOrigin, self->s.pos.trBase);
-*/
-		trap_LinkEntity (self);
-	}
-	else
-	{
-		// no new target found?
-		self->r.contents = 0;
-		self->s.eFlags = EF_DEAD;
-		self->s.time = level.time;
-		self->nextthink = level.time+6500;
-	}
-}
-
-static void GhostPad_Think( gentity_t *ent )
-{
-	if(ent->s.eFlags & EF_DEAD)
-	{
-		G_FreeEntity(ent);
-	}
-	else if(ent->s.eFlags & EF_FIRING)
-	{
-		// end "porting"
-		ent->s.eFlags = 0;
-		ent->takedamage = qtrue;
-		ent->s.time = 0;
-		ent->r.currentOrigin[0] = ent->nextTrain->r.currentOrigin[0];
-		ent->r.currentOrigin[1] = ent->nextTrain->r.currentOrigin[1];
-		ent->r.currentOrigin[2] = ent->nextTrain->r.currentOrigin[2]+128;
-		VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
-
-		ent->s.pos.trDelta[0] = crandom();
-		ent->s.pos.trDelta[1] = crandom();
-
-		trap_LinkEntity (ent);
-	}
-}
-
-void G_SpawnGhostPad(gentity_t* start)
-{
-	gentity_t*	ent;
-	gentity_t*	parent;
-
-	if(start && start->s.eType == ET_STATION)
-		parent = start;
-	else
-		parent = findNextHealthStation(NULL);
-
-	if(!parent) return;
-
-	ent = G_Spawn();
-//	Com_Printf("Spawn GhostPad(%i)\n",ent - g_entities);
-	ent->classname = "GhostPad";
-	ent->s.eType = ET_GHOSTPAD;
-	ent->s.eFlags = 0;
-	ent->parent = parent;
-//	ent->nextTrain = findNextHealthStation(parent);
-	ent->nextTrain = ent->parent;
-	if(ent->nextTrain)
-	{
-		ent->r.currentOrigin[0] = ent->nextTrain->r.currentOrigin[0];
-		ent->r.currentOrigin[1] = ent->nextTrain->r.currentOrigin[1];
-		ent->r.currentOrigin[2] = ent->nextTrain->r.currentOrigin[2]+128;
-		VectorCopy(ent->r.currentOrigin, ent->s.pos.trBase);
-		ent->nextthink = level.time + 100;
-	}
-	else
-		ent->nextthink = level.time + 10000;
-
-	ent->s.pos.trDelta[0] = crandom();
-	ent->s.pos.trDelta[1] = crandom();
-
-	ent->r.mins[0] = -(ent->r.maxs[0] = 128);
-	ent->r.mins[1] = -(ent->r.maxs[1] = 128);
-	ent->r.mins[2] = -(ent->r.maxs[2] = 128);
-
-//	ent->r.svFlags = SVF_USE_CURRENT_ORIGIN; //? used that at the missiles
-	ent->r.contents = CONTENTS_CORPSE;//CONTENTS_BODY;
-	ent->r.ownerNum = ent - g_entities;
-
-	ent->think = GhostPad_Think;
-
-	ent->die	= GhostPad_Die;
-	ent->pain	= GhostPad_Pain;
-
-	ent->takedamage = qtrue;
-	ent->health = 200;
-
-	VectorCopy( ent->s.pos.trBase, ent->r.currentOrigin );
-
-	trap_LinkEntity(ent);
-	trap_SendServerCommand( -1, "cdi 4"); // info for the player ... ghostpad started
 }
 

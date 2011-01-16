@@ -3,7 +3,7 @@
 // bg_pmove.c -- both games player movement code
 // takes a playerstate and a usercmd as input and returns a modifed playerstate
 
-#include "q_shared.h"
+#include "../qcommon/q_shared.h"
 #include "bg_public.h"
 #include "bg_local.h"
 
@@ -354,40 +354,14 @@ static qboolean PM_CheckJump( void ) {
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
 
-	if(pm->ps->powerups[PW_CLIMBER])
-	{
-#ifdef WWCODE
-		trace_t	tr;
-		vec3_t	endorigin;
-
-		if(pm->ps->powerups[PW_JUMPER])
-		{
-			pm->ps->velocity[0] += pm->wwnormal[0]*JUMP_VELOCITY*2.5f;
-			pm->ps->velocity[1] += pm->wwnormal[1]*JUMP_VELOCITY*2.5f;
-			pm->ps->velocity[2] += pm->wwnormal[2]*JUMP_VELOCITY*2.5f;
-		}
-		else
-		{
-			pm->ps->velocity[0] += pm->wwnormal[0]*JUMP_VELOCITY;
-			pm->ps->velocity[1] += pm->wwnormal[1]*JUMP_VELOCITY;
-			pm->ps->velocity[2] += pm->wwnormal[2]*JUMP_VELOCITY;
-		}
-
-		endorigin[0]=pm->ps->origin[0]+pm->wwnormal[0]*16;
-		endorigin[1]=pm->ps->origin[1]+pm->wwnormal[1]*16;
-		endorigin[2]=pm->ps->origin[2]+pm->wwnormal[2]*16;
-
-		pm->wallwalk=qfalse;
-		pm->trace(&tr,pm->ps->origin,pm->mins,pm->maxs,endorigin,pm->ps->clientNum,MASK_PLAYERSOLID);
-		pm->ps->origin[0]=tr.endpos[0];
-		pm->ps->origin[1]=tr.endpos[1];
-		pm->ps->origin[2]=tr.endpos[2];
-#endif
+	if( pm->ps->powerups[PW_JUMPER] && pm->ps->weapon != WP_SPRAYPISTOL ) {
+		// FIXME: Magical constant 2.5
+		pm->ps->velocity[2] = ( JUMP_VELOCITY * 2.5 );
 	}
-	else if(pm->ps->powerups[PW_JUMPER] && pm->ps->weapon!=WP_SPRAYPISTOL)
-		pm->ps->velocity[2] = JUMP_VELOCITY * 2.5f;
-	else
+	else {
 		pm->ps->velocity[2] = JUMP_VELOCITY;
+	}
+
 	PM_AddEvent( EV_JUMP );
 
 	if ( pm->cmd.forwardmove >= 0 ) {
@@ -676,266 +650,6 @@ static void PM_GrappleMove( void ) {
 	pml.groundPlane = qfalse;
 }
 
-#ifdef	WWCODE
-/*
-===================
-PM_WallWalkMove
-
-copy of the PM_WalkMove changed by #@
-... and it doesn't work good -.-
-===================
-*/
-static vec3_t	wwMins = {-15, -15, -15};
-static vec3_t	wwMaxs = {15, 15, 15};
-
-static void PM_WallWalkMove( void ) {
-	vec3_t		wishvel;
-	float		fmove, smove;
-	vec3_t		wishdir;
-	float		wishspeed;
-	float		scale;
-	usercmd_t	cmd;
-	float		accelerate;
-	float		vel;
-	vec3_t		tmpv3,tmpv3_2, startnormal;
-	float		drop, speed, newspeed;
-	float		*velptr;
-	trace_t		tr;
-
-	if ( pm->waterlevel > 2 && DotProduct( pml.forward, pml.groundTrace.plane.normal ) > 0 ) {
-		// begin swimming
-		PM_WaterMove();
-		return;
-	}
-
-	if ( PM_CheckJump () ) {
-		// jumped away
-		if ( pm->waterlevel > 1 ) {
-			PM_WaterMove();
-		} else {
-			PM_AirMove();
-		}
-		return;
-	}
-
-	if( pm->ps->pmove_framecount!=((pm->lastwwframe+1)&((1<<PS_PMOVEFRAMECOUNTBITS)-1)) )
-	{
-		Com_Printf("frame übersprungen??? ... cg\n");
-		tmpv3[0]=pm->ps->origin[0];
-		tmpv3[1]=pm->ps->origin[1];
-		tmpv3[2]=pm->ps->origin[2]-32;
-		pm->trace(&tr,pm->ps->origin,wwMins,wwMaxs,tmpv3,pm->ps->clientNum,(CONTENTS_SOLID|CONTENTS_PLAYERCLIP));//wwMins,wwMaxs
-		if(tr.fraction!=1.0f)
-		{//there is something in the front
-			pm->wwnormal[0]=tr.plane.normal[0];
-			pm->wwnormal[1]=tr.plane.normal[1];
-			pm->wwnormal[2]=tr.plane.normal[2];
-
-			pm->ps->origin[0]=tr.endpos[0]+9*pm->wwnormal[0];
-			pm->ps->origin[1]=tr.endpos[1]+9*pm->wwnormal[1];
-			pm->ps->origin[2]=tr.endpos[2]+9*pm->wwnormal[2];
-		}
-		else
-		{//noch nicht ideal ... es fehlt das "ich spring gegen die wand und bleib kleben" ;)
-			PM_AirMove();//wir sind nich bei einer wand ... also in der luft
-			pm->wallwalk=qfalse;
-		}
-	}
-	pm->lastwwframe=pm->ps->pmove_framecount;
-
-	startnormal[0]=pm->wwnormal[0];
-	startnormal[1]=pm->wwnormal[1];
-	startnormal[2]=pm->wwnormal[2];
-
-//	PM_Friction ();
-	//friction start
-	velptr=pm->ps->velocity;
-//	tmpv3[0]=velptr[0]; tmpv3[1]=velptr[1]; tmpv3[2]=0;//so wird es in friction gemacht ... mir gefällt das allerdings nich ganz da wir ja ach in richtung [2] laufen können ... also: //noch mal drüber nach denken
-	speed = VectorLength(velptr);
-	if(speed<1)	{velptr[0]=0;velptr[1]=0;velptr[2]=0;}//we don't need a sinking underwater, because we are at the wall ;)
-	else
-	{
-		drop=0;
-		//we allways take walk friction ... I hope this works ;)
-		if ( pm->waterlevel <= 1 && !(pm->ps->pm_flags & PMF_TIME_KNOCKBACK) ) {
-//			control = speed < pm_stopspeed ? pm_stopspeed : speed;
-//			drop += control*pm_friction*pml.frametime;
-			drop += (speed < pm_stopspeed ? pm_stopspeed : speed)*pm_friction*pml.frametime;
-		}
-		//we add the waterfriction if we walk thru water
-		if ( pm->waterlevel ) {
-			drop += speed*pm_waterfriction*pm->waterlevel*pml.frametime;
-		}
-		//we don't add flying friction, because we are don't fly with wallwalk ;)
-		//we also don't need spectator friction ... no spectator will geht this flag
-		newspeed = speed - drop;
-		if(newspeed<0) {velptr[0]=0;velptr[1]=0;velptr[2]=0;}
-		else
-		{
-			newspeed /= speed;
-			velptr[0] = velptr[0] * newspeed;
-			velptr[1] = velptr[1] * newspeed;
-			velptr[2] = velptr[2] * newspeed;
-		}
-	}
-	//friction end
-
-	fmove = pm->cmd.forwardmove;
-	smove = pm->cmd.rightmove;
-
-	cmd = pm->cmd;
-	scale = PM_CmdScale( &cmd );
-
-	// set the movementDir so clients can rotate the legs for strafing
-	PM_SetMovementDir();
-
-	// project moves down to flat plane
-//	pml.forward[2] = 0;
-//	pml.right[2] = 0;
-
-	// project the forward and right directions onto the ground plane
-	PM_ClipVelocity (pml.forward, pm->wwnormal, pml.forward, OVERCLIP );
-	PM_ClipVelocity (pml.right, pm->wwnormal, pml.right, OVERCLIP );
-
-	VectorNormalize (pml.forward);
-	VectorNormalize (pml.right);
-
-	wishvel[0] = pml.forward[0]*fmove + pml.right[0]*smove;
-	wishvel[1] = pml.forward[1]*fmove + pml.right[1]*smove;
-	wishvel[2] = pml.forward[2]*fmove + pml.right[2]*smove;
-
-	// when going up or down slopes the wish velocity should Not be zero
-//	wishvel[2] = 0;
-
-	VectorCopy (wishvel, wishdir);
-	wishspeed = VectorNormalize(wishdir);
-	wishspeed *= scale;
-
-	// clamp the speed lower if ducking
-	if ( pm->ps->pm_flags & PMF_DUCKED ) {
-		if ( wishspeed > pm->ps->speed * pm_duckScale ) {
-			wishspeed = pm->ps->speed * pm_duckScale;
-		}
-	}
-
-	// clamp the speed lower if wading or walking on the bottom 
-	if ( pm->waterlevel ) {
-		float	waterScale;
-
-		waterScale = pm->waterlevel / 3.0;
-		waterScale = 1.0 - ( 1.0 - pm_swimScale ) * waterScale;
-		if ( wishspeed > pm->ps->speed * waterScale ) {
-			wishspeed = pm->ps->speed * waterScale;
-		}
-	}
-
-/*	no acceleration
-	// when a player gets hit, they temporarily lose
-	// full control, which allows them to be moved a bit
-	if ( ( pml.groundTrace.surfaceFlags & SURF_SLICK ) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK ) {
-		accelerate = pm_airaccelerate;
-	} else {
-		accelerate = pm_accelerate;
-	}
-*/
-	accelerate = pm_accelerate;
-
-	PM_Accelerate (wishdir, wishspeed, accelerate);
-
-/*
-	if ( ( pml.groundTrace.surfaceFlags & SURF_SLICK ) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK ) {
-		pm->ps->velocity[2] -= pm->ps->gravity * pml.frametime;
-	} else {
-		// don't reset the z velocity for slopes
-//		pm->ps->velocity[2] = 0;
-	}
-*/
-
-	vel = VectorLength(velptr);
-
-	// slide along the ground plane
-	PM_ClipVelocity (velptr, pm->wwnormal, velptr, OVERCLIP );
-
-	// don't decrease velocity when going up or down a slope
-	VectorNormalize(velptr);
-	VectorCopy(velptr,tmpv3_2);
-	VectorScale(velptr, vel, velptr);
-
-	// don't do anything if standing still
-	if (!velptr[0] && !velptr[1] && !velptr[2]) {
-		return;
-	}
-
-//	PM_StepSlideMove( qfalse );
-
-	tmpv3[0]=pm->ps->origin[0]+pml.frametime*velptr[0];//+tmpv3_2[0]*24;
-	tmpv3[1]=pm->ps->origin[1]+pml.frametime*velptr[1];//+tmpv3_2[1]*24;
-	tmpv3[2]=pm->ps->origin[2]+pml.frametime*velptr[2];//+tmpv3_2[2]*24;
-	pm->trace(&tr,pm->ps->origin,wwMins,wwMaxs,tmpv3,pm->ps->clientNum,(CONTENTS_SOLID|CONTENTS_PLAYERCLIP));//MASK_SHOT
-	if(tr.fraction!=1.0f)
-	{	//we hit a wall ...
-		VectorCopy(tr.plane.normal,pm->wwnormal);//VectorCopy(in,out)
-
-		pm->ps->origin[0]=tr.endpos[0]+9*pm->wwnormal[0];
-		pm->ps->origin[1]=tr.endpos[1]+9*pm->wwnormal[1];
-		pm->ps->origin[2]=tr.endpos[2]+9*pm->wwnormal[2];
-	}
-	else
-	{
-		tmpv3[0]=pm->ps->origin[0]+pml.frametime*velptr[0];
-		tmpv3[1]=pm->ps->origin[1]+pml.frametime*velptr[1];
-		tmpv3[2]=pm->ps->origin[2]+pml.frametime*velptr[2];
-		tmpv3_2[0]=pm->ps->origin[0]+pml.frametime*velptr[0]-48*pm->wwnormal[0];
-		tmpv3_2[1]=pm->ps->origin[1]+pml.frametime*velptr[1]-48*pm->wwnormal[1];
-		tmpv3_2[2]=pm->ps->origin[2]+pml.frametime*velptr[2]-48*pm->wwnormal[2];
-		pm->trace(&tr,tmpv3,wwMins,wwMaxs,tmpv3_2,pm->ps->clientNum,(CONTENTS_SOLID|CONTENTS_PLAYERCLIP));//wwMins,wwMaxs
-		if(tr.fraction!=1.0f)
-		{//there is something in the front
-			VectorCopy(tr.plane.normal,pm->wwnormal);//VectorCopy(in,out)
-
-			pm->ps->origin[0]=tr.endpos[0]+9*pm->wwnormal[0];
-			pm->ps->origin[1]=tr.endpos[1]+9*pm->wwnormal[1];
-			pm->ps->origin[2]=tr.endpos[2]+9*pm->wwnormal[2];
-		}
-		else
-		{//we must go around the edge
-			tmpv3[0]=pm->ps->origin[0]+pml.frametime*velptr[0]-48*pm->wwnormal[0];
-			tmpv3[1]=pm->ps->origin[1]+pml.frametime*velptr[1]-48*pm->wwnormal[1];
-			tmpv3[2]=pm->ps->origin[2]+pml.frametime*velptr[2]-48*pm->wwnormal[2];
-			tmpv3_2[0]=pm->ps->origin[0]-48*pm->wwnormal[0];
-			tmpv3_2[1]=pm->ps->origin[1]-48*pm->wwnormal[1];
-			tmpv3_2[2]=pm->ps->origin[2]-48*pm->wwnormal[2];
-			pm->trace(&tr,tmpv3,wwMins,wwMaxs,tmpv3_2,pm->ps->clientNum,(CONTENTS_SOLID|CONTENTS_PLAYERCLIP));
-
-			if(tr.fraction!=1.0f)
-			{//we find a wall around the edge
-				VectorCopy(tr.plane.normal,pm->wwnormal);//VectorCopy(in,out)
-
-				pm->ps->origin[0]=tr.endpos[0]+9*pm->wwnormal[0];
-				pm->ps->origin[1]=tr.endpos[1]+9*pm->wwnormal[1];
-				pm->ps->origin[2]=tr.endpos[2]+9*pm->wwnormal[2];
-			}
-			else
-			{//*grumel* ... then we try the backside of the wall ;)
-				tmpv3[0]=pm->ps->origin[0]-48*pm->wwnormal[0];
-				tmpv3[1]=pm->ps->origin[1]-48*pm->wwnormal[1];
-				tmpv3[2]=pm->ps->origin[2]-48*pm->wwnormal[2];
-				tmpv3_2[0]=pm->ps->origin[0];
-				tmpv3_2[1]=pm->ps->origin[1];
-				tmpv3_2[2]=pm->ps->origin[2];
-				pm->trace(&tr,tmpv3,wwMins,wwMaxs,tmpv3_2,pm->ps->clientNum,(CONTENTS_SOLID|CONTENTS_PLAYERCLIP));
-
-				VectorCopy(tr.plane.normal,pm->wwnormal);//VectorCopy(in,out)
-
-				pm->ps->origin[0]=tr.endpos[0]+9*pm->wwnormal[0];
-				pm->ps->origin[1]=tr.endpos[1]+9*pm->wwnormal[1];
-				pm->ps->origin[2]=tr.endpos[2]+9*pm->wwnormal[2];
-			}
-		}
-	}
-//	pm->ps->velocity[0]=0;pm->ps->velocity[1]=0;pm->ps->velocity[2]=0;
-}
-#endif
 
 /*
 ===================
@@ -1749,7 +1463,7 @@ static void PM_BeginWeaponChange( int weapon ) {
 
 	PM_AddEvent( EV_CHANGE_WEAPON );
 	pm->ps->weaponstate = WEAPON_DROPPING;
-	pm->ps->weaponTime += 200;
+	pm->ps->weaponTime += ADDTIME_WEAPONCHANGE_BEGIN;
 	PM_StartTorsoAnim( TORSO_DROP );
 }
 
@@ -1771,9 +1485,13 @@ static void PM_FinishWeaponChange( void ) {
 		weapon = WP_NONE;
 	}
 
+	if ( pm->ps->powerups[PW_BERSERKER] && !( ( weapon == WP_PUNCHY ) || ( weapon == WP_SPRAYPISTOL ) ) ) {
+		weapon = WP_PUNCHY;
+	}
+
 	pm->ps->weapon = weapon;
 	pm->ps->weaponstate = WEAPON_RAISING;
-	pm->ps->weaponTime += 250;
+	pm->ps->weaponTime += ADDTIME_WEAPONCHANGE_FINISH;
 	PM_StartTorsoAnim( TORSO_RAISE );
 }
 
@@ -1829,8 +1547,11 @@ static void PM_Weapon( void ) {
 
 	// check for item using
 	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE ) {
-		if((pm->ps->stats[STAT_WEAPONS] & (1<<WP_SPRAYPISTOL)) && pm->ps->stats[STAT_INSPRAYROOMSEKS])
+		// No items in sprayroom
+		if ( ( pm->ps->stats[STAT_WEAPONS] & ( 1 << WP_SPRAYPISTOL ) ) &&
+		     ( pm->ps->stats[STAT_SPRAYROOMSECS] > 0 ) ) {
 			return;
+		}
 
 		if ( ! ( pm->ps->pm_flags & PMF_USE_ITEM_HELD ) ) {
 			if ( bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag == HI_MEDKIT
@@ -1843,7 +1564,7 @@ static void PM_Weapon( void ) {
 
 				pm->ps->eFlags |= EF_FLOATER;
 
-				pm->ps->stats[STAT_HOLDABLEVAR]-=50;//noch ändern (frametime abhängig)
+				pm->ps->stats[STAT_HOLDABLEVAR]-=50;//FIXME: it would be better if the value gets calculated from framerate ...
 				if(pm->ps->stats[STAT_HOLDABLEVAR]<=0)
 				{
 					pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
@@ -1864,9 +1585,27 @@ static void PM_Weapon( void ) {
 					pm->ps->stats[STAT_HOLDABLEVAR] = 0;
 					pm->ps->stats[STAT_HOLDABLE_ITEM] = 0;
 				}
-				pm->ps->weaponTime = 1000;
+				pm->ps->weaponTime = 500;
 				pm->ps->weaponstate = WEAPON_FIRING;
 				goto shootafterrspecialHI;
+			} else if(bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag == HI_BOOMIES) {
+				if(pm->ps->weaponstate!=WEAPON_READY)
+					goto shootafterrspecialHI;
+
+				PM_AddEvent( EV_USE_ITEM0 + HI_BOOMIES );
+
+				pm->ps->weaponTime = 500;
+				pm->ps->weaponstate = WEAPON_FIRING;
+				goto shootafterrspecialHI;
+			} else if(bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag == HI_BAMBAM) {
+				if(pm->ps->weaponstate!=WEAPON_READY)
+					goto shootafterrspecialHI;
+
+				PM_AddEvent( EV_USE_ITEM0 + HI_BAMBAM );
+				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
+
+				pm->ps->weaponTime = 2000;
+				pm->ps->weaponstate = WEAPON_FIRING;
 			} else {
 				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
 				PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
@@ -1881,11 +1620,14 @@ static void PM_Weapon( void ) {
 shootafterrspecialHI:
 
 	// HERBY: Imperius charging
+	// FIXME: A whole new weapons state for one weapon? Sick
 	if ( pm->ps->weaponstate == WEAPON_CHARGING ) {
 		int seed;
 		// advance time
 		pm->ps->weaponTime += pml.msec;
-		if ( pm->ps->weaponTime > 1800 ) pm->ps->eFlags |= EF_CHARGED;
+		if ( pm->ps->weaponTime > CHARGETIME_IMPERIUS ) {
+			pm->ps->eFlags |= EF_CHARGED;
+		}
 
 		// shaking
 		seed = pm->ps->pmove_framecount;
@@ -1896,14 +1638,14 @@ shootafterrspecialHI:
 		if ( !(pm->cmd.buttons & BUTTON_ATTACK) ) 
 		{
 			pm->ps->weaponstate = WEAPON_FIRING;
-			pm->ps->weaponTime = 800;
+			pm->ps->weaponTime = ADDTIME_IMPERIUS;
 			if ( pm->ps->eFlags & EF_CHARGED ) goto fire;
 		} 
-		else if ( pm->ps->weaponTime > 3500 ) {
+		else if ( pm->ps->weaponTime > OVERCHARGETIME_IMPERIUS ) {
 			PM_AddEvent( EV_IMPERIUS_EXPLODE );
 			pm->ps->eFlags &= ~EF_CHARGED;
 			pm->ps->weaponstate = WEAPON_FIRING;
-			pm->ps->weaponTime = 800;
+			pm->ps->weaponTime = ADDTIME_IMPERIUS;
 			--(pm->ps->ammo[ pm->ps->weapon ]);
 		}
 		return;
@@ -1957,8 +1699,10 @@ shootafterrspecialHI:
 		return;
 	}
 
-	if((pm->ps->stats[STAT_WEAPONS] & (1<<WP_SPRAYPISTOL)) && (pm->ps->stats[STAT_INSPRAYROOMSEKS] && pm->ps->weapon!=WP_SPRAYPISTOL))
+	if ( ( pm->ps->stats[STAT_WEAPONS] & ( 1 << WP_SPRAYPISTOL ) ) &&
+	     ( ( pm->ps->stats[STAT_SPRAYROOMSECS] > 0 ) && ( pm->ps->weapon != WP_SPRAYPISTOL ) ) ) {
 		return;
+	}
 
 	if( pm->ps->weapon == WP_SPRAYPISTOL && pm->ps->weaponstate == WEAPON_READY)
 	{
@@ -1970,7 +1714,7 @@ shootafterrspecialHI:
 	if( pm->ps->weapon == WP_NIPPER && pm->ps->weaponstate != WEAPON_READY)
 	{
 		//noch was ein binden damit die nipper auch automatisch schießt
-		pm->ps->weaponTime += 250;
+		pm->ps->weaponTime += ADDTIME_AUTOFIRE_NIPPER;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
 	}
@@ -1995,7 +1739,7 @@ shootafterrspecialHI:
 	// check for out of ammo
 	if ( ! pm->ps->ammo[ pm->ps->weapon ] ) {
 		PM_AddEvent( EV_NOAMMO );
-		pm->ps->weaponTime += 500;
+		pm->ps->weaponTime += ADDTIME_WEAPON_NOAMMO;
 		return;
 	}
 
@@ -2022,31 +1766,35 @@ fire:
 	{
 	default:
 	case WP_PUNCHY:
-		addTime = 400;
+		addTime = ADDTIME_PUNCHY;
 		break;
 	case WP_BOASTER:
-		addTime = 50;
+		addTime = ADDTIME_BOASTER;
 		break;
 	case WP_PUMPER:
-		addTime = 1000;
+		addTime = ADDTIME_PUMPER;
 		break;
 	case WP_NIPPER:
-		addTime = 150;// this isn't a fix timer!!!
+		addTime = ADDTIME_NIPPER;
 		break;
 	case WP_BALLOONY:
-		addTime = 800;
+		addTime = ADDTIME_BALLOONY;
 		break;
 	case WP_BETTY:
-		addTime = 800;
+		addTime = ADDTIME_BETTY;
 		break;
 	case WP_BUBBLEG:
-		addTime = 100;
+		addTime = ADDTIME_BUBBLEG;
 		break;
 	case WP_SPLASHER:
-		addTime = 2000;//1500;
+		addTime = ADDTIME_SPLASHER;
 		break;
 	case WP_IMPERIUS:
 		addTime = 200;
+		break;
+
+	case WP_KMA97:	// "Kiss My Ass 97"
+		addTime = ADDTIME_KMA97;
 		break;
 
 	case WP_GRAPPLING_HOOK:
@@ -2159,14 +1907,6 @@ void trap_SnapVector( float *v );
 
 void PmoveSingle (pmove_t *pmove)
 {
-
-#ifdef WWCODE
-//	vec3_t	tmpangle;
-	trace_t trace;
-	vec3_t	min = {-40,-40,-40};
-	vec3_t	max = {40,40,40};
-#endif
-
 	pm = pmove;
 
 	// this counter lets us debug movement problems with a journal
@@ -2200,7 +1940,8 @@ void PmoveSingle (pmove_t *pmove)
 	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION
 		&& ( pm->cmd.buttons & BUTTON_ATTACK ) && pm->ps->ammo[ pm->ps->weapon ]
 		&& ( pm->ps->weapon != WP_IMPERIUS || pm->ps->weaponstate == WEAPON_CHARGING )
-		&& (pm->gametype!=GT_LPS || pm->ps->stats[STAT_LIVESLEFT]>0) ) {
+		&& ( ( pm->gametype != GT_LPS ) || ( pm->ps->stats[STAT_LIVESLEFT] > 0 ) )
+		&& !( pm->cmd.buttons & BUTTON_TALK ) ) {
 		pm->ps->eFlags |= EF_FIRING;
 	} else {
 		pm->ps->eFlags &= ~EF_FIRING;
@@ -2246,17 +1987,6 @@ void PmoveSingle (pmove_t *pmove)
 
 	// update the viewangles
 	PM_UpdateViewAngles( pm->ps, &pm->cmd );
-
-#ifdef	WWCODE
-	pm->trace(&trace, pml.previous_origin, min, max, pml.previous_origin, pm->ps->clientNum, pm->tracemask);
-	if(trace.startsolid && pm->ps->powerups[PW_CLIMBER])
-		pm->wallwalk = qtrue;
-
-//	vectoangles(pm->wwnormal,tmpangle);
-//	pm->ps->viewangles[0]+=tmpangle[0]+90;
-//	pm->ps->viewangles[1]+=tmpangle[1];
-//	pm->ps->viewangles[2]+=tmpangle[2];
-#endif
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -2324,12 +2054,6 @@ void PmoveSingle (pmove_t *pmove)
 	} else if ( pm->waterlevel > 1 ) {
 		// swimming
 		PM_WaterMove();
-
-#ifdef	WWCODE
-	} else if ( pm->wallwalk ) {
-		// walking with active wallwalk
-		PM_WallWalkMove();
-#endif
 	} else if ( pml.walking ) {
 		// walking on ground
 		PM_WalkMove();

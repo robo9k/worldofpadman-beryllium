@@ -1,9 +1,0 @@
-
-This Tools ( lcc, q3asm, q3cpp, q3rcc ) are used to build the VM-Modules.
-
-The Binaries in this directory are based on the sourcecode from ioquake3.
-
-The Sourcecode for this tools can be found:
-* on the ioquake3-svn: svn://svn.icculus.org/quake3/trunk (web-view: http://svn.icculus.org/quake3/trunk/ )
-* or the wop-engine-svn: https://wop-engine.svn.sourceforge.net/svnroot/wop-engine/trunk ( http://wop-engine.svn.sourceforge.net/viewvc/wop-engine/trunk/ )
-

@@ -2,7 +2,7 @@
 //
 // bg_misc.c -- both games misc functions, all completely stateless
 
-#include "q_shared.h"
+#include "../qcommon/q_shared.h"
 #include "bg_public.h"
 
 /*QUAKED item_***** ( 0 0 0 ) (-16 -16 -16) (16 16 16) suspended
@@ -36,7 +36,7 @@ gitem_t	bg_itemlist[] =
 		0,
 /* precache */ "",
 /* sounds */ ""
-	},	// leave index 0 alone
+	},	// leave index 0 alone !
 
 	//
 	// ARMOR
@@ -46,7 +46,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_armor_shard", 
-		"sound/misc/ar1_pkup.wav",
+		"sounds/items/armor/padshard_pickup.wav",
 		{ "models/powerups/armor/pad_shard.md3", 
 		0,
 		0, 0} ,
@@ -62,8 +62,8 @@ gitem_t	bg_itemlist[] =
 /*QUAKED item_armor_padshield (1 .5 0) (-16 -16 -16) (16 16 16) suspended
 */
 	{
-		"item_armor_padshield",//"item_armor_body", 
-		"sounds/Items/PadShield.wav",//"sound/misc/ar2_pkup.wav",
+		"item_armor_padshield",
+		"sounds/names/powerups/padshield.wav",
         { "models/powerups/armor/pad_shield.md3",
 		0, 0, 0},
 /* icon */		"icons/padshild",
@@ -75,76 +75,6 @@ gitem_t	bg_itemlist[] =
 /* sounds */ ""
 	},
 
-//	//
-//	// health
-//	//
-///*QUAKED item_health_small (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"item_health_small",
-//		"sound/items/s_health.wav",
-//        { "models/powerups/health/small_cross.md3", 
-//		"models/powerups/health/small_sphere.md3", 
-//		0, 0 },
-///* icon */		"icons/iconh_green",
-///* pickup */	"5 Health",
-//		5,
-//		IT_HEALTH,
-//		0,
-///* precache */ "",
-///* sounds */ ""
-//	},
-//
-///*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"item_health",
-//		"sound/items/n_health.wav",
-//        { "models/powerups/health/medium_cross.md3", 
-//		"models/powerups/health/medium_sphere.md3", 
-//		0, 0 },
-///* icon */		"icons/iconh_yellow",
-///* pickup */	"25 Health",
-//		25,
-//		IT_HEALTH,
-//		0,
-///* precache */ "",
-///* sounds */ ""
-//	},
-//
-///*QUAKED item_health_large (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"item_health_large",
-//		"sound/items/l_health.wav",
-//        { "models/powerups/health/large_cross.md3", 
-//		"models/powerups/health/large_sphere.md3", 
-//		0, 0 },
-///* icon */		"icons/iconh_red",
-///* pickup */	"50 Health",
-//		50,
-//		IT_HEALTH,
-//		0,
-///* precache */ "",
-///* sounds */ ""
-//	},
-//
-///*QUAKED item_health_mega (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"item_health_mega",
-//		"sound/items/m_health.wav",
-//        { "models/powerups/health/mega_cross.md3", 
-//		"models/powerups/health/mega_sphere.md3", 
-//		0, 0 },
-///* icon */		"icons/iconh_mega",
-///* pickup */	"Mega Health",
-//		100,
-//		IT_HEALTH,
-//		0,
-///* precache */ "",
-///* sounds */ ""
-//	},
 
 	//
 	// WEAPONS 
@@ -154,7 +84,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_punchy", 
-		"sounds/Weapons/Punchy.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/punchy.wav",
 		{ "models/weapons2/punchy/punchy.md3",
 		0, 0, 0},
 /* icon */		"icons/iconw_punchy",
@@ -170,7 +100,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_nipper", 
-		"sounds/Weapons/Nipper.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/nipper.wav",
         { "models/weapons2/nipper/nipper.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_nipper",
@@ -186,7 +116,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_boaster", 
-		"sounds/Weapons/Boaster.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/boaster.wav",
         { "models/weapons2/boaster/boaster.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_boaster",
@@ -202,7 +132,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_splasher", 
-		"sounds/Weapons/Splasher.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/splasher.wav",
 //        { "models/weapons2/railgun/railgun.md3", 
         { "models/weapons2/splasher/splasher.md3", 
 		0, 0, 0},
@@ -219,7 +149,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_bubbleg", 
-		"sounds/Weapons/BubbleG.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/bubbleg.wav",
         { "models/weapons2/bubbleg/bubbleg.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_bubbleg",
@@ -235,7 +165,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_balloony",
-		"sounds/Weapons/Balloony.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/balloony.wav",
         { "models/weapons2/balloony/balloony.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_balloony",
@@ -244,14 +174,14 @@ gitem_t	bg_itemlist[] =
 		IT_WEAPON,
 		WP_BALLOONY,
 /* precache */ "",
-/* sounds */ "sound/weapons/grenade/hgrenb1a.wav sound/weapons/grenade/hgrenb2a.wav"
+/* sounds */ ""
 	},
 
 /*QUAKED weapon_betty (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
 		"weapon_betty",
-		"sounds/Weapons/Betty.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/betty.wav",
         { "models/weapons2/betty/betty.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_betty",
@@ -268,7 +198,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_pumper", 
-		"sounds/Weapons/Pumper.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/pumper.wav",
         { "models/weapons2/pumper/pumper.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_pumper",
@@ -284,7 +214,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_imperius",
-		"sounds/Weapons/Imperious.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/imperius.wav",
         { "models/weapons2/imperius/imperius.md3", 
 		0, 0, 0},
 /* icon */		"icons/iconw_imperius",
@@ -300,7 +230,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_killerducks",
-		"sounds/Weapons/Killerducks.wav",//"sound/misc/w_pkup.wav",
+		"sounds/names/weapons/killerducks.wav",
         { "models/weapons2/killerducks/pad_killerduck_pu.md3", 
 		0, 0, 0},
 /* icon */		"icons/killerducks",
@@ -321,7 +251,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"weapon_spraypistol",
-		"sound/misc/w_pkup.wav",
+		"sounds/weapons/weapon_pickup.wav",
         { "models/weapons2/spraypistol/spraypistol.md3",
 		0, 0, 0},
 /* icon */		"icons/iconw_spraypistol_red",
@@ -341,7 +271,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_pumper",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/pumper_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_pumper",
@@ -357,7 +287,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_nipper",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/nipper_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_nipper",
@@ -373,7 +303,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_balloony",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/balloony_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_balloony",
@@ -389,7 +319,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_bubbleg",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/bubbleg_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_bubbleg",
@@ -405,7 +335,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_boaster",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/boaster_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_boaster",
@@ -421,7 +351,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_betty",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/betty_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_betty",
@@ -437,7 +367,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_splasher",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/splasher_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_splasher",
@@ -453,7 +383,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_imperius",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/powerups/ammo/imperius_am.md3", 
 		0, 0, 0},
 /* icon */		"icons/icona_imperius",
@@ -469,7 +399,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_killerducks",
-		"sound/misc/am_pkup.wav",
+		"sounds/weapons/ammo/ammo_pickup.wav",
         { "models/weapons2/killerducks/pad_killerduck_pu.md3", 
 		0, 0, 0},
 /* icon */		"icons/killerducks",
@@ -489,7 +419,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_spray_r",
-		"sounds/Items/cartridges.wav",
+		"sounds/weapons/ammo/spraypistol/cartridges.wav",
         { "models/weapons2/spraypistol/cart_red.md3",
 		0, 0, 0},
 /* icon */		"icons/icona_cart_red",
@@ -505,7 +435,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_spray_b",
-		"sounds/Items/cartridges.wav",
+		"sounds/weapons/ammo/spraypistol/cartridges.wav",
         { "models/weapons2/spraypistol/cart_blue.md3",
 		0, 0, 0},
 /* icon */		"icons/icona_cart_blue",
@@ -521,7 +451,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"ammo_spray_n",
-		"sounds/Items/cartridges.wav",
+		"sounds/weapons/ammo/spraypistol/cartridges.wav",
         { "models/weapons2/spraypistol/cart_neutral.md3",
 		0, 0, 0},
 /* icon */		"icons/icona_cart_neutral",
@@ -537,44 +467,11 @@ gitem_t	bg_itemlist[] =
 	// HOLDABLE ITEMS
 	//
 
-///*QUAKED holdable_teleporter (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"holdable_teleporter", 
-//		"sound/items/holdable.wav",
-//        { "models/powerups/holdable/teleporter.md3", 
-//		0, 0, 0},
-///* icon */		"icons/teleporter",
-///* pickup */	"Personal Teleporter",
-//		60,
-//		IT_HOLDABLE,
-//		HI_TELEPORTER,
-///* precache */ "",
-///* sounds */ ""
-//	},
-///*QUAKED holdable_medkit (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//	{
-//		"holdable_medkit", 
-//		"sound/items/holdable.wav",
-//        { 
-//		"models/powerups/holdable/medkit.md3", 
-//		"models/powerups/holdable/medkit_sphere.md3",
-//		0, 0},
-///* icon */		"icons/medkit",
-///* pickup */	"Medkit",
-//		60,
-//		IT_HOLDABLE,
-//		HI_MEDKIT,
-///* precache */ "",
-///* sounds */ "sound/items/use_medkit.wav"
-//	},
-
 /*QUAKED holdable_floater (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
 		"holdable_floater", 
-		"sounds/Items/Floater.wav",
+		"sounds/names/powerups/floater.wav",
         { 
 		"models/powerups/instant/floater.md3", 
 		"models/powerups/instant/floater_ring.md3",
@@ -592,7 +489,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"holdable_killerducks", 
-		"sounds/Weapons/Killerducks.wav",
+		"sounds/names/weapons/killerducks.wav",
         { 
 		"models/weapons2/killerducks/pad_killerduck_pu.md3", 
 		"models/powerups/instant/killerducks_ring.md3",
@@ -606,6 +503,44 @@ gitem_t	bg_itemlist[] =
 /* sounds */ ""
 	},
 
+// vv boomis & bambam vv
+/*QUAKED holdable_floater (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"holdable_bambam", 
+		"sounds/names/powerups/bambam.wav",
+        { 
+		"models/powerups/instant/bambam.md3", 
+		"models/powerups/instant/bambam_ring.md3",
+		0, 0},
+/* icon */		"icons/bambam",
+/* pickup */	"BAMBAM",
+		60,
+		IT_HOLDABLE,
+		HI_BAMBAM,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED holdable_floater (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"holdable_boomies", 
+		"sounds/names/powerups/boomies.wav",
+        { 
+		"models/powerups/instant/boomies.md3", 
+		"models/powerups/instant/boomies_ring.md3",
+		0, 0},
+/* icon */		"icons/boomies",
+/* pickup */	"BOOMiES",
+		60,
+		IT_HOLDABLE,
+		HI_BOOMIES,
+/* precache */ "",
+/* sounds */ ""
+	},
+// ^^ boomis & bambam ^^
+
 	//
 	// POWERUP ITEMS
 	//
@@ -614,7 +549,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_padpower", 
-		"sounds/Items/Padpower.wav",
+		"sounds/names/powerups/padpower.wav",
         { "models/powerups/instant/padpower.md3", 
         "models/powerups/instant/padpower_ring.md3",
 		0, 0 },
@@ -624,14 +559,14 @@ gitem_t	bg_itemlist[] =
 		IT_POWERUP,
 		PW_PADPOWER,
 /* precache */ "",
-/* sounds */ "sound/items/damage2.wav sound/items/damage3.wav"//noch ändern
+/* sounds */ "sounds/items/padpower/damage3.wav"//noch ändern
 	},
 
 /*QUAKED item_climber (.8 0 .8) (-16 -16 -16) (16 16 16) suspended
 */
 	{
 		"item_climber",
-		"sounds/Items/Climber.wav",
+		"sounds/names/powerups/climber.wav",
         { "models/powerups/instant/climber.md3", 
 		"models/powerups/instant/climber_ring.md3", 
 		0, 0 },
@@ -648,7 +583,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_speedy",
-		"sounds/Items/Speedy.wav",
+		"sounds/names/powerups/speedy.wav",
         { "models/powerups/instant/speedy.md3", 
 		"models/powerups/instant/speedy_ring.md3", 
 		0, 0 },
@@ -665,7 +600,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_jumper",
-		"sounds/Items/Jumper.wav",
+		"sounds/names/powerups/jumper.wav",
         { "models/powerups/instant/jumper.md3", 
 		"models/powerups/instant/jumper_ring.md3", 
 		0, 0 },
@@ -682,7 +617,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_visionless",
-		"sounds/Items/Visionless.wav",
+		"sounds/names/powerups/visionless.wav",
         { "models/powerups/instant/visionless.md3", 
 		"models/powerups/instant/visionless_ring.md3", 
 		0, 0 },
@@ -699,7 +634,7 @@ gitem_t	bg_itemlist[] =
 */
 	{
 		"item_revival",
-		"sounds/Items/Reviva.wav",
+		"sounds/names/powerups/revival.wav",
         { "models/powerups/instant/revival.md3", 
 		"models/powerups/instant/revival_ring.md3", 
 		0, 0 },
@@ -709,14 +644,14 @@ gitem_t	bg_itemlist[] =
 		IT_POWERUP,
 		PW_REVIVAL,
 /* precache */ "",
-/* sounds */ "sounds/items/revival_heart.wav"
+/* sounds */ "sounds/items/revival/heart.wav"
 	},
 
 /*QUAKED item_berserker (1 0 0) (-16 -16 -16) (16 16 16) suspended
 */
 	{
 		"item_berserker",
-		"sound/weapons/melee/berserker.wav",
+		"sounds/weapons/punchy/berserker.wav",
         { 0,//"models/powerups/instant/revival.md3", 
 		0,//"models/powerups/instant/revival_ring.md3", 
 		0, 0 },
@@ -760,6 +695,38 @@ Only in CTL games
 		0,
 		IT_TEAM,
 		PW_BLUEFLAG,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED weapon_kma97 ( .3 .3 1 ) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"weapon_kma97",	// "Kiss My Ass 97"
+		"sounds/names/weapons/kma97.wav",
+        { "models/weapons2/kma97/kma97.md3", 
+		0, 0, 0 },
+/* icon */		"icons/iconw_kma97",
+/* pickup */	"KMA97",
+		1,
+		IT_WEAPON,
+		WP_KMA97,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED ammo_kma97 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"ammo_kma97",		// "Kiss My Ass 97"
+		"sounds/weapons/ammo/ammo_pickup.wav",
+        { "models/powerups/ammo/kma97_am.md3", 
+		0, 0, 0},
+/* icon */		"icons/icona_kma97",
+/* pickup */	"KMA97 AMMO",
+		10,
+		IT_AMMO,
+		WP_KMA97,
 /* precache */ "",
 /* sounds */ ""
 	},
@@ -898,7 +865,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		return qtrue;	// weapons are always picked up
 
 	case IT_AMMO:
-		if ( ps->ammo[ item->giTag ] >= 200 ) {
+		if ( ps->ammo[ item->giTag ] >= MAXAMMO_WEAPON ) {
 			return qfalse;		// can't hold any more
 		}
 		return qtrue;
@@ -1151,18 +1118,13 @@ char *eventnames[] = {
 	"EV_GLOBAL_SOUND",		// no attenuation
 	"EV_GLOBAL_TEAM_SOUND",
 
-	"EV_BULLET_HIT_FLESH",
-	"EV_BULLET_HIT_WALL",
-
 	"EV_MISSILE_HIT",
 	"EV_MISSILE_MISS",
 	"EV_MISSILE_MISS_METAL",
 	"EV_RAILTRAIL",
 	"EV_SHOTGUN",
-	"EV_BULLET",				// otherEntity is the shooter
 
 	"EV_SPRAYLOGO",
-
 
 	"EV_PAIN",
 	"EV_DEATH1",
@@ -1189,6 +1151,16 @@ char *eventnames[] = {
 	,"EV_FOOTSTEP_SOFT"
 	,"EV_FOOTSTEP_WOOD"
 	,"EV_FOOTSTEP_SNOW"
+
+	,"EV_BAMBAM_EXPLOSION"
+	,"EV_BOOMIES_EXPLOSION"
+
+	,"EV_TAUNT_YES",
+	"EV_TAUNT_NO",
+	"EV_TAUNT_FOLLOWME",
+	"EV_TAUNT_GETFLAG",
+	"EV_TAUNT_GUARDBASE",
+	"EV_TAUNT_PATROL"
 
 };
 
@@ -1297,6 +1269,7 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->torsoAnim = ps->torsoAnim;
 	s->clientNum = ps->clientNum;		// ET_PLAYER looks here instead of at number
 										// so corpses can also reference the proper config
+	ps->eFlags = (ps->eFlags&0xFFFF)|(ps->stats[STAT_HB_EFLAGS] << 16);
 	s->eFlags = ps->eFlags;
 	if ( ps->stats[STAT_HEALTH] <= 0 ) {
 		s->eFlags |= EF_DEAD;
@@ -1412,3 +1385,37 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
 }
+
+
+int	convertGTStringToGTNumber(char* argStr)
+{
+	int gt = -1;
+
+	Q_strlwr(argStr);
+
+	if(strstr(argStr,"syc") || (strstr(argStr,"spray") && strstr(argStr,"color")))
+	{
+		if(strstr(argStr,"tp") || strstr(argStr,"team"))
+			gt=GT_SPRAY;
+		else
+			gt=GT_SPRAYFFA;
+	}
+	else if(strstr(argStr,"balloon") || strstr(argStr,"bb"))
+			gt=GT_BALLOON;
+	else if(strstr(argStr,"lps") || (strstr(argStr,"last") && strstr(argStr,"standing")))
+			gt=GT_LPS;
+	else if(strstr(argStr,"ctl") || (strstr(argStr,"capture") && (strstr(argStr,"lolly") || strstr(argStr,"lolli"/*pop"*/))))
+			gt=GT_CTF;
+	else if(strstr(argStr,"tournament") || strstr(argStr,"tourney"))
+			gt=GT_TOURNAMENT;
+	else
+	{
+		if(strstr(argStr,"tp") || strstr(argStr,"team") || strstr(argStr,"tdm"))
+			gt=GT_TEAM;
+		else if(strstr(argStr,"ffa") || strstr(argStr,"free") || strstr(argStr,"dm"))
+			gt=GT_FFA;
+	}
+
+	return gt;
+}
+

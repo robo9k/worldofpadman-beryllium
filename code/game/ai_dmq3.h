@@ -107,21 +107,23 @@ int ClientOnSameTeamFromName(bot_state_t *bs, char *name);
 int BotPointAreaNum(vec3_t origin);
 //
 void BotMapScripts(bot_state_t *bs);
-qboolean BotInSprayroom(bot_state_t *bs);	// cyr_zLPS
-qboolean BotCheckChargedImp(bot_state_t *bs);	// cyr_zIMP
-qboolean BotNmyTurnedInvalid(bot_state_t* bs);	// cyr, detect enemys that went spec or switched teams
+qboolean ClientInSprayroom(int clId);
+qboolean BotCheckChargedImp(bot_state_t *bs);
+qboolean BotNmyTurnedInvalid(bot_state_t* bs);
 int BotGetNumClientCarts(bot_state_t* bs, int clientnum);
-int BotPoorCheckAttack(bot_state_t *bs);
+int BotSprayWallCheckAttack(bot_state_t *bs);
 void BotSelectLogo(bot_state_t* bs);
 qboolean IsDuck(int ent);
 qboolean IsWall(int ent);
+qboolean IsBoomie(int ent);
+qboolean IsBambam(int ent);
 qboolean IsMyBalloon(int team, bot_goal_t* goal);
 qboolean BotCTFCarryingFlag(bot_state_t* bs);
+void CheckMatrixForGoal(bot_goal_t* goal);
+qboolean GetDroppedLollyGoal(int team, bot_goal_t* goal);
+qboolean GetCTLFlagGoal(int team, bot_goal_t* goal);
 
-
-// eigena cyr{
 #define MAX_HSTATIONS	8
-// eigene cyr}
 
 extern int gametype;		//game type
 extern int maxclients;		//maximum number of clients
@@ -133,15 +135,12 @@ extern vmCvar_t bot_nochat;
 extern vmCvar_t bot_testrchat;
 extern vmCvar_t bot_challenge;
 
-
-//cyr {
 extern bot_goal_t ctf_redflag;
 extern bot_goal_t ctf_blueflag;
-extern bot_goal_t balloongoal[MAX_BALLONS];
+extern bot_goal_t balloongoal[MAX_BALLOONS];
 extern bot_goal_t rwall;
 extern bot_goal_t bwall;
 extern bot_goal_t spraytele;
 extern bot_goal_t outtele;
 extern bot_goal_t hstations[MAX_HSTATIONS];
 extern int num_hstations;
-//cyr }

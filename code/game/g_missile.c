@@ -132,9 +132,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 				ent->parent->client->accurateCount--; //-= 2;
 //				ent->parent->client->ps.persistant[PERS_IMPRESSIVE_COUNT]++;
 //				// add the sprite over the player's head
-//				ent->parent->client->ps.eFlags &= ~(EF_AWARD_IMPRESSIVE | EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET | EF_AWARD_ASSIST | EF_AWARD_DEFEND | EF_AWARD_CAP | EF_AWARD_SPRAYGOD | EF_AWARD_SPRAYKILLER );
-//				ent->parent->client->ps.eFlags |= EF_AWARD_IMPRESSIVE;
-//				ent->parent->client->rewardTime = level.time + REWARD_SPRITE_TIME;
+//				SetAward( ent->parent->client, AWARD_IMPRESSIVE );
 				G_AddEvent(ent->parent,EV_HEHE2,0);
 			}
 		}
@@ -219,6 +217,10 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		}
 	}
 
+	// Instagib Weaponjump
+	if ( g_modInstagib.integer && g_modInstagib_WeaponJump.integer )
+		Instagib_applyWeaponJumpKnockback( trace->endpos, ent->parent, ent->methodOfDeath );
+
 	trap_LinkEntity( ent );
 }
 
@@ -294,11 +296,10 @@ void move_killerducks(gentity_t *ent)
 			continue;
 		if(level.clients[i].ps.stats[STAT_HEALTH]<=0)
 			continue;
-		if(level.clients[i].sess.sessionTeam==TEAM_SPECTATOR)
+		if( ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( &level.clients[i] ) ) {
 			continue;
-		if(g_gametype.integer==GT_LPS && level.clients[i].sess.livesleft<=0)
-			continue;
-
+		}
+		
 		tmpv3[0]=level.clients[i].ps.origin[0]-ent->r.currentOrigin[0];
 		tmpv3[1]=level.clients[i].ps.origin[1]-ent->r.currentOrigin[1];
 		tmpv3[2]=(level.clients[i].ps.origin[2]-ent->r.currentOrigin[2])*2.0f;//die höhe soll stärker gewertet werden ...
@@ -513,11 +514,11 @@ void move_killerducks(gentity_t *ent)
 		}
 //	}
 
-	if(tr.entityNum==opfer && ent->s.time2<=level.time)
-	{
-		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("killerducks/duckbite.wav") );
-		G_Damage(&g_entities[opfer],NULL,ent->parent,NULL,NULL,2,0,ent->methodOfDeath);//noch dir eintragen (damit man den dmg auf dem screen richtig sieht)
-		ent->s.time2=level.time+1000;
+	if ( ( tr.entityNum == opfer ) && ( ent->s.time2 <= level.time ) ) {
+		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( "sounds/weapons/killerducks/bite.wav" ) );
+		// TODO: Add dir
+		G_Damage( &g_entities[opfer], NULL, ent->parent, NULL, NULL, DAMAGE_KILLERDUCKS_BITE , 0, ent->methodOfDeath );
+		ent->s.time2 = ( level.time + 1000 );
 	}
 
 	ent->r.currentOrigin[0]=tr.endpos[0];
@@ -721,23 +722,23 @@ gentity_t *fire_nipper (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "plasma";
-	bolt->nextthink = level.time + 10000;
+	bolt->classname = "bolt_nipper";
+	bolt->nextthink = ( level.time + DURATION_NIPPER );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_NIPPER;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 12;
-	bolt->methodOfDeath = MOD_MACHINEGUN;
+	bolt->damage = DAMAGE_NIPPER;
+	bolt->methodOfDeath = MOD_NIPPER;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
 	bolt->s.pos.trType = TR_LINEAR;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
-	VectorScale( dir, 3200, bolt->s.pos.trDelta );
+	VectorScale( dir, SPEED_NIPPER, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 
 	VectorCopy (start, bolt->r.currentOrigin);
@@ -759,16 +760,16 @@ gentity_t *fire_splasher (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "plasma";
-	bolt->nextthink = level.time + 10000;
+	bolt->classname = "bolt_splasher";
+	bolt->nextthink = ( level.time + DURATION_SPLASHER );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_SPLASHER;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 110;
-	bolt->methodOfDeath = MOD_RAILGUN;
+	bolt->damage = DAMAGE_SPLASHER;
+	bolt->methodOfDeath = MOD_SPLASHER;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
@@ -776,7 +777,7 @@ gentity_t *fire_splasher (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	VectorCopy( start, bolt->s.origin2 );
-	VectorScale( dir, 100000, bolt->s.pos.trDelta );//RAUTE von 7000 auf ... ... muss //noch mal richtig geändert werden
+	VectorScale( dir, SPEED_SPLASHER, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 
 	VectorCopy (start, bolt->r.currentOrigin);
@@ -796,25 +797,23 @@ gentity_t *fire_bubbleg (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "plasma";
-	bolt->nextthink = level.time + 10000;
+	bolt->classname = "bolt_bubbleg";
+	bolt->nextthink = ( level.time + DURATION_BUBBLEG );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_BUBBLEG;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 20;//vq3:20, oldWoP:25
-	bolt->methodOfDeath = MOD_PLASMA;
-	bolt->splashMethodOfDeath = MOD_PLASMA_SPLASH;
+	bolt->damage = DAMAGE_BUBBLEG;
+	bolt->methodOfDeath = MOD_BUBBLEG;
 	bolt->clipmask = MASK_SHOT;
-	bolt->target_ent = NULL;
-	bolt->s.generic1 = (int)(6*random())+1;
+	bolt->s.generic1 = ((int)( 6 * random() ) + 1 ); // FIXME: Magical constant 6 for g_color_table in cg
 
 	bolt->s.pos.trType = TR_LINEAR;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
-	VectorScale( dir, 1800, bolt->s.pos.trDelta );
+	VectorScale( dir, SPEED_BUBBLEG, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 
 	VectorCopy (start, bolt->r.currentOrigin);
@@ -822,6 +821,57 @@ gentity_t *fire_bubbleg (gentity_t *self, vec3_t start, vec3_t dir) {
 	return bolt;
 }
 
+
+/*
+#######################
+
+  fire_bambamMissile
+
+  should only be used by the BamBam-entity, not directly by the player
+
+#######################
+*/
+
+gentity_t *fire_bambamMissile(gentity_t *self, vec3_t start, vec3_t dir, float velocity) {
+	gentity_t	*bolt;
+	vec3_t angles, forward;
+
+	bolt = G_Spawn();
+	bolt->classname = "missile_bambam";
+	bolt->nextthink = ( level.time + DURATION_BAMBAM );
+	bolt->think = G_ExplodeMissile;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_BAMBAM_MISSILE;
+	if(self->team[0] == 'b')
+		bolt->s.generic1 = TEAM_BLUE;
+	else
+		bolt->s.generic1 = TEAM_RED;
+	bolt->damage = DAMAGE_BAMBAM;
+	bolt->methodOfDeath = MOD_BAMBAM;
+	bolt->clipmask = MASK_SHOT;
+	bolt->target_ent = NULL;
+
+	bolt->s.pos.trType = TR_LINEAR;
+	bolt->s.pos.trTime = level.time;
+	VectorCopy( start, bolt->s.pos.trBase );
+
+	bolt->r.ownerNum = ENTITYNUM_WORLD;
+
+	// add random spread
+	vectoangles(dir, angles);
+	// FIXME: Use SPREAD_BAMBAM when final value is found..
+	angles[PITCH] += g_bambamSpread.integer *  crandom();
+	angles[YAW]   += g_bambamSpread.integer *  crandom();
+	AngleVectors(angles, forward, NULL, NULL);
+	VectorNormalize(forward);
+
+	VectorScale( forward, velocity, bolt->s.pos.trDelta ); // velocity ~ 1800
+	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
+
+	VectorCopy (start, bolt->r.currentOrigin);
+	return bolt;
+}
 
 /*
 =================
@@ -834,16 +884,16 @@ gentity_t *fire_boaster (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "waterbeam";
-	bolt->nextthink = level.time + 1500;
+	bolt->classname = "bolt_boaster";
+	bolt->nextthink = ( level.time + DURATION_BOASTER );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_BOASTER;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 3; //old: 8
-	bolt->methodOfDeath = MOD_LIGHTNING;
+	bolt->damage = DAMAGE_BOASTER;
+	bolt->methodOfDeath = MOD_BOASTER;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 	bolt->r.mins[0]=bolt->r.mins[1]=bolt->r.mins[2]=-8.0f;
@@ -853,7 +903,7 @@ gentity_t *fire_boaster (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.pos.trTime = level.time - 10;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	dir[2] += 0.15f;
-	VectorScale( dir, 1250, bolt->s.pos.trDelta );
+	VectorScale( dir, SPEED_BOASTER, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	//... the transmission of this missiles is disabled in G_RunMissile!
 
@@ -886,10 +936,9 @@ gentity_t *fire_duck (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "KiLLERDUCK";
-	bolt->nextthink = level.time + 10000;
+	bolt->classname = "missile_killerduck";
+	bolt->nextthink = ( level.time + DURATION_KILLERDUCKS );
 	bolt->think = G_ExplodeMissile;
-	bolt->s.time = level.time + 20000;
 	bolt->timestamp = level.time;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
@@ -915,11 +964,11 @@ gentity_t *fire_duck (gentity_t *self, vec3_t start, vec3_t dir) {
 	}
 	bolt->die = duck_die;
 	//dmg-vars vielleicht noch missbrauchen ;)
-	bolt->damage = 20;
-	bolt->splashDamage = 50;
-	bolt->splashRadius = 128;
-	bolt->methodOfDeath = MOD_KILLERDUCKS;//noch ändern
-	bolt->splashMethodOfDeath = MOD_KILLERDUCKS;//noch ändern
+	bolt->damage = DAMAGE_KILLERDUCKS_IMPACT;
+	bolt->splashDamage = SPLASHDMG_KILLERDUCKS;
+	bolt->splashRadius = SPLASHRAD_KILLERDUCKS;
+	bolt->methodOfDeath = MOD_KILLERDUCKS;
+	bolt->splashMethodOfDeath = MOD_KILLERDUCKS;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
@@ -960,8 +1009,8 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "grenade";
-	bolt->nextthink = level.time + 2500;
+	bolt->classname = "missile_balloony";
+	bolt->nextthink = ( level.time + DURATION_BALLOONY );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
@@ -969,11 +1018,11 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.eFlags = EF_BOUNCE_HALF | EF_BOUNCE;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 80;
-	bolt->splashDamage = 80;
-	bolt->splashRadius = 220;
-	bolt->methodOfDeath = MOD_GRENADE;
-	bolt->splashMethodOfDeath = MOD_GRENADE_SPLASH;
+	bolt->damage = DAMAGE_BALLOONY;
+	bolt->splashDamage = SPLASHDMG_BALLOONY;
+	bolt->splashRadius = SPLASHRAD_BALLOONY;
+	bolt->methodOfDeath = MOD_BALLOONY;
+	bolt->splashMethodOfDeath = MOD_BALLOONY_SPLASH;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
@@ -1015,25 +1064,25 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "bfg";
-	bolt->nextthink = level.time + 10000;
+	bolt->classname = "missile_imperius";
+	bolt->nextthink = (level.time + DURATION_IMPERIUS );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_IMPERIUS;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 120;
-	bolt->splashRadius = 800;
-	bolt->methodOfDeath = MOD_BFG;
-	bolt->splashMethodOfDeath = MOD_BFG_SPLASH;
+	bolt->damage = DAMAGE_IMPERIUS;
+	bolt->splashRadius = SPLASHRAD_IMPERIUS;
+	bolt->methodOfDeath = MOD_IMPERIUS;
+	bolt->splashMethodOfDeath = MOD_IMPERIUS_SPLASH;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
 	bolt->s.pos.trType = TR_LINEAR;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
-	VectorScale( dir, 1100, bolt->s.pos.trDelta );
+	VectorScale( dir, SPEED_IMPERIUS, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
@@ -1050,17 +1099,17 @@ gentity_t *explode_imperius (gentity_t *self) {
 	vec3_t		origin, forward;
 
 	bolt = G_Spawn();
-	bolt->classname = "bfg";
+	bolt->classname = "missile_imperius_explode";
 	bolt->nextthink = level.time + 10000;
 	bolt->think = G_ExplodeMissile;
 	bolt->r.svFlags = 0;
 	bolt->s.weapon = WP_IMPERIUS;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 120;
-	bolt->splashRadius = 800;
-	bolt->methodOfDeath = MOD_BFG;
-	bolt->splashMethodOfDeath = MOD_BFG_SPLASH;
+	bolt->damage = DAMAGE_IMPERIUS;
+	bolt->splashRadius = SPLASHRAD_IMPERIUS;
+	bolt->methodOfDeath = MOD_IMPERIUS;
+	bolt->splashMethodOfDeath = MOD_IMPERIUS_SPLASH;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 	bolt->s.eType = ET_EXPLOSION;
@@ -1087,26 +1136,26 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
-	bolt->classname = "rocket";
-	bolt->nextthink = level.time + 15000;
+	bolt->classname = "missile_betty";
+	bolt->nextthink = ( level.time + DURATION_BETTY );
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_BETTY;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 100;
-	bolt->splashDamage = 100;
-	bolt->splashRadius = 120;
-	bolt->methodOfDeath = MOD_ROCKET;
-	bolt->splashMethodOfDeath = MOD_ROCKET_SPLASH;
+	bolt->damage = DAMAGE_BETTY;
+	bolt->splashDamage = SPLASHDMG_BETTY;
+	bolt->splashRadius = SPLASHRAD_BETTY;
+	bolt->methodOfDeath = MOD_BETTY;
+	bolt->splashMethodOfDeath = MOD_BETTY_SPLASH;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;
 
 	bolt->s.pos.trType = TR_LINEAR;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
-	VectorScale( dir, 900, bolt->s.pos.trDelta );
+	VectorScale( dir, SPEED_BETTY, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
@@ -1149,4 +1198,41 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	return hook;
 }
 
+
+/*
+=================
+fire_kma
+
+=================
+*/
+gentity_t *fire_kma ( gentity_t *self, vec3_t start, vec3_t dir ) {
+	gentity_t	*bolt;
+
+	VectorNormalize ( dir );
+
+	bolt = G_Spawn();
+	bolt->classname = "bolt_injector";
+	bolt->nextthink = level.time + 10000;
+	bolt->think = G_ExplodeMissile;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_KMA97;
+	bolt->r.ownerNum = self->s.number;
+	bolt->parent = self;
+	bolt->damage = 110;
+	bolt->methodOfDeath = MOD_INJECTOR;
+	bolt->clipmask = MASK_SHOT;
+	bolt->target_ent = NULL;
+
+	bolt->s.pos.trType = TR_LINEAR;
+	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
+	VectorCopy( start, bolt->s.pos.trBase );
+	VectorCopy( start, bolt->s.origin2 );
+	VectorScale( dir, 100000, bolt->s.pos.trDelta );
+	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
+
+	VectorCopy ( start, bolt->r.currentOrigin );
+
+	return bolt;
+}
 

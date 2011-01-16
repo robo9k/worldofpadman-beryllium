@@ -169,6 +169,7 @@ void G_SetClientSound( gentity_t *ent ) {
 
 //==============================================================
 
+
 /*
 ==============
 ClientImpacts
@@ -284,7 +285,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		}
 
 		// ignore most entities if a spectator
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR || (g_gametype.integer==GT_LPS && ent->client->sess.livesleft<=0)) {
+		if ( ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( ent->client ) ) {
 			if ( hit->s.eType != ET_TELEPORT_TRIGGER &&
 				// this is ugly but adding a new ET_? type will
 				// most likely cause network incompatibilities
@@ -420,10 +421,6 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 	while ( client->timeResidual >= 1000 ) {
 		client->timeResidual -= 1000;
-
-		/* added beryllium */
-		BE_ClientTimerActions( ent );
-		/* end added */
 
 		if ( client->ps.powerups[PW_REVIVAL] ) {
 			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
@@ -581,6 +578,55 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			}
 			break;
 
+		// HI_BAMBAM
+		case EV_USE_ITEM5:
+			{
+				gitem_t	*item = BG_FindItemForHoldable( HI_BAMBAM );
+				if( item )
+				{
+					if ( client->ps.stats[STAT_FORBIDDENITEMS] & ( 1 << HI_BAMBAM ) ) {
+						trap_SendServerCommand( ( ent - g_entities ), va( "cp \"%s not allowed here\"", item->pickup_name ) );
+					}
+					else {
+						if ( bambam_createByPlayer( ent, item->pickup_name ) ) {
+							client->ps.stats[STAT_HOLDABLEVAR] = 0;
+							client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
+						}
+					}
+				}
+				else
+				{
+					trap_SendServerCommand( ( ent - g_entities ), va( "cp \"Invalid item used: %d\"", event ) );
+				}
+				break;
+			}
+
+		// HI_BOOMIES
+		case EV_USE_ITEM6:
+			{
+				gitem_t	*item = BG_FindItemForHoldable( HI_BOOMIES );
+				if( item )
+				{
+					if ( client->ps.stats[STAT_FORBIDDENITEMS] & ( 1 << HI_BOOMIES ) ) {
+						trap_SendServerCommand( ( ent - g_entities ), va( "cp \"%s not allowed here\"", item->pickup_name ) );
+					}
+					else {
+						if ( boomies_createByPlayer( ent, item->pickup_name ) ) {
+							client->ps.stats[STAT_HOLDABLEVAR]--;
+							if ( client->ps.stats[STAT_HOLDABLEVAR] <= 0 ) {
+								ent->client->ps.pm_flags |= PMF_USE_ITEM_HELD;
+								ent->client->ps.stats[STAT_HOLDABLEVAR] = 0;
+								ent->client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
+							}
+						}
+					}
+				}
+				else
+				{
+					trap_SendServerCommand( ( ent - g_entities ), va( "cp \"Invalid item used: %d\"", event ) );
+				}
+				break;
+			}
 		default:
 			break;
 		}
@@ -698,7 +744,7 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	// spectators don't do much
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR || (g_gametype.integer==GT_LPS && client->sess.livesleft<=0)) {
+	if ( ( client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( client ) ) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
 			return;
 		}
@@ -731,7 +777,7 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.pm_type = PM_NOCLIP;
 	} else if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		client->ps.pm_type = PM_DEAD;
-	} else {
+	} else if( client->ps.pm_type != PM_FREEZE ) {
 		client->ps.pm_type = PM_NORMAL;
 	}
 
@@ -740,7 +786,7 @@ void ClientThink_real( gentity_t *ent ) {
 	// set speed
 	client->ps.speed = g_speed.value;
 
-	if((g_gametype.integer==GT_SPRAYFFA || g_gametype.integer==GT_SPRAY) && client->ps.stats[STAT_INSPRAYROOMSEKS]) {
+	if ( InSprayroom( client ) ) {
 		// no speedmodification in sprayroom
 	}
 	else if ( client->ps.powerups[PW_SPEEDY] )
@@ -766,9 +812,10 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// check for the hit-scan gauntlet, don't let the action
 	// go through as an attack unless it actually hits something
-	if ( client->ps.weapon == WP_PUNCHY && !( ucmd->buttons & BUTTON_TALK ) &&
-		( ucmd->buttons & BUTTON_ATTACK ) && client->ps.weaponTime <= 0 &&
-		(!(client->ps.stats[STAT_WEAPONS] & (1<<WP_SPRAYPISTOL)) || !client->ps.stats[STAT_INSPRAYROOMSEKS]) ) { // <-- no, punchy-attack in sprayroom ("has player sprayp."="spray gt", "'STAT_INSPRAYROOMSEKS'==0"="not in sprayroom")
+	if ( ( client->ps.weapon == WP_PUNCHY ) &&
+	     !( ucmd->buttons & BUTTON_TALK ) && ( ucmd->buttons & BUTTON_ATTACK ) &&
+	     ( client->ps.weaponTime <= 0 ) &&
+		 !InSprayroom( client ) ) {
 		pm.gauntletHit = CheckGauntletAttack( ent );
 	}
 
@@ -799,18 +846,9 @@ void ClientThink_real( gentity_t *ent ) {
 	VectorCopy( client->ps.origin, client->oldOrigin );
 
 
-#ifdef	WWCODE
-		ByteToDir(ent->client->ps.stats[STAT_WWDIR],pm.wwnormal);
-		pm.lastwwframe=ent->client->lastwwframe;
-#endif
-		pm.gametype=g_gametype.integer;
+	pm.gametype = g_gametype.integer;
 
-		Pmove (&pm);
-
-#ifdef	WWCODE
-		ent->client->lastwwframe=pm.lastwwframe;
-		ent->client->ps.stats[STAT_WWDIR] = DirToByte(pm.wwnormal);//this function can cost some time!!
-#endif
+	Pmove( &pm );
 
 	// save results of pmove
 	if ( ent->client->ps.eventSequence != oldEventSequence ) {
@@ -839,6 +877,10 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// execute client events
 	ClientEvents( ent, oldEventSequence );
+
+	// reset forbidden items after events have been handled
+	// trigger touches below will set flag for next frame and ClientEvents()
+	client->ps.stats[STAT_FORBIDDENITEMS] = 0;
 
 	// link entity now, after any personal teleporters have been used
 	trap_LinkEntity (ent);
@@ -943,7 +985,7 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 		}
 		if ( clientNum >= 0 ) {
 			cl = &level.clients[ clientNum ];
-			if ( cl->pers.connected == CON_CONNECTED && (cl->sess.sessionTeam != TEAM_SPECTATOR && (g_gametype.integer!=GT_LPS || cl->sess.livesleft>0)) ) {
+			if ( ( cl->pers.connected == CON_CONNECTED ) && ( ( cl->sess.sessionTeam != TEAM_SPECTATOR ) && !LPSDeadSpec( cl ) ) ) {
 				flags = (cl->ps.eFlags & ~(EF_VOTED | EF_TEAMVOTED)) | (ent->client->ps.eFlags & (EF_VOTED | EF_TEAMVOTED));
 				ent->client->ps = cl->ps;
 				ent->client->ps.pm_flags |= PMF_FOLLOW;
@@ -979,7 +1021,7 @@ void ClientEndFrame( gentity_t *ent ) {
 	int			i;
 	clientPersistant_t	*pers;
 
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR || (g_gametype.integer==GT_LPS && ent->client->sess.livesleft<=0)) {
+	if ( ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( ent->client ) ) {
 		SpectatorClientEndFrame( ent );
 		return;
 	}

@@ -1,6 +1,7 @@
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
 #include "g_local.h"
+#include "wopg_sphandling.h"
 
 
 /*
@@ -24,8 +25,10 @@ void G_WriteClientSessionData( gclient_t *client ) {
 	const char	*s;
 	const char	*var;
 
-	if(strchr(client->sess.selectedlogo,' '))
-		client->sess.selectedlogo[0]='\0';//wenn ein Leerzeichen im Logonamen ist ... besser leeren(später neu vom cleint hollen), sonst gibt's probleme beim sscanf ;)
+	// Spaces cause problems with sscanf
+	if ( strchr( client->sess.selectedlogo, ' ' ) ) {
+		client->sess.selectedlogo[0] = '\0';
+	}
 
 	s = va("%i %i %i %i %i %i %i %i %s", 
 		client->sess.sessionTeam,
@@ -97,7 +100,11 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 
 	// initial team determination
 	if ( g_gametype.integer >= GT_TEAM ) {
-		if ( g_teamAutoJoin.integer ) {
+		if(wopSP_hasForceTeam()) {
+			sess->sessionTeam = wopSP_forceTeam();
+			BroadcastTeamChange( client, -1 );
+		}
+		else if ( g_teamAutoJoin.integer ) {
 			sess->sessionTeam = PickTeam( -1 );
 			BroadcastTeamChange( client, -1 );
 		} else {

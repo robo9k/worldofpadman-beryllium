@@ -61,7 +61,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR && (g_gametype.integer!=GT_LPS || player->client->sess.livesleft>0)) {
+	if ( ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) && !LPSDeadSpec( player->client ) ) {
 		if ( g_gametype.integer < GT_TEAM ) {
 			tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 			VectorCopy(player->client->ps.viewangles,tent->s.angles);
@@ -98,7 +98,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	SetClientViewAngle( player, angles );
 
 	// kill anything at the destination
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR && (g_gametype.integer!=GT_LPS || player->client->sess.livesleft>0)) {
+	if ( ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) && !LPSDeadSpec( player->client ) ) {
 		G_KillBox (player);
 	}
 
@@ -108,7 +108,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// use the precise origin for linking
 	VectorCopy( player->client->ps.origin, player->r.currentOrigin );
 
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR && (g_gametype.integer!=GT_LPS || player->client->sess.livesleft>0)) {
+	if ( ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) && !LPSDeadSpec( player->client ) ) {
 		trap_LinkEntity (player);
 	}
 }

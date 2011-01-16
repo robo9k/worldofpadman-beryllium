@@ -6,15 +6,15 @@
  *****************************************************************************/
 
 #include "g_local.h"
-#include "botlib.h"
-#include "be_aas.h"
-#include "be_ea.h"
-#include "be_ai_char.h"
-#include "be_ai_chat.h"
-#include "be_ai_gen.h"
-#include "be_ai_goal.h"
-#include "be_ai_move.h"
-#include "be_ai_weap.h"
+#include "../botlib/botlib.h"
+#include "../botlib/be_aas.h"
+#include "../botlib/be_ea.h"
+#include "../botlib/be_ai_char.h"
+#include "../botlib/be_ai_chat.h"
+#include "../botlib/be_ai_gen.h"
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/be_ai_weap.h"
 //
 #include "ai_main.h"
 #include "ai_dmq3.h"
@@ -250,19 +250,19 @@ BotWeaponNameForMeansOfDeath
 
 char *BotWeaponNameForMeansOfDeath(int mod) {
 	switch(mod) {
-		case MOD_SHOTGUN: return "Shotgun";
-		case MOD_GAUNTLET: return "Gauntlet";
-		case MOD_MACHINEGUN: return "Machinegun";
-		case MOD_GRENADE:
-		case MOD_GRENADE_SPLASH: return "Grenade Launcher";
-		case MOD_ROCKET:
-		case MOD_ROCKET_SPLASH: return "Rocket Launcher";
-		case MOD_PLASMA:
-		case MOD_PLASMA_SPLASH: return "Plasmagun";
-		case MOD_RAILGUN: return "Railgun";
-		case MOD_LIGHTNING: return "Lightning Gun";
-		case MOD_BFG:
-		case MOD_BFG_SPLASH: return "BFG10K";
+		case MOD_PUMPER: return "Shotgun";
+		case MOD_PUNCHY: return "Gauntlet";
+		case MOD_NIPPER: return "Machinegun";
+		case MOD_BALLOONY:
+		case MOD_BALLOONY_SPLASH: return "Grenade Launcher";
+		case MOD_BETTY:
+		case MOD_BETTY_SPLASH: return "Rocket Launcher";
+		case MOD_BUBBLEG:
+		case MOD_BUBBLEG_SPLASH: return "Plasmagun";
+		case MOD_SPLASHER: return "Railgun";
+		case MOD_BOASTER: return "Lightning Gun";
+		case MOD_IMPERIUS:
+		case MOD_IMPERIUS_SPLASH: return "BFG10K";
 
 		case MOD_KILLERDUCKS: return "KiLLERDUCKS";
 
@@ -580,17 +580,17 @@ int BotChat_Death(bot_state_t *bs) {
 		else if (bs->botdeathtype == MOD_TELEFRAG)
 			BotAI_BotInitialChat(bs, "death_telefrag", name, NULL);
 		else {
-			if ((bs->botdeathtype == MOD_GAUNTLET ||
-				bs->botdeathtype == MOD_RAILGUN ||
-				bs->botdeathtype == MOD_BFG ||
-				bs->botdeathtype == MOD_BFG_SPLASH) && random() < 0.5) {
+			if ((bs->botdeathtype == MOD_PUNCHY ||
+				bs->botdeathtype == MOD_SPLASHER ||
+				bs->botdeathtype == MOD_IMPERIUS ||
+				bs->botdeathtype == MOD_IMPERIUS_SPLASH) && random() < 0.5) {
 
-				if (bs->botdeathtype == MOD_GAUNTLET)
+				if (bs->botdeathtype == MOD_PUNCHY)
 					BotAI_BotInitialChat(bs, "death_gauntlet",
 							name,												// 0
 							//BotWeaponNameForMeansOfDeath(bs->botdeathtype),		// 1
 							NULL);
-				else if (bs->botdeathtype == MOD_RAILGUN)
+				else if (bs->botdeathtype == MOD_SPLASHER)
 					BotAI_BotInitialChat(bs, "death_rail",
 							name,												// 0
 							//BotWeaponNameForMeansOfDeath(bs->botdeathtype),		// 1
@@ -659,10 +659,10 @@ int BotChat_Kill(bot_state_t *bs) {
 			return qfalse;			// don't wait
 		}
 		//
-		if (bs->enemydeathtype == MOD_GAUNTLET) {
+		if (bs->enemydeathtype == MOD_PUNCHY) {
 			BotAI_BotInitialChat(bs, "kill_gauntlet", name, NULL);
 		}
-		else if (bs->enemydeathtype == MOD_RAILGUN) {
+		else if (bs->enemydeathtype == MOD_SPLASHER) {
 			BotAI_BotInitialChat(bs, "kill_rail", name, NULL);
 		}
 		else if (bs->enemydeathtype == MOD_TELEFRAG) {
@@ -782,12 +782,15 @@ int BotChat_HitNoDeath(bot_state_t *bs) {
 	if (!bot_fastchat.integer) {
 		if (random() > rnd * 0.5) return qfalse;
 	}
+
+	BotEntityInfo(bs->enemy, &entinfo);
+	if (!entinfo.valid) return qfalse;
+	if (EntityIsShooting(&entinfo)) return qfalse;
+
 	if (!BotValidChatPosition(bs)) return qfalse;
 	//
 	if (BotVisibleEnemies(bs)) return qfalse;
 	//
-	BotEntityInfo(bs->enemy, &entinfo);
-	if (EntityIsShooting(&entinfo)) return qfalse;
 	//
 	ClientName(lasthurt_client, name, sizeof(name));
 	//weap = BotWeaponNameForMeansOfDeath(g_entities[bs->client].client->lasthurt_mod);
@@ -820,12 +823,15 @@ int BotChat_HitNoKill(bot_state_t *bs) {
 	if (!bot_fastchat.integer) {
 		if (random() > rnd * 0.5) return qfalse;
 	}
+
+	BotEntityInfo(bs->enemy, &entinfo);
+	if (!entinfo.valid) return qfalse;
+	if (EntityIsShooting(&entinfo)) return qfalse;
+
 	if (!BotValidChatPosition(bs)) return qfalse;
 	//
 	if (BotVisibleEnemies(bs)) return qfalse;
 	//
-	BotEntityInfo(bs->enemy, &entinfo);
-	if (EntityIsShooting(&entinfo)) return qfalse;
 	//
 	ClientName(bs->enemy, name, sizeof(name));
 	//weap = BotWeaponNameForMeansOfDeath(g_entities[bs->enemy].client->lasthurt_mod);

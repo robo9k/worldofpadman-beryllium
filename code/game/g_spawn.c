@@ -99,7 +99,7 @@ field_t fields[] = {
 	{"animationStart",FOFS(animationStart),F_INT},
 	{"animationEnd",  FOFS(animationEnd),F_INT},
 	{"animationFPS",  FOFS(animationFPS),F_FLOAT},
-
+	{"distance", FOFS(distance), F_FLOAT}, 
 	{NULL}
 };
 
@@ -126,6 +126,7 @@ void SP_func_button (gentity_t *ent);
 void SP_func_door (gentity_t *ent);
 void SP_func_train (gentity_t *ent);
 void SP_func_timer (gentity_t *self);
+void SP_func_door_rotating( gentity_t *ent );
 
 void SP_station_health( gentity_t *ent );
 void SP_misc_sprayroomtl_teleporter(gentity_t *ent);
@@ -138,6 +139,8 @@ void SP_trigger_teleport (gentity_t *ent);
 void SP_trigger_hurt (gentity_t *ent);
 
 void SP_trigger_balloonzone (gentity_t *ent);
+void SP_trigger_exit(gentity_t *self);
+void SP_trigger_forbiddenitems( gentity_t *self );
 
 void SP_target_balloon (gentity_t *ent);
 
@@ -146,6 +149,7 @@ void SP_target_give (gentity_t *ent);
 void SP_target_delay (gentity_t *ent);
 void SP_target_speaker (gentity_t *ent);
 void SP_target_print (gentity_t *ent);
+void SP_target_script(gentity_t* ent);
 void SP_target_laser (gentity_t *self);
 void SP_target_character (gentity_t *ent);
 void SP_target_score( gentity_t *ent );
@@ -203,6 +207,7 @@ spawn_t	spawns[] = {
 	{"func_train", SP_func_train},
 	{"func_group", SP_info_null},
 	{"func_timer", SP_func_timer},			// rename trigger_timer?
+	{"func_door_rotating", SP_func_door_rotating},
 
 	{"station_health", SP_station_health},
 
@@ -219,7 +224,9 @@ spawn_t	spawns[] = {
 	{"trigger_teleport", SP_trigger_teleport},
 	{"trigger_hurt", SP_trigger_hurt},
 
-	{"trigger_balloonzone", SP_trigger_balloonzone}, 
+	{"trigger_balloonzone", SP_trigger_balloonzone},
+	{"trigger_forbiddenitems", SP_trigger_forbiddenitems},
+	{"trigger_exit",SP_trigger_exit},
 
 	// targets perform no action by themselves, but must be triggered
 	// by another entity
@@ -230,6 +237,7 @@ spawn_t	spawns[] = {
 	{"target_delay", SP_target_delay},
 	{"target_speaker", SP_target_speaker},
 	{"target_print", SP_target_print},
+	{"target_script", SP_target_script},
 	{"target_laser", SP_target_laser},
 	{"target_score", SP_target_score},
 	{"target_teleporter", SP_target_teleporter},
@@ -262,7 +270,6 @@ spawn_t	spawns[] = {
 	{"team_bluespawn", SP_team_CTF_bluespawn},
 
 	{"item_botroam", SP_item_botroam},
-
 	{0, 0}
 };
 
@@ -392,7 +399,67 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 }
 
 
+typedef struct {
+	const char* s; //search
+	const char* r; //replace
+} replacePair_t;
 
+replacePair_t q3ToWopItems[] = {
+	{ "weapon_gauntlet",		"weapon_punchy"		},
+	{ "weapon_machinegun",		"weapon_nipper"		},
+	{ "weapon_shotgun",			"weapon_pumper"		},
+	{ "weapon_lightning",		"weapon_boaster"	},
+	{ "weapon_railgun",			"weapon_splasher"	},
+	{ "weapon_plasmagun",		"weapon_bubbleg"	},
+	{ "weapon_grenadelauncher",	"weapon_balloony"	},
+	{ "weapon_rocketlauncher",	"weapon_betty"		},
+	{ "weapon_bfg",				"weapon_imperius"	},
+			
+	{ "ammo_shells",	"ammo_pumper"	},
+	{ "ammo_bullets",	"ammo_nipper"	},
+	{ "ammo_grenades",	"ammo_balloony"	},
+	{ "ammo_cells",		"ammo_bubbleg"	},
+	{ "ammo_lightning",	"ammo_boaster"	},
+	{ "ammo_rockets",	"ammo_betty"	},
+	{ "ammo_slugs",		"ammo_splasher"	},
+	{ "ammo_bfg",		"ammo_imperius"	},
+			
+	{ "item_quad",		"item_padpower"			},
+	{ "item_enviro",	"item_climber"			},
+	{ "item_hast",		"item_speedy"			},
+	{ "item_flight",	"item_jump"				},
+	{ "item_invis",		"item_visionless"		},
+	{ "item_regen",		"item_revival"			},
+	{ "item_armor_body","item_armor_padshield"	},
+			
+	{ "team_CTF_redflag",	"team_CTL_redlolly"	},
+	{ "team_CTF_blueflag",	"team_CTL_bluelolly"},
+	{ "team_CTF_redplayer",	"team_redplayer"	},
+	{ "team_CTF_blueplayer","team_blueplayer"	},
+	{ "team_CTF_redspawn",	"team_redspawn"		},
+	{ "team_CTF_bluespawn",	"team_bluespawn"	},
+	{ NULL,		NULL },
+	NULL
+};
+
+replacePair_t shortMarkernames[] = {
+	{ "black",	"models/mapobjects/pad_weaponmarker/pad_wepm_black_bg.md3"	},
+	{ "blue",	"models/mapobjects/pad_weaponmarker/pad_wepm_blue_bg.md3"	},
+	{ "green",	"models/mapobjects/pad_weaponmarker/pad_wepm_green_gg.md3"	},
+	{ "purple",	"models/mapobjects/pad_weaponmarker/pad_wepm_green_bg.md3"	},
+	{ "orange",	"models/mapobjects/pad_weaponmarker/pad_wepm_orange_bg.md3"	},
+	{ NULL,		NULL },
+	NULL
+};
+
+replacePair_t spawnpointReplacements[] = {
+	{ "team_redplayer",		"info_player_deathmatch" },
+	{ "team_blueplayer",	"info_player_deathmatch" },
+	{ "team_redspawn",		"info_player_deathmatch" },
+	{ "team_bluespawn",		"info_player_deathmatch" },
+	{ NULL,					NULL },
+	NULL
+};
 
 /*
 ===================
@@ -405,9 +472,11 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*s, *value, *gametypeName;
+	char		*s, *value;
+	const char	*gametypeName;
+	gitem_t		*item;
 
-	static char *gametypeNames[] = {"ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"};
+	static const char *gametypeNames[] = {"ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"};
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -416,30 +485,37 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		G_ParseField( level.spawnVars[i][0], level.spawnVars[i][1], ent );
 	}
 
-	if(g_q3TOpadItems.integer)
-	{
-		static char *olditems[] = { "weapon_gauntlet",	"weapon_machinegun",	"weapon_shotgun",	"weapon_lightning",	"weapon_railgun",	"weapon_plasmagun",	"weapon_grenadelauncher",	"weapon_rocketlauncher",	"weapon_bfg",
-			"ammo_shells",	"ammo_bullets",	"ammo_grenades",	"ammo_cells",	"ammo_lightning",	"ammo_rockets",	"ammo_slugs",		"ammo_bfg",
-			"item_quad",		"item_enviro",	"item_hast",	"item_flight",	"item_invis",		"item_regen",	"item_armor_body",
-			"team_CTF_redflag", "team_CTF_blueflag","team_CTF_redplayer","team_CTF_blueplayer","team_CTF_redspawn","team_CTF_bluespawn",	NULL };
-
-		static char *newitems[] = { "weapon_punchy",	"weapon_nipper",		"weapon_pumper",	"weapon_boaster",	"weapon_splasher",	"weapon_bubbleg",	"weapon_balloony",			"weapon_betty",				"weapon_imperius",
-			"ammo_pumper",	"ammo_nipper",	"ammo_balloony",	"ammo_bubbleg",	"ammo_boaster",		"ammo_betty",	"ammo_splasher",	"ammo_imperius",
-			"item_padpower",	"item_climber",	"item_speedy",	"item_jump",	"item_visionless",	"item_revival",	"item_armor_padshield",
-			"team_CTL_redlolly", "team_CTL_bluelolly","team_redplayer",  "team_blueplayer",	   "team_redspawn",	   "team_bluespawn",		NULL };
-
-		for(i=0;olditems[i]!=NULL;i++)
-		{
-			if(!Q_stricmp(ent->classname,olditems[i]))
-			{
-				ent->classname=newitems[i];
+	// Convert suitable items from q3
+	if ( g_q3Items.integer ) {
+		for ( i = 0; q3ToWopItems[i].s; i++ ) {
+			if ( Q_stricmp( ent->classname, q3ToWopItems[i].s ) == 0 ) {
+				ent->classname = (char*)q3ToWopItems[i].r;
 				break;
 			}
 		}
 	}
 
+	// Convert additional team spawnpoints when not in team gametypes
+	if ( g_gametype.integer < GT_TEAM ) {
+		for ( i = 0; spawnpointReplacements[i].s; i++ ) {
+			if ( Q_stricmp( ent->classname, spawnpointReplacements[i].s ) == 0 ) {
+				ent->classname = (char*)spawnpointReplacements[i].r;
+				break;
+			}
+		}
+	}
 
-	if ( !(g_gametype.integer == GT_SPRAYFFA || g_gametype.integer == GT_SPRAY) ) {
+	// remove lollies if we aren't in CTL
+	// FIXME: Should mappers do this via gametype spawnvar (also for balloons, lps items etc) ?
+	if( g_gametype.integer!=GT_CTF
+		&& (!Q_stricmp(ent->classname,"team_CTL_redlolly") || !Q_stricmp(ent->classname,"team_CTL_bluelolly")) )
+	{
+		G_FreeEntity( ent );
+		return;
+	}
+
+
+	if ( !IsSyc() ) {
 		G_SpawnInt( "onlyspraygt", "0", &i );
 		if ( i ) {
 			G_FreeEntity( ent );
@@ -451,7 +527,8 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		if( !Q_stricmp(ent->classname,"station_health")
 				|| NULL!=strstr(ent->classname,"_imperius")
 				|| !Q_stricmpn(ent->classname,"holdable_",9)
-				|| !Q_stricmpn(ent->classname,"item_",5)	) {
+				|| (!Q_stricmpn(ent->classname,"item_",5)
+					&& Q_stricmp(ent->classname,"item_botroam")) ) {
 			G_FreeEntity( ent );
 			return;
 		}
@@ -513,6 +590,66 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 				G_FreeEntity( ent );
 				return;
 			}
+		}
+	}
+
+
+	for ( item = ( bg_itemlist + 1 ); item->classname; item++ ) {
+    	if ( strcmp( item->classname, ent->classname ) == 0 ) {
+			RegisterItem( item );
+			break;
+		}
+	}
+
+
+	/*
+	Modifiers / Instagib
+	Exclude unwanted Items from spawning in Instagib, but have them register with
+	the client anyway. (So we have working visuals and sound for the entities when
+	we turn off the modifier, which doesn't trigger a full client reload)
+	*/
+	if ( g_modInstagib.integer && !Instagib_canSpawnEntity( ent ) ) {
+		G_FreeEntity( ent );
+		return;
+	}
+
+
+	// weapon marker
+	if( G_SpawnString("marker", NULL, &value) ) {
+		trace_t		tr;
+		vec3_t		min = {-16.0f,-16.0f, 0.0f};
+		vec3_t		max = { 16.0f, 16.0f, 1.0f};
+		vec3_t		trEnd;
+
+		if ( g_modInstagib.integer ) { // no markers for instagib
+			G_FreeEntity( ent );
+			return;
+		}
+
+		VectorCopy( ent->s.origin, trEnd );
+		trEnd[2] -= 512;
+		trap_Trace(&tr,ent->s.origin,min,max,trEnd,ENTITYNUM_NONE,MASK_SHOT);
+
+		if(!tr.startsolid && tr.fraction!=1.0f) {
+			gentity_t	*marker_ent;
+			marker_ent = G_Spawn();
+
+			marker_ent->classname = "misc_externalmodel";
+			for(i=0;shortMarkernames[i].s!=NULL;++i) {
+				if(!Q_stricmp(value,shortMarkernames[i].s))
+					marker_ent->model = (char *)shortMarkernames[i].r;
+			}
+			if(marker_ent->model == NULL)
+				marker_ent->model = G_NewString(value);
+			marker_ent->s.modelindex = G_ModelIndex( marker_ent->model );
+
+			VectorCopy( ent->s.angles, marker_ent->s.angles );
+
+			G_SetOrigin( marker_ent, tr.endpos );
+
+			VectorCopy( marker_ent->s.angles, marker_ent->s.apos.trBase );
+
+			trap_LinkEntity(marker_ent);
 		}
 	}
 
