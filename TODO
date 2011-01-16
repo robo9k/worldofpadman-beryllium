@@ -58,3 +58,7 @@ Implement a guid filter like sv_banFile
 
 Properly sync the versionstring in README with the actual current version (in code/game/Makefile plus svn rev).
 
+Maybe record some stats? Those stimulate players and could be used to detect noobs or cheaters.
+
+Give points depending on difficulty. For example less points while using padpower, more when on low health while killing with punchy. OneUp after x kills in LPS etc.
+
