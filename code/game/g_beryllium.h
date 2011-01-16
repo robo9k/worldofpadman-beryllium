@@ -42,6 +42,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define CHAT_SERVER_NAME	"server"
 
+#define MAX_CAMPTIME		20
+
 enum {
 	GUIDCHECK_EMPTY		= 1,
 	GUIDCHECK_FORMAT	= 2
@@ -70,6 +72,8 @@ extern vmCvar_t	be_maxConnections;
 
 extern vmCvar_t	g_version;
 
+extern vmCvar_t	be_campDistance;
+
 
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
@@ -84,6 +88,8 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 void BE_ClientUserinfoChanged( int clientNum );
 char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
+
+void BE_ClientTimerActions( gentity_t* ent );
 
 
 #endif

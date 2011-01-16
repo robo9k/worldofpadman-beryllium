@@ -75,6 +75,10 @@
                        Please also read ioquake's README concerning the purpose
                        of cl_guid!
 
+   be_campDistance   - If greater than zero, this is the the distance in units
+                       the players have to move each second. If they do not, they
+                       are considered camping and after 20 seconds killed.
+
 
    .: Commands :.
 

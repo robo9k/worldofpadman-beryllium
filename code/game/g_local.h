@@ -268,6 +268,9 @@ typedef struct {
 
 	char		guid[GUIDSTRMAXLEN];				
 	char		ip[NET_ADDRSTRMAXLEN];
+
+	int			campCounter;
+	vec3_t		campPosition;
 	/* end beryllium */
 } clientPersistant_t;
 

@@ -97,6 +97,8 @@ vmCvar_t	be_maxConnections;
 
 vmCvar_t	g_version;
 
+vmCvar_t	be_campDistance;
+
 /* end beryllium */
 
 // bk001129 - made static to avoid aliasing
@@ -209,7 +211,9 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
 
 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
-	{ &g_version, "g_version", "wop 1.2_SVN98", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse }
+	{ &g_version, "g_version", "wop 1.2_SVN98", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+
+	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 

@@ -296,3 +296,49 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	return NULL;
 }
 
+
+/*
+	Called once a second for each alive client
+*/
+void BE_ClientTimerActions( gentity_t* ent ) {
+	vec3_t	position;
+	int counter, remaining;
+
+	assert( ent );
+	assert( ent->client );
+
+
+	if ( CON_CONNECTED != ent->client->pers.connected ) {
+		return;
+	}
+	if ( TEAM_SPECTATOR == ent->client->sess.sessionTeam ) {
+		return;
+	}
+
+
+	/* Anti-Camping, check how far we moved */
+	VectorCopy( ent->client->ps.origin, position );
+	if ( DistanceSquared( ent->client->pers.campPosition, position ) < Square( be_campDistance.value ) ) {
+		ent->client->pers.campCounter++;
+	}
+	else {
+		ent->client->pers.campCounter = 0;
+	}
+	VectorCopy( position, ent->client->pers.campPosition );
+
+	counter = ent->client->pers.campCounter;
+	remaining = ( MAX_CAMPTIME - counter );
+	/* TODO: Make the countdown configurable via cvar? */
+	if ( ( remaining <= 10 ) && ( remaining > 5 ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, S_COLOR_ITALIC"Camping will get you killed.." );
+	}
+	else if ( ( remaining <= 5 ) && ( remaining >= 1 ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_CP, S_COLOR_BOLD"Get moving!" );
+	}
+
+	if ( remaining <= 0 ) {
+		/* Let them commit suicide! */
+		G_Damage( ent, NULL, ent, NULL, NULL, 3000, 0, MOD_UNKNOWN );
+	}
+}
+
