@@ -451,12 +451,17 @@ static void Svcmd_Tell_f( void ) {
 	G_Say( NULL, target, SAY_TELL, ConcatArgs( 2 ) );
 }
 
-
+/* changed beryllium */
+/* NOTE: beryllium also uses an enum with the same name and value names */
+/*
 typedef enum {
 	CCMD_MP,
 	CCMD_CP,
 	CCMD_PRINT
 } clientCommand_t;
+*/
+/* end changed */
+
 /*
 ===================
 Svcmd_ClientCommand_f
@@ -823,6 +828,14 @@ qboolean	ConsoleCommand( void ) {
 
 	trap_Argv( 0, cmd, sizeof( cmd ) );
 
+
+	/* added beryllium */
+	if ( BE_ConsoleCommand( cmd ) ) {
+		return qtrue;
+	}
+	/* end beryllium */
+
+
 	if ( Q_stricmp (cmd, "entitylist") == 0 ) {
 		Svcmd_EntityList_f();
 		return qtrue;
@@ -935,9 +948,14 @@ qboolean	ConsoleCommand( void ) {
 			return qtrue;
 		}
 
-		// everything else will also be printed to clients
-		trap_SendServerCommand( -1, va("print \"server: %s\n\"", ConcatArgs(0) ) );
+		/* changed beryllium
+		/* This "feature" is annoying, disable */
+		/*
+		// everything else will also be printed as a say command
+		trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(0) ) );
 		return qtrue;
+		*/
+		/* end changed */
 	}
 
 	return qfalse;

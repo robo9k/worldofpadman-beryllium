@@ -275,6 +275,22 @@ typedef struct {
 #define MAX_NETNAME			36
 #define	MAX_VOTE_COUNT		3
 
+
+/* added beryllium */
+/* FIXME: This should go into be_vote.h, which is included too late */
+typedef enum {
+	VOTE_NONE,
+	VOTE_YES,
+	VOTE_NO,
+	VOTE_DONTCARE
+} vote_t;
+
+/* FIXME: These should go into berylliums headers, which are included too late */
+#define NET_ADDRSTRMAXLEN		48 			/* NOTE: Must match NET_ADDRSTRMAXLEN in qcommon.h */
+#define GUIDSTRMAXLEN			33			/* NOTE: Length must match max result of Com_MD5File() / cl_guid */
+/* end added */
+
+
 // client data that stays across multiple respawns, but is cleared
 // on each level change or team change at ClientBegin()
 typedef struct {
@@ -291,6 +307,22 @@ typedef struct {
 	int			voteCount;			// to prevent people from constantly calling votes
 	int			teamVoteCount;		// to prevent people from constantly calling votes
 	qboolean	teamInfo;			// send team overlay updates?
+
+
+	/* added beryllium */
+	/* FIXME: Use unsigned int? */
+	int			voteTime;
+	vote_t		voted;
+
+	int			nameChanges;
+	int			nameChangeTime;
+
+	char		guid[GUIDSTRMAXLEN];				
+	char		ip[NET_ADDRSTRMAXLEN];
+
+	int			campCounter;
+	vec3_t		campPosition;
+	/* end beryllium */
 } clientPersistant_t;
 
 
@@ -476,6 +508,12 @@ typedef struct {
 	vec3_t		cam_spawnangles;
 	int			numBambams[TEAM_NUM_TEAMS];
 	int			numBoomies[TEAM_NUM_TEAMS];
+
+
+	/* added beryllium */
+	int			voteDuration;
+	int			voteEnd;
+	/* end beryllium */
 } level_locals_t;
 
 
@@ -1108,4 +1146,16 @@ int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *paren
 
 void	trap_SnapVector( float *v );
 int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalorigin);
+
+
+/* added beryllium */
+
+/* Included here, because of dependencies */
+#include "g_beryllium.h"
+#include "be_util.h"
+#include "be_vote.h"
+#include "be_cmds.h"
+#include "be_svcmds.h"
+
+/* end beryllium */
 

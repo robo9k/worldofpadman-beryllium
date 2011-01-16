@@ -422,6 +422,12 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 	while ( client->timeResidual >= 1000 ) {
 		client->timeResidual -= 1000;
 
+
+		/* added beryllium */
+		BE_ClientTimerActions( ent );
+		/* end added */
+
+
 		if ( client->ps.powerups[PW_REVIVAL] ) {
 			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
 				ent->health += 15;

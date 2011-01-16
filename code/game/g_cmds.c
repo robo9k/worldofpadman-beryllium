@@ -718,7 +718,11 @@ void Cmd_Team_f( gentity_t *ent ) {
 	}
 
 	if ( ent->client->switchTeamTime > level.time ) {
-		trap_SendServerCommand( ent-g_entities, "print \"May not switch teams more than once per 5 seconds.\n\"" );
+		/* changed beryllium */
+		/*trap_SendServerCommand( ent-g_entities, "print \"May not switch teams more than once per 5 seconds.\n\"" );*/
+		/* TODO: Use proper beryllium colors and TimeToString()? */
+		trap_SendServerCommand( ( ent - g_entities ), va( "print \"May not switch teams more than once per %i seconds.\n\"", be_switchTeamTime.integer ) );
+		/* end changed*/
 		return;
 	}
 
@@ -732,7 +736,10 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	SetTeam( ent, s );
 
-	ent->client->switchTeamTime = level.time + 5000;
+	/* changed beryllium */
+	/*ent->client->switchTeamTime = level.time + 5000;*/
+	ent->client->switchTeamTime = ( level.time + ( be_switchTeamTime.integer * 1000 ) );
+	/* end changed */
 }
 
 
@@ -908,7 +915,12 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 	// server calls don't have a valid entity
 	if ( !ent ) {
+		/* changed beryllium */
+		/*
 		namesrc = "server";
+		*/
+		namesrc = CHAT_SERVER_NAME;
+		/* end changed */
 		realEnt = qfalse;
 		cid = -1;
 	}
@@ -1901,6 +1913,14 @@ void ClientCommand( int clientNum ) {
 
 
 	trap_Argv( 0, cmd, sizeof( cmd ) );
+
+
+	/* added beryllium */
+	if ( BE_ClientCommand( ent, cmd ) ) {
+		return;
+	}
+	/* end beryllium */
+
 
 	if (Q_stricmp (cmd, "say") == 0) {
 		Cmd_Say_f (ent, SAY_ALL, qfalse);

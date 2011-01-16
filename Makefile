@@ -208,12 +208,14 @@ endif
 
 # version info
 VERSION=1.5
+BERYLLIUM_VERSION=0.07a
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)
   SVN_REV=$(shell LANG=C svnversion .)
   ifneq ($(SVN_REV),)
     VERSION:=$(VERSION)_SVN$(SVN_REV)
+	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-r$(SVN_REV)
     USE_SVN=1
   endif
 else
@@ -221,6 +223,7 @@ ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
   SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
   ifneq ($(SVN_REV),)
     VERSION:=$(VERSION)_SVN$(SVN_REV)
+	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-r$(SVN_REV)
   endif
 endif
 endif
@@ -1267,7 +1270,7 @@ endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" -o $@ $<
 endef
 
 define DO_UI_Q3LCC
@@ -1865,6 +1868,12 @@ Q3GOBJ_ = \
   $(B)/baseq3/game/g_weapon.o \
   $(B)/baseq3/game/wopg_sphandling.o \
   $(B)/baseq3/game/wopg_spstoryfiles.o \
+  \
+  $(B)/baseq3/game/g_beryllium.o \
+  $(B)/baseq3/game/be_util.o \
+  $(B)/baseq3/game/be_cmds.o \
+  $(B)/baseq3/game/be_svcmds.o \
+  $(B)/baseq3/game/be_vote.o \
   \
   $(B)/baseq3/qcommon/q_math.o \
   $(B)/baseq3/qcommon/q_shared.o

@@ -692,6 +692,12 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	char	ch;
 	char	*p;
 	int		spaces;
+	/* added beryllium */
+	int			totalWhitespace = 0;
+	qboolean	invalid = qfalse;
+	char		cleanName[MAX_NETNAME];
+	/* end added */
+
 
 	//save room for trailing null byte
 	outSize--;
@@ -712,6 +718,15 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 		if( !*p && ch == ' ' ) {
 			continue;
 		}
+
+
+		/* added beryllium */
+		/* don't allow nonprinting characters or (dead) console keys */
+		if ( ch < ' ' || ch > '}' || ch == '`' ) {
+			continue;
+		}
+		/* end added */
+
 
 		// check colors
 		if( ch == Q_COLOR_ESCAPE ) {
@@ -752,6 +767,15 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 			break;
 		}
 
+
+		/* added beryllium */
+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+		if ( ch == ' ' ) {
+			totalWhitespace++;
+		}
+		/* end added */
+
+
 		*out++ = ch;
 		colorlessLen++;
 		len++;
@@ -762,6 +786,44 @@ static void ClientCleanName( const char *in, char *out, int outSize ) {
 	if( *p == 0 || colorlessLen == 0 ) {
 		Q_strncpyz( p, "UnnamedPlayer", outSize );
 	}
+
+
+	/* added beryllium */
+	/* /name "^7 " etc. also results in an "empty" name */
+	if ( totalWhitespace >= colorlessLen ) {
+		invalid = qtrue;	
+	}
+
+	Q_strncpyz( cleanName, p, sizeof( cleanName ) );
+	Q_CleanStr( cleanName );
+
+	/* Used to not print text to chat area, but console only */
+	if ( Q_strncmp( "[skipnotify]", cleanName, 12 ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* Used in serverside chat messages */
+	if ( Q_stricmp( CHAT_SERVER_NAME, cleanName ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* NOTE: Problematic names below don't harm votes in beryllium anymore,
+	         yet none should use them as names.
+	*/
+	/* "kick 42". Numerical names as in client numbers */
+	if ( IsANumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
+		invalid = qtrue;
+	}
+	/* "kick all", "kick allbots" */
+	if ( Q_stricmp( "all", cleanName ) == 0 ) {
+		invalid = qtrue;
+	}
+
+
+	if ( invalid ) {
+		Q_strncpyz( p, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+	}
+	/* end added */
 }
 
 
@@ -791,6 +853,12 @@ void ClientUserinfoChanged( int clientNum ) {
 	ent = g_entities + clientNum;
 	client = ent->client;
 
+
+	/* added beryllium */
+	BE_ClientUserinfoChanged( clientNum );
+	/* end added */
+
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 	// check for malformed or illegal info strings
@@ -818,6 +886,17 @@ void ClientUserinfoChanged( int clientNum ) {
 	Q_strncpyz ( oldname, client->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
 	ClientCleanName( s, client->pers.netname, sizeof(client->pers.netname) );
+
+
+	/* added beryllium */
+	/* NOTE: If we don't do this, the engine might still have an "invalid" name in client->name
+	         Fixing the userinfo will cause the engine to correctly re-read the name.
+	         We can not properly do this inside BE_ClientUserinfoChanged()
+	*/
+	Info_SetValueForKey( userinfo, "name", client->pers.netname );
+	trap_SetUserinfo( clientNum , userinfo );
+	/* end added */
+
 
 	if ( ( client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( client ) ) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
@@ -945,6 +1024,15 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	ent = &g_entities[ clientNum ];
 
+
+	/* added beryllium */
+	value = BE_ClientConnect( clientNum, firstTime, isBot );
+	if ( value != NULL ) {
+		return value;
+	}
+	/* end added */
+
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 	// There's no point in letting those clients connect
@@ -996,6 +1084,14 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			return "BotConnectfailed";
 		}
 	}
+
+
+	/* added beryllium */
+	/* NOTE: See NOTEs in BE_ClientConnect() */
+	/* Copy pasta .. */
+	Q_strncpyz( client->pers.guid, Info_ValueForKey( userinfo, "cl_guid" ), sizeof( client->pers.guid ) );
+	Q_strncpyz( client->pers.ip, Info_ValueForKey( userinfo, "ip" ), sizeof( client->pers.ip ) );
+	/* end added */
 
 	
 	// get and distribute relevent paramters

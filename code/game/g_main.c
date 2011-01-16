@@ -82,6 +82,34 @@ vmCvar_t	g_modInstagib_WeaponJump;
 // Game Stats
 vmCvar_t	g_trackGameStats;
 
+
+/* added beryllium */
+
+vmCvar_t	be_version;
+vmCvar_t	g_version;
+
+vmCvar_t	be_voteDuration;
+vmCvar_t	be_allowedVotes;
+vmCvar_t	be_votePause;
+vmCvar_t	be_voteRate;
+vmCvar_t	be_votePass;
+vmCvar_t	be_maxVotes;
+
+vmCvar_t	be_respawnProtect;
+
+vmCvar_t	be_switchTeamTime;
+
+vmCvar_t	be_maxNameChanges;
+
+vmCvar_t	be_checkGUIDs;
+
+vmCvar_t	be_maxConnections;
+
+vmCvar_t	be_campDistance;
+
+/* end beryllium */
+
+
 // bk001129 - made static to avoid aliasing
 static cvarTable_t		gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -171,7 +199,39 @@ static cvarTable_t		gameCvarTable[] = {
 	
 	{ &g_trackGameStats, "g_trackGameStats", "1", 0, 0, qfalse },
 	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse},
-	{ &g_bambamSpread, "g_bambamSpread", "5", 0, 0, qfalse}
+	{ &g_bambamSpread, "g_bambamSpread", "5", 0, 0, qfalse},
+
+
+	/* added beryllium */
+
+	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
+	{ &g_version, "g_version", "wop 1.5_SVN1863", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+
+	/* FIXME: Use proper g_ instead of be_ prefix? */
+	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
+	/* FIXME: Keep in sync with vote command handler string array? */
+	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit/pointlimit"
+	                                       "/g_gametype/setgametype/shuffleteams/",
+	                                       CVAR_ARCHIVE, 0, qfalse },
+	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse },
+	{ &be_maxVotes, "be_maxVotes", "3", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_maxNameChanges, "be_maxNameChanges", "-1", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_checkGUIDs, "be_checkGUIDs", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
+
+	/* end beryllium */
 };
 
 // bk001129 - made static to avoid aliasing
@@ -2222,7 +2282,12 @@ end = trap_Milliseconds();
 	CheckTeamStatus();
 
 	// cancel vote if timed out
+	/* changed beryllium */
+	/*
 	CheckVote();
+	*/
+	BE_CheckVote();
+	/* end beryllium */
 
 	// check team votes
 	CheckTeamVote( TEAM_RED );
