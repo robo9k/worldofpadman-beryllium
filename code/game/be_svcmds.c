@@ -109,6 +109,7 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 	int count = 0;
 	int	sortedClients[MAX_CLIENTS];
 	gclient_t *cl;
+	gentity_t *ent;
 
 	if ( g_gametype.integer < GT_TEAM ) {
 		G_Printf( "Not in a team gametype." );
@@ -139,24 +140,13 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 
 	for( i = 0; i < count; i++ ) {
 		cl = ( level.clients + sortedClients[i] );
+		ent = ( g_entities + sortedClients[i] );
 
 		team = ( ( ( i + p ) % 2 ) + TEAM_RED );
 		cl->sess.sessionTeam = team;
 
-		/* Bots' team is quite different */
-		if ( ( g_entities + sortedClients[i] )->r.svFlags & SVF_BOT ) {
-			char ci[MAX_INFO_STRING];
-
-			trap_GetUserinfo( sortedClients[i], ci, sizeof ( ci ) );
-			if ( !Info_Validate( ci ) ) {
-				G_Error( "shuffleteams: Invalid userinfo for bot %i!\n", i );
-				return;
-			}
-
-			Info_SetValueForKey( ci, "team", TeamName( team ) );
-
-			trap_SetUserinfo( sortedClients[i], ci );
-		}
+		/* NOTE: Needed to return team items such as lollies, as this will call Team_ReturnFlag() etc.  */
+		player_die( ent, ent, ent, 100000, MOD_SUICIDE );
 
 		ClientUserinfoChanged( sortedClients[i] );
 		ClientBegin( sortedClients[i] );
