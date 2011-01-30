@@ -891,7 +891,7 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 		return;
 	}
 
-	trap_SendServerCommand( ( other - g_entities ), va( "say %d %ld \"%s%c%c%s\"", 
+	trap_SendServerCommand( ( other - g_entities ), va( "say %d %d \"%s%c%c%s\"", 
 	                        mode,
                             ( ent ? ( ent - g_entities ) : -1 ),
                             name, Q_COLOR_ESCAPE, color, message ) );
@@ -959,7 +959,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 			break;
 
 		case SAY_TELL:
-			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
+			G_LogPrintf( "Tell: %d %d %s\n", cid, ( target - g_entities ), chatText );
 			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
 				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
 				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
@@ -1322,7 +1322,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	}
 
 	trap_SendServerCommand( -1, va("print \"%s " S_COLOR_WHITE "called a vote: %s.\n\"", ent->client->pers.netname, level.voteDisplayString ) );
-	G_LogPrintf( "Callvote: %ld %s\n", ( ent - g_entities ), level.voteString );
+	G_LogPrintf( "Callvote: %d %s\n", ( ent - g_entities ), level.voteString );
 
 	// start the voting, the caller autoamtically votes yes
 	level.voteTime = level.time;
@@ -1748,7 +1748,7 @@ void Cmd_dropCartridge_f( gentity_t *ent ) {
 	}
 
 	if( tmpGE )
-		G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), tmpGE->classname );
+		G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), tmpGE->classname );
 }
 
 //cyr{

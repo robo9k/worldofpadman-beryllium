@@ -75,7 +75,7 @@ void AddScore( gentity_t *ent, vec3_t origin, int score, char *reason ) {
 
 	CalculateRanks();
 
-	G_LogPrintf( "AddScore: %ld %d %s\n", ( ent - g_entities ), score, reason );
+	G_LogPrintf( "AddScore: %d %d %s\n", ( ent - g_entities ), score, reason );
 }
 
 /*

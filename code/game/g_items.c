@@ -614,7 +614,7 @@ gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
 	velocity[2] += 200 + crandom() * 50;
 
 	// FIXME: Cartridges call LaunchItem() directly
-	G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), item->classname );
+	G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), item->classname );
 	
 	return LaunchItem( item, ent->s.pos.trBase, velocity );
 }

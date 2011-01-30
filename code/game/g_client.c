@@ -711,7 +711,12 @@ static void ForceClientSkin( gclient_t *client, char *model, const char *skin ) 
 ClientCheckName
 ============
 */
+/* changed beryllium */
+/*
 static void ClientCleanName(const char *in, char *out, int outSize)
+*/
+void ClientCleanName(const char *in, char *out, int outSize)
+/* end changed */
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
 	/* added beryllium */
@@ -1333,6 +1338,7 @@ void ClientSpawn(gentity_t *ent) {
 		// add instagib weapon to client's inventory
 		client->ps.stats[ STAT_WEAPONS ] = ( 1 << weapon );
 		client->ps.ammo[ weapon ] = INFINITE;
+trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
 	}
 	else
 	{
@@ -1397,6 +1403,7 @@ void ClientSpawn(gentity_t *ent) {
 		// force the base weapon up
 		client->ps.weapon = WP_NIPPER;
 		client->ps.weaponstate = WEAPON_READY;
+trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
 	}
 
 	// don't allow full run speed for a bit

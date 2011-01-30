@@ -146,9 +146,15 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 		cl->sess.sessionTeam = team;
 
 		/* NOTE: Needed to return team items such as lollies, as this will call Team_ReturnFlag() etc.  */
+		/* FIXME: We should really use SetTeam() instead. Be aware of limits within the function! */
+		cl->ps.stats[STAT_HEALTH] = ent->health = -999;
 		player_die( ent, ent, ent, 100000, MOD_SUICIDE );
 
 		ClientUserinfoChanged( sortedClients[i] );
+		/* NOTE/FIXME: There are some clientside problems with base weapon after ClientBegin(),
+		               see "srwc" commands in ClientSpawn(). To reproduce go into sprayroom and shuffleteams.
+		               It works without the instant respawn due to ClientBegin(), since we are forcefully setting health.
+		*/
 		ClientBegin( sortedClients[i] );
 	}
 }

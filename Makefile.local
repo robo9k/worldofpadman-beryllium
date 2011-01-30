@@ -1,8 +1,8 @@
-BUILD_GAME_SO		= 1
+BUILD_GAME_SO		= 0
 BUILD_GAME_QVM		= 1
 BUILD_MISSIONPACK	= 0
 
-BUILD_SERVER		= 1
+BUILD_SERVER		= 0
 BUILD_CLIENT		= 0
 BUILD_CLIENT_SMP	= 0
 
@@ -25,6 +25,6 @@ BUILD_STANDALONE	= 1
 #DEFAULT_BASEDIR	= /usr/share/games/worldofpadman
 
 # -fprofile-generate/use -fbranch-probabilities
-FPROFILE		= -fprofile-use
+FPROFILE		= -fprofile-generate -fbranch-probabilities
 CFLAGS			= -O2 -march=native -Wa,-mtune=core2 $(FPROFILE)
 LDFLAGS			= -Wl,-O2 -Wl,--as-needed $(FPROFILE)
