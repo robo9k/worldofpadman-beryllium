@@ -137,7 +137,7 @@ void Free_SpriteParticle( sparticle_t *p )
 
 	if(p<&pmem[0] || p>&pmem[MAX_PARTICLES-1])
 	{
-		Com_Error(ERR_FATAL,"free spriteparticle got a wrong pointer (%h)\n",p);
+		Com_Error(ERR_FATAL,"free spriteparticle got a wrong pointer (%p)\n",p);
 		return;
 	}
 
@@ -322,7 +322,8 @@ void LaunchStationStar(vec3_t origin)
 		p->currentcolor[2] =
 		p->currentcolor[3] = 1.0f;
 
-	if(tmpce=AddCCToParticle(p,2000,3000,1.0f,1.0f,1.0f,0.0f)) Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,2000,3000,1.0f,1.0f,1.0f,0.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
 /*
 	p->currentcolor[0] = 1.0f;
 	p->currentcolor[1] = 0.0f;
@@ -374,8 +375,10 @@ void LaunchSpiralParticle(vec3_t origin)
 	p->currentcolor[2] = 0.0f;
 	p->currentcolor[3] = 1.0f;
 
-	if(tmpce=AddCCToParticle(p,0,2100,0.0f,1.0f,0.0f,1.0f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCCToParticle(p,2100,3000,0.0f,1.0f,0.0f,0.0f)) Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,0,2100,0.0f,1.0f,0.0f,1.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,2100,3000,0.0f,1.0f,0.0f,0.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
 
 /* rot->gelb->weiß->weg
 	p->currentcolor[0] = 1.0f;
@@ -423,15 +426,12 @@ void LaunchSpeedyPuffTrail(vec3_t origin)
 	p->currentcolor[3] = 0.7f;
 
 	// FIXME: Magical constants
-	if ( tmpce = AddCCToParticle( p, 0, 2100, 1.0f, 0.8f, 1.0f, 0.80f ) ) {
+	if ((tmpce = AddCCToParticle( p, 0, 2100, 1.0f, 0.8f, 1.0f, 0.80f)))
 		Com_Printf( "changeerror=%i\n", tmpce );
-	}
-	if ( tmpce = AddCCToParticle( p, 2100, 3000, 1.0f, 1.0f, 1.0f, 0.8f ) ) {
+	if ((tmpce = AddCCToParticle( p, 2100, 3000, 1.0f, 1.0f, 1.0f, 0.8f)))
 		Com_Printf( "changeerror=%i\n", tmpce );
-	}
-	if ( tmpce = AddCCToParticle( p, 3100, 4000, 1.0f, 1.0f, 1.0f, 0.0f ) ) {
+	if ((tmpce = AddCCToParticle( p, 3100, 4000, 1.0f, 1.0f, 1.0f, 0.0f)))
 		Com_Printf( "changeerror=%i\n", tmpce );
-	}
 }
 
 // puff for floatering around °°
@@ -468,9 +468,12 @@ void LaunchFloaterPuff(vec3_t origin)
 	p->currentcolor[2] = 0.4f;
 	p->currentcolor[3] = 0.8f;
 
-	if(tmpce=AddCCToParticle(p,0,1500,0.6f,0.4f,1.0f,0.80f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCCToParticle(p,1500,2000,1.0f,1.0f,1.0f,0.8f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCCToParticle(p,2100,2500,1.0f,1.0f,1.0f,0.0f)) Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,0,1500,0.6f,0.4f,1.0f,0.80f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,1500,2000,1.0f,1.0f,1.0f,0.8f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,2100,2500,1.0f,1.0f,1.0f,0.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
 }
 
 // not realy used ... because it looked realy ugly ^^
@@ -510,12 +513,17 @@ void LaunchPunchyBerserker(vec3_t origin)
 	p->currentcolor[2] = 0.0f;
 	p->currentcolor[3] = 0.7f;
 
-	if(tmpce=AddCSIToParticle(p,1000,-6.0f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCSIToParticle(p,1100,60.0f)) Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCSIToParticle(p,1000,-6.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCSIToParticle(p,1100,60.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
 
-	if(tmpce=AddCCToParticle(p,0,800,1.0f,0.66f,0.0f,0.20f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCCToParticle(p,800,1200,0.0f,0.0f,0.0f,0.33f)) Com_Printf("changeerror=%i\n",tmpce);
-	if(tmpce=AddCCToParticle(p,1200,1600,0.0f,0.0f,0.0f,0.0f)) Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,0,800,1.0f,0.66f,0.0f,0.20f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,800,1200,0.0f,0.0f,0.0f,0.33f)))
+		Com_Printf("changeerror=%i\n",tmpce);
+	if((tmpce=AddCCToParticle(p,1200,1600,0.0f,0.0f,0.0f,0.0f)))
+		Com_Printf("changeerror=%i\n",tmpce);
 }
 
 
@@ -559,11 +567,11 @@ void LaunchRevivalParticle( vec3_t origin, const int lifetime )
 	p->currentcolor[3] = 0.0f;
 
 	// fade it in over 1/4 of its lifetime
-	if( tmpce = AddCCToParticle( p, 0, lifetime / 4, 1.0f, 1.0f, 1.0f, 0.0f ) )
+	if((tmpce = AddCCToParticle( p, 0, lifetime / 4, 1.0f, 1.0f, 1.0f, 0.0f)))
 		CHANGE_ERROR( tmpce );
 
 	// start fading out again after 3/4 of its lifetime
-	if( tmpce = AddCCToParticle( p, lifetime *3 /4, lifetime, 0.0f, 0.0f, 0.0f, 0.0f ) )
+	if((tmpce = AddCCToParticle( p, lifetime *3 /4, lifetime, 0.0f, 0.0f, 0.0f, 0.0f)))
 		CHANGE_ERROR( tmpce );
 }
 

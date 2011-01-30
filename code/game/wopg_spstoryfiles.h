@@ -63,7 +63,7 @@ int wopSP_openStory(const char* storyname); // adds default path+suffix and use 
 int wopSP_openFile(const char* filename);
 int wopSP_loadNextStoryElement( wop_StoryElement_t* newElement );
 int wopSP_findStoryElement( const char* storyElementName, wop_StoryElement_t* newElement );
-void wopSP_closeFile();
+void wopSP_closeFile(void);
 
 qboolean wopSP_compareWithNextString(const char* nextStr, const wop_StoryElement_t* element);
 void wopSP_execStoryElement(const wop_StoryElement_t* newElement);

@@ -76,7 +76,7 @@ vmCvar_t bot_showreachesto;
 
 void ExitLevel( void );
 
-void ResetWaypoints(){
+void ResetWaypoints(void){
 	numwaypoints = 0;
 	memset( waypoints, 0, sizeof(waypoints) );
 
@@ -209,7 +209,7 @@ qboolean BotWpHasSuccessor(bot_state_t* bs, qboolean direction_home){
 /*
 // wp traveltimes don't make much sense as they are. 
 // also they can't be initialized at level start, because AAS init is not done at this point
-void InitWpTravelTimes()
+void InitWpTravelTimes(void)
 {
 	int i;
 	ctf_waypoint_t* wp;
@@ -519,7 +519,7 @@ void ParseWaypointFile( char* buf ){
 	}
 }
 
-void ReadWaypointFile(){
+void ReadWaypointFile(void){
 	int				len;
 	fileHandle_t	f;
 	char			buf[8192];
@@ -819,7 +819,7 @@ void BotTestAAS(vec3_t origin) {
 		else {
 			trap_AAS_AreaInfo(areanum, &info);
 			//BotAI_Print(PRT_MESSAGE, "\rarea %d, cluster %d    cachetime %d   ", areanum, info.cluster, CacheUpdateTime(info.flags) );
-			trap_SendServerCommand( -1, va("cp \"area %d, cluster %d cachetime %d \n\"", areanum, info.cluster) ); //, CacheUpdateTime(info.flags)) );
+			trap_SendServerCommand( -1, va("cp \"area %d, cluster %d \n\"", areanum, info.cluster) ); //, CacheUpdateTime(info.flags)) );
 		}
 	}
 }
@@ -1975,7 +1975,7 @@ int BotAIStartFrame(int time) {
 	if (bot_memorydump.integer) {
 		trap_BotLibVarSet("memorydump", "1");
 		trap_Cvar_Set("bot_memorydump", "0");
-		G_Printf("bstates %d one state %d ratio %f\n", sizeof(botstates), sizeof(bot_state_t), sizeof(botstates)/sizeof(bot_state_t));
+		G_Printf("bstates %lu one state %lu ratio %f\n", sizeof(botstates), sizeof(bot_state_t), (double) sizeof(botstates)/sizeof(bot_state_t));
 	}
 	if (bot_saveroutingcache.integer) {
 		trap_BotLibVarSet("saveroutingcache", "1");

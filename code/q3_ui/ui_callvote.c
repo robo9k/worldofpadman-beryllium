@@ -171,7 +171,7 @@ static void UI_CallVote_BackEvent( void *ptr, int event ) {
 
 
 static void UI_CallVote_UpdateItems( void ) {
-	int i, j;
+	int i = 0, j;
 	char* ptr = ArrayForListStrs;
 
 	for ( j = 0; j < s_callVoteMenu.numListitems; j++, ptr += ( strlen( ptr ) + 1 ) ) {

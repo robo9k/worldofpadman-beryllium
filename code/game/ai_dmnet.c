@@ -106,9 +106,9 @@ void BotDumpNodeSwitches(bot_state_t *bs) {
 	ClientName(bs->client, netname, sizeof(netname));
 	BotAI_Print(PRT_MESSAGE, "%s at %1.1f switched more than %d AI nodes\n", netname, FloatTime(), MAX_NODESWITCHES);
 	for (i = 0; i < numnodeswitches; i++) {
-		BotAI_Print(PRT_MESSAGE, nodeswitch[i]);
+		BotAI_Print(PRT_MESSAGE, "%s", nodeswitch[i]);
 	}
-	BotAI_Print(PRT_FATAL, "");
+	BotAI_Print(PRT_FATAL, " ");
 }
 
 /*
@@ -1959,8 +1959,8 @@ qboolean BotDefendsCapturedBalloon(bot_state_t* bs){
     index = g_entities[ bs->teamgoal.entitynum ].count;
     state = level.balloonState[index];      // status of goal i
     //G_Printf("#%d -> %d ",index, state);
-    if( BotTeam(bs) == TEAM_RED && state == '1' ||
-        BotTeam(bs) == TEAM_BLUE && state == '2' )
+    if((BotTeam(bs) == TEAM_RED && state == '1') ||
+        (BotTeam(bs) == TEAM_BLUE && state == '2') )
         return qtrue;
     else
         return qfalse;

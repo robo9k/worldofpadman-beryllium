@@ -1,0 +1,149 @@
+Index: code/game/g_local.h
+===================================================================
+--- code/game/g_local.h	(Revision 69)
++++ code/game/g_local.h	(Arbeitskopie)
+@@ -322,6 +322,8 @@
+ 
+ 	int			campCounter;
+ 	vec3_t		campPosition;
++
++	int			lifeShards;
+ 	/* end beryllium */
+ } clientPersistant_t;
+ 
+Index: code/game/g_main.c
+===================================================================
+--- code/game/g_main.c	(Revision 69)
++++ code/game/g_main.c	(Arbeitskopie)
+@@ -107,6 +107,8 @@
+ 
+ vmCvar_t	be_campDistance;
+ 
++vmCvar_t	be_oneUp;
++
+ /* end beryllium */
+ 
+ 
+@@ -229,8 +231,10 @@
+ 
+ 	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
+ 
+-	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
++	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
+ 
++	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qfalse }
++
+ 	/* end beryllium */
+ };
+ 
+Index: code/game/g_beryllium.c
+===================================================================
+--- code/game/g_beryllium.c	(Revision 69)
++++ code/game/g_beryllium.c	(Arbeitskopie)
+@@ -342,3 +342,52 @@
+ 	}
+ }
+ 
++
++/* Called at the end of ClientBegin() but before ranks are calculated */
++void BE_ClientBegin( int clientNum ) {
++	gentity_t *ent;
++
++	/* FIXME: assert() */
++	ent = &g_entities[ clientNum ];
++
++	ent->client->pers.lifeShards = 0;
++}
++
++
++/* Called before client tosses items while being killed */
++void BE_ClientKilled( gentity_t *self ) {
++	gentity_t	*killer_ent;
++	gclient_t	*killer;
++	int			numShards, neededShards;
++
++	/* FIXME: assert() */
++
++	if ( ( GT_LPS != g_gametype.integer ) || !be_oneUp.integer ) {
++		return;
++	}
++
++	if ( level.warmupTime ) {
++		return;
++	}
++
++	killer_ent = &g_entities[self->client->lasthurt_client];
++		
++	if ( killer_ent->client ) {
++		killer = killer_ent->client;
++		killer->pers.lifeShards++;
++
++		numShards		= killer->pers.lifeShards;
++		neededShards	= be_oneUp.integer;
++		if ( numShards >= neededShards ) {
++			killer->sess.livesleft++;
++			killer->pers.lifeShards = 0;
++			CalculateRanks();
++
++			SendClientCommand( CID_ALL, CCMD_PRINT, va( "%s gained an extra life!\n", killer->pers.netname ) );
++		}
++		else {
++			SendClientCommand( ( killer_ent - g_entities ), CCMD_PRINT, va( "You gained a life shard ( %i of %i ).\n", numShards, neededShards ) );
++		}
++	}
++}
++
+Index: code/game/g_beryllium.h
+===================================================================
+--- code/game/g_beryllium.h	(Revision 69)
++++ code/game/g_beryllium.h	(Arbeitskopie)
+@@ -74,7 +74,9 @@
+ 
+ extern vmCvar_t	be_campDistance;
+ 
++extern vmCvar_t	be_oneUp;
+ 
++
+ extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
+ extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
+ 
+@@ -91,6 +93,9 @@
+ 
+ void BE_ClientTimerActions( gentity_t* ent );
+ 
++void BE_ClientBegin( int clientNum );
++void BE_ClientKilled( gentity_t *self );
+ 
++
+ #endif
+ 
+Index: code/game/g_combat.c
+===================================================================
+--- code/game/g_combat.c	(Revision 69)
++++ code/game/g_combat.c	(Arbeitskopie)
+@@ -545,6 +545,10 @@
+ 		}
+ 	}
+ 
++	/* added beryllium */
++	BE_ClientKilled( self );
++	/* end added */
++
+ 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
+ 	contents = trap_PointContents( self->r.currentOrigin, -1 );
+ 	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {
+Index: code/game/g_client.c
+===================================================================
+--- code/game/g_client.c	(Revision 69)
++++ code/game/g_client.c	(Arbeitskopie)
+@@ -1182,6 +1182,10 @@
+ 	}
+ 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
+ 
++	/* added beryllium */
++	BE_ClientBegin( clientNum );
++	/* end added */
++
+ 	// count current clients and rank for scoreboard
+ 	CalculateRanks();
+ 

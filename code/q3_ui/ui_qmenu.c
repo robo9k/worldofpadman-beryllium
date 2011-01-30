@@ -811,7 +811,7 @@ static void Slider_Draw( menuslider_s *s ) {
 	}
 
 	// draw label
-	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, UI_RIGHT|style&~UI_PULSE, color );
+	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, UI_RIGHT | (style & ~UI_PULSE), color );
 
 	// draw slider
 	UI_SetColor( color );
@@ -1106,8 +1106,8 @@ static void SpinControl_Draw( menulist_s *s )
 		UI_DrawChar( x, y, 13, UI_CENTER|UI_BLINK|UI_SMALLFONT, color);
 	}
 
-	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, UI_RIGHT|style&~UI_PULSE, color );
-	UI_DrawString( x + SMALLCHAR_WIDTH, y, s->itemnames[s->curvalue], style|UI_LEFT, color );
+	UI_DrawString( x - SMALLCHAR_WIDTH, y, s->generic.name, UI_RIGHT | (style &~ UI_PULSE), color );
+	UI_DrawString( x + SMALLCHAR_WIDTH, y, s->itemnames[s->curvalue], style | UI_LEFT, color );
 }
 
 /*
@@ -1828,7 +1828,6 @@ void Menu_Draw( menuframework_s *menu )
 
 	if(uis.dropdownlist)
 	{
-		vec4_t	tblack = {0.0f,0.0f,0.0f,0.20f};
 		vec4_t  dropdownBG;
 		int mouseover = (uis.cursory-uis.dropdownxywh[1])/SMALLCHAR_HEIGHT;
 

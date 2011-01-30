@@ -166,7 +166,7 @@ static void Preferences_SetMenuItems( void )
 	s_preferences.allowdownload.curvalue	= trap_Cvar_VariableValue( "cl_allowDownload" ) != 0;
 }
 
-static void SwitchPage()
+static void SwitchPage(void)
 {
 	menucommon_s	**hide_options;
 	menucommon_s	**show_options;

@@ -808,7 +808,7 @@ qhandle_t FindLogoForSpraying(const clientInfo_t *ci)
 */
 		strcpy(tmpstr,ci->spraylogo);
 
-	if(tmpstr=='\0')
+	if(!*tmpstr)
 		return cgs.media.defaultspraylogo;
 
 	for(i=0;i<loadedlogos;i++)

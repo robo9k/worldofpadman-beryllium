@@ -88,7 +88,7 @@ static void Cutscene2d_ResetPic(int picID) {
 	}
 }
 
-static void Cutscene2d_ResetAll() {
+static void Cutscene2d_ResetAll(void) {
 	int i;
 	memset(&cg_cutscene2d,0,sizeof(cg_cutscene2d));
 	for(i=0;i<MAX_CUTSCENE2D_PICTURES;++i) {
@@ -96,7 +96,7 @@ static void Cutscene2d_ResetAll() {
 	}
 }
 
-void CG_Cutscene2d_Init() {
+void CG_Cutscene2d_Init(void) {
 
 	if(cutscene2d_Inited)
 		return;
@@ -107,7 +107,7 @@ void CG_Cutscene2d_Init() {
 }
 
 
-void CG_Cutscene2d_Draw() {
+void CG_Cutscene2d_Draw(void) {
 	int i;
 
 	CG_Cutscene2d_Init(); // make sure that we are inited
@@ -144,7 +144,7 @@ void CG_Cutscene2d_Draw() {
 	}
 }
 
-void CG_Cutscene2d_UpdateTrans() {
+void CG_Cutscene2d_UpdateTrans(void) {
 	int i;
 
 	CG_Cutscene2d_Init(); // make sure that we are inited
@@ -188,6 +188,8 @@ void CG_Cutscene2d_UpdateTrans() {
 				if(pic->color[3]==0 && pic->textcolor[3]==0)
 					pic->isShown = qfalse;
 				break;
+			default:
+				break;
 			}
 
 			if(tran->timeout>0 && tran->timeout<cg.time) {
@@ -199,7 +201,7 @@ void CG_Cutscene2d_UpdateTrans() {
 	}
 }
 
-static cutscene2dTransformation_t* getFreeTransformation() {
+static cutscene2dTransformation_t* getFreeTransformation(void) {
 	int i;
 
 	for(i=0;i<MAX_CUTSCENE2D_TRANSFORMATIONS;++i) {

@@ -221,7 +221,7 @@ static int CG_TeamScoreboard( int y, team_t team, float fade, int maxLines, int 
 	int		count;
 	clientInfo_t	*ci;
 	qboolean		localSpecialDraw;
-	int				localScoreID;
+	int			localScoreID = 0;
 
 	color[0] = color[1] = color[2] = 0.0f;
 	color[3] = fade;

@@ -491,6 +491,7 @@ static void Svcmd_ClientCommand_f( clientCommand_t cmd ) {
 			break;
 
 		default:
+			cmdstr = NULL;
 			G_Error( "Svcmd_ClientCommand_f: cmd out of clientCommand_t range!\n" );
 	}
 
@@ -535,7 +536,7 @@ void	Svcmd_ForceTeam_f( void ) {
 }
 
 
-static void Svcmd_SetGameType_f()
+static void Svcmd_SetGameType_f(void)
 {
 	char* argStr = ConcatArgs(1);
 	int gt = convertGTStringToGTNumber(argStr);
@@ -816,7 +817,7 @@ void Svcmd_CamCmd( void ){
 }
 
 
-void WaypointInit();
+void WaypointInit(void);
 /*
 =================
 ConsoleCommand

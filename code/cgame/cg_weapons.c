@@ -327,6 +327,7 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	trap_R_AddRefEntityToScene( &beam );
 }
 
+#if 0
 /*
 ==========================
 CG_GrenadeTrail
@@ -398,7 +399,7 @@ static void CG_GrenadeTrail( centity_t *ent, const weaponInfo_t *wi )
 		smoke->leType = LE_MOVE_SCALE_FADE;
 	}
 }
-
+#endif
 
 /*
 =================
@@ -1246,14 +1247,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 				flash.shaderRGBA[0] = 0;
 				flash.shaderRGBA[1] = 0;
 				flash.shaderRGBA[2] = 255;
-				flash.shaderRGBA[3] = cinfo->color2[3] * 255;			
+				flash.shaderRGBA[3] = 255;			
 			}
 			else
 			{
 				flash.shaderRGBA[0] = 255;
 				flash.shaderRGBA[1] = 0;
 				flash.shaderRGBA[2] = 0;
-				flash.shaderRGBA[3] = cinfo->color2[3] * 255;
+				flash.shaderRGBA[3] = 255;
 			}
 		}
 		else // ffa-type color
@@ -1261,12 +1262,12 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			flash.shaderRGBA[0] = cinfo->color2[0] * 255;
 			flash.shaderRGBA[1] = cinfo->color2[1] * 255;
 			flash.shaderRGBA[2] = cinfo->color2[2] * 255;
-			flash.shaderRGBA[3] = cinfo->color2[3] * 255;
+			flash.shaderRGBA[3] = 255;
 			
 			// force a different color for "black" since black doesn't show up
 			if ( flash.shaderRGBA[0] == 0 && flash.shaderRGBA[1] == 0 && flash.shaderRGBA[2] == 0 )
 			{
-				flash.shaderRGBA[0] = 0.8 * 255;
+				flash.shaderRGBA[0] = (unsigned int) 0.8 * 255;
 				flash.shaderRGBA[1] = 0;
 				flash.shaderRGBA[2] = 255;
 			}

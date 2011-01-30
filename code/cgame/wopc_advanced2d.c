@@ -74,7 +74,7 @@ int			initrefdef = 0;
 Initrefdef2D
 #######################
 */
-void Initrefdef2D()
+void Initrefdef2D(void)
 {
 	float		x,y,w,h;
 

@@ -714,7 +714,7 @@ void Svcmd_BotList_f( void ) {
 	}
 }
 
-
+#if 0
 /*
 ===============
 G_SpawnBots
@@ -771,7 +771,7 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 		delay += BOT_BEGIN_DELAY_INCREMENT;
 	}
 }
-
+#endif
 
 /*
 ===============

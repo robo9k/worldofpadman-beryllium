@@ -92,6 +92,7 @@ static playersettings_t	s_playersettings;
 static int gamecodetoui[] = {4,2,3,0,5,1,6};
 static int uitogamecode[] = {4,6,2,3,1,5,7};
 
+#if 0
 static const char *handicap_items[] = {
 	"None",
 	"95",
@@ -115,6 +116,7 @@ static const char *handicap_items[] = {
 	"5",
 	0
 };
+#endif
 
 #define MAX_UIMODELS	96 //32
 #define MAX_SKINS	640 // padman has 18 skins ...
@@ -198,7 +200,7 @@ static void PlayerSettings_DrawName( void *self ) {
 
 }
 
-
+#if 0
 /*
 =================
 PlayerSettings_DrawHandicap
@@ -251,7 +253,7 @@ static void PlayerSettings_DrawEffects( void *self ) {
 	UI_DrawHandlePic( item->generic.x + 64, item->generic.y + PROP_HEIGHT + 8, 128, 8, s_playersettings.fxBasePic );
 	UI_DrawHandlePic( item->generic.x + 64 + item->curvalue * 16 + 8, item->generic.y + PROP_HEIGHT + 6, 16, 12, s_playersettings.fxPic[item->curvalue] );
 }
-
+#endif
 
 /*
 =================

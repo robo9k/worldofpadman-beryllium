@@ -313,7 +313,7 @@ int AAS_StartFrame(float time)
 	AAS_ClearShownDebugLines();
 
 	//
-	if (bot_developer)
+	if (botDeveloper)
 	{
 		if (LibVarGetValue("showcacheupdates"))
 		{

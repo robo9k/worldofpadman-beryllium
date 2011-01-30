@@ -64,6 +64,7 @@ typedef struct {
 
 static errorMessage_t s_errorMessage;
 
+#if 0
 /*
 =================
 MainMenu_ExitAction
@@ -76,8 +77,7 @@ static void MainMenu_ExitAction( qboolean result ) {
 	UI_PopMenu();
 	UI_CreditMenu();
 }
-
-
+#endif
 
 /*
 =================

@@ -373,7 +373,7 @@ void MenuField_Draw( menufield_s *f )
 	}
 
 	if ( f->generic.name ) {
-		UI_DrawString( x - w, y, f->generic.name, UI_RIGHT|style&~UI_PULSE, color );
+		UI_DrawString( x - w, y, f->generic.name, UI_RIGHT | (style & ~UI_PULSE), color );
 	}
 
 	MField_Draw( &f->field, x + w, y, style, color );

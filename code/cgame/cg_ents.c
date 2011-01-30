@@ -1010,6 +1010,7 @@ static void CG_Balloon( centity_t *cent ) {
 	trap_R_AddRefEntityToScene (&ent);
 }
 
+#if 0
 /*
 #######################
 CG_StationHealth
@@ -1123,6 +1124,7 @@ static void CG_DrawIntegerToScene( vec3_t origin, int value ) {
 		trap_R_AddPolyToScene(cgs.media.charsetShader,4,polyVerts);
 	}
 }
+#endif
 
 static void CG_Station( centity_t *cent )
 {
@@ -1142,7 +1144,6 @@ static void CG_Station( centity_t *cent )
 
 	if(cent->currentState.angles2[1]==0.0f)
 	{
-		static int	tmpi;
 		vec3_t		tmpangles;
 
 /*

@@ -135,7 +135,7 @@ int BotGetVisTeamPlayers(bot_state_t *bs, int *players, int maxplayers, qboolean
         //if the player is dead or invisible and not shooting, skip it
         if (!entinfo.valid ||
             EntityIsDead(&entinfo) ||
-            EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo))
+            (EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo)))
             continue;
         //if not an easy fragger don't shoot at chatting players
 		if (easyfragger < 0.5 && EntityIsChatting(&entinfo)) continue;
@@ -378,7 +378,7 @@ qboolean IsMyBalloon(int team, bot_goal_t* goal){
 		return qfalse;
 
 	state = level.balloonState[ g_entities[ goal->entitynum ].count ];
-	return ( team == TEAM_RED && state == '1' || team == TEAM_BLUE && state == '2' );
+	return ((team == TEAM_RED && state == '1') || (team == TEAM_BLUE && state == '2'));
 }
 
 
@@ -398,8 +398,8 @@ qboolean BotPickUnCappedBalloon(bot_state_t* bs){
 		ballindex = g_entities[ balloongoal[i].entitynum ].count;
 		state = level.balloonState[ballindex];		// status of goal i
 
-		if( BotTeam(bs) == TEAM_RED && state != '1' ||
-			BotTeam(bs) == TEAM_BLUE && state != '2' ){
+		if( (BotTeam(bs) == TEAM_RED && state != '1') ||
+			(BotTeam(bs) == TEAM_BLUE && state != '2') ){
 		   	uncaptured[numuncap++]=i;
 		}
 	}
@@ -441,14 +441,14 @@ qboolean BotPickBestBalloonGoal(bot_state_t* bs){
 	for(i=0; i < level.numBalloons; i++){
 		index = g_entities[ balloongoal[i].entitynum ].count;
 		state = level.balloonState[index];		// status of goal i
-		if( BotTeam(bs) == TEAM_RED && state == '1' ||
-			BotTeam(bs) == TEAM_BLUE && state == '2' ){
+		if((BotTeam(bs) == TEAM_RED && state == '1') ||
+			(BotTeam(bs) == TEAM_BLUE && state == '2') ){
 			// own balloon
 		   	capstate[i]=0;
 		   	numcap++;
 		}
-		else if(BotTeam(bs) == TEAM_RED && state == '2' ||
-				BotTeam(bs) == TEAM_BLUE && state == '1'){
+		else if((BotTeam(bs) == TEAM_RED && state == '2') ||
+				(BotTeam(bs) == TEAM_BLUE && state == '1')){
 			// nmy balloon
 		     capstate[i]=1;
 		     numnmycap++;
@@ -755,7 +755,7 @@ qboolean PickBoomieGoal(bot_state_t* bs)
 	team_t botTeam = BotTeam(bs);
 	static const int TT_MAX = 999999;
 	int tt, best_tt = TT_MAX;
-	int best_id;
+	int best_id = 0;
 
 	for(i=0; i<numboomiespots; i++)
 	{
@@ -784,8 +784,7 @@ qboolean PickBambamGoal(bot_state_t* bs)
 	team_t botTeam = BotTeam(bs);
 	static const int TT_MAX = 999999;
 	int tt, best_tt = TT_MAX;
-	int best_id;
-
+	int best_id = 0;
 
 	for(i=0; i<numbambamspots;i++)
 	{
@@ -1755,14 +1754,6 @@ int BotWantsToHelp(bot_state_t *bs) {
 	return qtrue;
 }
 
-
-
-
-
-
-
-
-
 /*
 ==================
 BotDontAvoid
@@ -2381,8 +2372,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if( IsBambam(i) )
 		{
 			// it has to be an enemy
-			if( ent->team[0] == 'b' && BotTeam(bs) == TEAM_BLUE ||
-				ent->team[0] == 'r' && BotTeam(bs) == TEAM_RED )
+			if((ent->team[0] == 'b' && BotTeam(bs) == TEAM_BLUE) ||
+				(ent->team[0] == 'r' && BotTeam(bs) == TEAM_RED) )
 				continue;
 
 			vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, i);
@@ -2400,8 +2391,8 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if( IsBoomie(i) )
 		{
 			// it has to be an enemy
-			if( ent->team[0] == 'b' && BotTeam(bs) == TEAM_BLUE ||
-				ent->team[0] == 'r' && BotTeam(bs) == TEAM_RED )
+			if((ent->team[0] == 'b' && BotTeam(bs) == TEAM_BLUE) ||
+				(ent->team[0] == 'r' && BotTeam(bs) == TEAM_RED) )
 				continue;
 
 			vis = BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 80, i);
@@ -3154,9 +3145,6 @@ void BotMapScripts(bot_state_t *bs) {
     char mapname[128];
     vec3_t one, two;
 
-	static vec3_t bathdrain = {-987, -1496, -394};
-//	int drainarea;
-
     trap_GetServerinfo(info, sizeof(info));
 
     strncpy(mapname, Info_ValueForKey( info, "mapname" ), sizeof(mapname)-1);
@@ -3610,7 +3598,8 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 		return 0;
 	}
 	trap_AAS_ValueForBSPEpairKey(ent, "classname", classname, sizeof(classname));
-	if (!classname) {
+
+	if (!*classname) {
 		BotAI_Print(PRT_ERROR, "BotGetActivateGoal: entity with model %s has no classname\n", model);
 		return 0;
 	}
@@ -4324,7 +4313,8 @@ void BotCheckAir(bot_state_t *bs) {
 }
 
 // any gametype specific map contents missing?
-qboolean MissingMapConts(){
+qboolean MissingMapConts(void)
+{
 
 	if(gametype == GT_BALLOON)
 		return (level.numBalloons == 0);
@@ -4463,7 +4453,7 @@ void CheckMatrixForGoal(bot_goal_t* goal){
 	int xmin, xmax, ymin, ymax, zmin, zmax;
 	int i, j, k;
 	int step;
-	vec3_t pos, sample, offset, bestsample;
+	vec3_t pos, sample, offset, bestsample = {0, 0, 0};
 	int sarea, earea;
 	int dist, bestdist;
 	int reachable;

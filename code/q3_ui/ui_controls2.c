@@ -765,6 +765,7 @@ static void Controls_StatusBar( void *self )
 }
 
 
+#if 0
 /*
 =================
 Controls_DrawPlayer
@@ -784,7 +785,7 @@ static void Controls_DrawPlayer( void *self ) {
 	b = (menubitmap_s*) self;
 	UI_DrawPlayer( b->generic.x, b->generic.y, b->width, b->height, &s_controls.playerinfo, uis.realtime/2 );
 }
-
+#endif
 
 /*
 =================
@@ -1211,6 +1212,7 @@ static void Controls_ActionEvent( void* ptr, int event )
 	}
 }
 
+#if 0
 /*
 =================
 Controls_InitModel
@@ -1238,6 +1240,7 @@ static void Controls_InitWeapons( void ) {
 		trap_R_RegisterModel( item->world_model[0] );
 	}
 }
+#endif
 
 /*
 =================
@@ -1246,8 +1249,6 @@ Controls_MenuInit
 */
 static void Controls_MenuInit( void )
 {
-	static char playername[32];
-
 	// zero set all our globals
 	memset( &s_controls, 0 ,sizeof(controls_t) );
 

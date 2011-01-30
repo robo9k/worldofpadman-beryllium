@@ -714,7 +714,6 @@ static void StartServer_MenuInit( void ) {
 	int	i;
 	int	x;
 	int	y;
-	static char mapnamebuffer[64];
 
 	// zero set all our globals
 	memset( &s_startserver, 0 ,sizeof(startserver_t) );
@@ -1177,7 +1176,7 @@ static void UI_BotSelectMenu_UpdateGrid( void ) {
 	}
 }
 
-
+#if 0
 /*
 =================
 UI_BotSelectMenu_Default
@@ -1213,7 +1212,7 @@ static void UI_BotSelectMenu_Default( char *bot ) {
 
 	botSelectInfo.selectedmodel = i;
 }
-
+#endif
 
 /*
 =================
@@ -1558,7 +1557,7 @@ static void UI_BotSelectMenu_DrawBotIcon(void* self)
 UI_BotSelectMenu_Init
 #######################
 */
-static void UI_BotSelectMenu_Init() {
+static void UI_BotSelectMenu_Init(void) {
 	int		i, j, k;
 	int		x, y;
 

@@ -596,11 +596,11 @@ void G_AddPredictableEvent( gentity_t *ent, int event, int eventParm );
 void G_AddEvent( gentity_t *ent, int event, int eventParm );
 void G_SetOrigin( gentity_t *ent, vec3_t origin );
 void AddRemap(const char *oldShader, const char *newShader, float timeOffset);
-const char *BuildShaderStateConfig();
+const char *BuildShaderStateConfig(void);
 
 int DebugLine(vec3_t start, vec3_t end, int color);
 void DebugLineDouble(vec3_t start, vec3_t end, int color);
-void DeleteDebugLines();
+void DeleteDebugLines(void);
 
 // Simply matches EF_AWARD_ flags in bg_public.h
 typedef enum {
@@ -695,7 +695,7 @@ int TeamCount( int ignoreClientNum, int team );
 int TeamLeader( int team );
 team_t PickTeam( int ignoreClientNum );
 void SetClientViewAngle( gentity_t *ent, vec3_t angle );
-gentity_t *SelectSpawnPoint ( vec3_t avoidPoint, vec3_t origin, vec3_t angles );
+gentity_t *SelectSpawnPoint (vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot);
 void CopyToBodyQue( gentity_t *ent );
 void respawn (gentity_t *ent);
 void BeginIntermission (void);
@@ -808,7 +808,7 @@ void Svcmd_AbortPodium_f( void );
 // g_modifiers.c
 //
 void Instagib_applyWeaponJumpKnockback( vec3_t origin, gentity_t *ent, int mod );
-int Instagib_getSpawnWeapon();
+int Instagib_getSpawnWeapon(void);
 int Instagib_calculateDamage( gentity_t *target, gentity_t *inflictor, gentity_t *attacker, int damage, int dflags, int mod );
 qboolean Instagib_isRelevantDamageEvent( gentity_t *target, gentity_t *inflictor, gentity_t *attacker, int damage, int dflags, int mod );
 qboolean Instagib_canSpawnEntity( gentity_t *ent );
@@ -871,7 +871,7 @@ void BotTestAAS(vec3_t origin);
 extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 
-#define	FOFS(x) ((int)&(((gentity_t *)0)->x))
+#define	FOFS(x) ((size_t) &(((gentity_t *)0)->x))
 
 extern	vmCvar_t	g_gametype;
 extern	vmCvar_t	g_dedicated;

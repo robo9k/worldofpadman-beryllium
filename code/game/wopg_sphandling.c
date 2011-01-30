@@ -165,7 +165,7 @@ static void wopSP_cmd_introFinished(void);
 
 typedef struct {
 	const char* name;
-	void (*func)();
+	void (*func)(void);
 } cmdInfo_t;
 
 static const cmdInfo_t wopSP_cmdInfos[] = {

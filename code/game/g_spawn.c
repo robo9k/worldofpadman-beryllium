@@ -72,7 +72,6 @@ typedef struct
 	char	*name;
 	int		ofs;
 	fieldtype_t	type;
-	int		flags;
 } field_t;
 
 field_t fields[] = {
@@ -438,8 +437,7 @@ replacePair_t q3ToWopItems[] = {
 	{ "team_CTF_blueplayer","team_blueplayer"	},
 	{ "team_CTF_redspawn",	"team_redspawn"		},
 	{ "team_CTF_bluespawn",	"team_bluespawn"	},
-	{ NULL,		NULL },
-	NULL
+	{ NULL,		NULL }
 };
 
 replacePair_t shortMarkernames[] = {
@@ -448,8 +446,7 @@ replacePair_t shortMarkernames[] = {
 	{ "green",	"models/mapobjects/pad_weaponmarker/pad_wepm_green_gg.md3"	},
 	{ "purple",	"models/mapobjects/pad_weaponmarker/pad_wepm_green_bg.md3"	},
 	{ "orange",	"models/mapobjects/pad_weaponmarker/pad_wepm_orange_bg.md3"	},
-	{ NULL,		NULL },
-	NULL
+	{ NULL,		NULL }
 };
 
 replacePair_t spawnpointReplacements[] = {
@@ -457,8 +454,7 @@ replacePair_t spawnpointReplacements[] = {
 	{ "team_blueplayer",	"info_player_deathmatch" },
 	{ "team_redspawn",		"info_player_deathmatch" },
 	{ "team_bluespawn",		"info_player_deathmatch" },
-	{ NULL,					NULL },
-	NULL
+	{ NULL,					NULL }
 };
 
 /*

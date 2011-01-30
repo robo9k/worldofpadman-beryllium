@@ -107,7 +107,7 @@ static int				tmpstrl;
 static char				tmpString[MAX_TMPSTRING];
 static char				nextscript[128];
 
-static void StrEndWork()
+static void StrEndWork(void)
 {
 //	char	offsetstr[32];
 
@@ -187,6 +187,8 @@ static void StrEndWork()
 			next_tmpstr=NT_NORMAL;
 			break;
 */
+		default:
+			break;
 		}
 		break;
 	case PL_FLARE:
@@ -321,6 +323,8 @@ static void StrEndWork()
 				next_tmpstr=NT_NORMAL;
 			}
 			break;
+		default:
+			break;
 		}
 		break;
 	default:
@@ -418,6 +422,8 @@ void LF_Parser(const char* scriptname)
 				tmpflare->next=lfmem[numlfs-1].firstflare;
 				lfmem[numlfs-1].firstflare=tmpflare;
 				break;
+			default:
+				break;
 			}
 		}
 		else if(buffer[i]=='}')
@@ -475,7 +481,7 @@ this function will search lensflare-scripts in "lensflarelist" and call the pars
 #######################
 */
 #define MAX_LFFILES	40//I hope this is enough
-void Load_LFfiles()
+void Load_LFfiles(void)
 {
 	int		i, scriptsfound;
 	char	*scriptnamelist[MAX_LFFILES];
@@ -739,7 +745,7 @@ static void DrawLensflare(int lfid, vec2_t dir, float lfalpha, float distanceSqu
 	float	prozSize=xywh[3]/480.0f;
 //	float	invprozSize=480.0f/xywh[3];
 
-	float	curRadius, curSpecialVar;
+	float	curRadius, curSpecialVar = 0;
 
 	prozDir[0]=dir[0]*invHalfWidth;
 	prozDir[1]=dir[1]*invHalfHeight;
@@ -803,7 +809,7 @@ static void DrawLensflare(int lfid, vec2_t dir, float lfalpha, float distanceSqu
 		case SF_TURNING:
 */
 			{
-				float	tmpf;
+				float	tmpf = 0;
 				vec2_t	tmpdir;
 
 				if(tmpflare->turnstyle[1]!=0.0f)
@@ -864,7 +870,7 @@ static void DrawLensflare(int lfid, vec2_t dir, float lfalpha, float distanceSqu
 			{
 				vec2_t	qdir={0.0f,1.0f};
 				vec2_t	ndir={1.0f,0.0f};
-				float	tmpf;
+				float	tmpf = 0;
 
 				if(tmpflare->turnstyle[1]!=0.0f)
 				{
@@ -929,7 +935,7 @@ static void DrawLensflare(int lfid, vec2_t dir, float lfalpha, float distanceSqu
 			{
 				vec2_t subdir;
 				vec4_t subxywh;
-				float	dirlen, angle;
+				float	dirlen = 0, angle = 0;
 
 				subxywh[0]=xywh[0]+dir[0]*tmpflare->pos;
 				subxywh[1]=xywh[1]-dir[1]*tmpflare->pos;

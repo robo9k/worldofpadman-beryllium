@@ -49,7 +49,7 @@ qboolean wopSP_validSE(const wop_StoryElement_t* e) {
 	return (e->elementID >= 0);
 }
 
-static qboolean isFileAtTop() {
+static qboolean isFileAtTop(void) {
 	return (wop_StoryFile.buffPtr==NULL); //FIXME? maybe this should be solved a better way
 }
 
@@ -115,7 +115,7 @@ qboolean wopSP_compareWithNextString(const char* nextStr, const wop_StoryElement
 	return qfalse;
 }
 
-static int bytesLeftInBuffer() {
+static int bytesLeftInBuffer(void) {
 	if(wop_StoryFile.buffPtr)
 		return wop_StoryFile.usedBuffer - (wop_StoryFile.buffPtr-wop_StoryFile.buffer);
 	else
@@ -149,7 +149,7 @@ int wopSP_openFile(const char* filename) {
 	return 0;
 }
 
-int wopSP_resetFile() {
+int wopSP_resetFile(void) {
 	char	filename[MAX_QPATH];
 	strcpy(filename,wop_StoryFile.filename);
 
@@ -394,7 +394,7 @@ int wopSP_findStoryElement( const char* storyElementName, wop_StoryElement_t* ne
 
   Close File and reset wop_StoryFile
 */
-void wopSP_closeFile() {
+void wopSP_closeFile(void) {
 	if(wop_StoryFile.f)
 		trap_FS_FCloseFile(wop_StoryFile.f);
 

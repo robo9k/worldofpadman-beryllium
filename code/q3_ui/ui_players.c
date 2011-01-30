@@ -1149,7 +1149,7 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 	}
 
 	// looking for special head for this skin ...
-	if( skinName && *skinName && Q_stricmp(skinName,"default") ) {
+	if( *skinName && Q_stricmp(skinName,"default") ) {
 
 		// first try directly with skinName
 		Com_sprintf( filename, sizeof( filename ), "models/wop_players/%s/head_%s.md3", modelName, skinName );

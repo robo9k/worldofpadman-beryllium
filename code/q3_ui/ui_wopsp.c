@@ -18,7 +18,7 @@
 
 #define DEFAULT_STORY "shortTest"
 
-void WoPSPContinue_Init();
+void WoPSPContinue_Init(void);
 
 enum {
 // main singleplayer menu
@@ -58,6 +58,7 @@ typedef struct {
 
 wopSPmenu_t wopSPmenu;
 
+#if 0
 static void DrawSEConnection(menuStoryElement_t* s, menuStoryElement_t* e, qboolean win) {
 	float* color;
 
@@ -96,6 +97,7 @@ static void DrawStoryElement(menuStoryElement_t* mse) {
 	if(mse->nextLoos)
 		DrawSEConnection(mse,mse->nextLoos,qfalse);
 }
+#endif
 
 static void WoPSPMenu_Draw( void ) {
 
@@ -417,7 +419,7 @@ static void WoPSPContinue_Event(void *ptr, int event)
 		break;
 	}
 }
-void WoPSPContinue_Init() {
+void WoPSPContinue_Init(void) {
 
 	memset(&wopSPcontinue,0,sizeof(wopSPcontinue_t));
 

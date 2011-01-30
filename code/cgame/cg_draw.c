@@ -21,6 +21,7 @@ CG_DrawField
 Draws large numbers for status bar and powerups
 ==============
 */
+#if 0
 static void CG_DrawField (int x, int y, int width, int value) {
 	char	num[16], *ptr;
 	int		l;
@@ -74,6 +75,7 @@ static void CG_DrawField (int x, int y, int width, int value) {
 		l--;
 	}
 }
+#endif
 
 /*
 ================
@@ -238,6 +240,7 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	}
 }
 
+#if 0
 /*
 ================
 CG_DrawStatusBarHead
@@ -304,6 +307,7 @@ CG_DrawStatusBarFlag
 static void CG_DrawStatusBarFlag( float x, int team ) {
 	CG_DrawFlagModel( x, 480 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
 }
+#endif
 
 /*
 ================
@@ -333,6 +337,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 	trap_R_SetColor( NULL );
 }
 
+#if 0
 /*
 ================
 CG_DrawStatusBar
@@ -483,6 +488,7 @@ static void CG_DrawStatusBar( void ) {
 
 	}
 }
+#endif
 
 /*
 ===========================================================================================
@@ -957,7 +963,7 @@ static float  CG_DrawBotInfo( float y_in ) {
 #define WOPTOL_LOCHEIGHT 12
 #define WOPTOL_ITEMHEIGHT_SMALL ? //TODO
 
-static void CG_WoPTeamOverlay() {
+static void CG_WoPTeamOverlay(void) {
 	int team = cg.snap->ps.persistant[PERS_TEAM];
 	int i,j;
 	int slotID;
@@ -1092,6 +1098,7 @@ static void CG_WoPTeamOverlay() {
 	}
 }
 
+#if 0
 /*
 =================
 CG_DrawTeamOverlay
@@ -1274,7 +1281,7 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	return ret_y;
 //#endif
 }
-
+#endif
 
 /*
 =====================
@@ -1282,7 +1289,8 @@ CG_DrawUpperRight
 
 =====================
 */
-static void CG_DrawUpperRight( void ) {
+static void CG_DrawUpperRight(stereoFrame_t stereoFrame)
+{
 	float	y;
 
 	y = 0;
@@ -1293,7 +1301,7 @@ static void CG_DrawUpperRight( void ) {
 	if ( cg_drawSnapshot.integer ) {
 		y = CG_DrawSnapshot( y );
 	}
-	if ( cg_drawFPS.integer ) {
+	if (cg_drawFPS.integer && (stereoFrame == STEREO_CENTER || stereoFrame == STEREO_RIGHT)) {
 		y = CG_DrawFPS( y );
 	}
 	if ( cg_drawTimer.integer ) {
@@ -1339,6 +1347,7 @@ static void CG_DrawUpperRight( void ) {
 ===========================================================================================
 */
 
+#if 0
 /*
 =================
 CG_DrawScores
@@ -1491,6 +1500,7 @@ static float CG_DrawScores( float y ) {
 
 	return y1 - 8;
 }
+#endif
 
 /*
 ================
@@ -1509,10 +1519,10 @@ static float CG_DrawPowerups( float y ) {
 	int		color;
 	float	size;
 	float	f;
-	static float colors[2][4] = { 
-    { 0.2f, 1.0f, 0.2f, 1.0f } , 
-    { 1.0f, 0.2f, 0.2f, 1.0f } 
-  };
+//	static float colors[2][4] = { 
+//    { 0.2f, 1.0f, 0.2f, 1.0f } , 
+//    { 1.0f, 0.2f, 0.2f, 1.0f } 
+//      };
 
 	ps = &cg.snap->ps;
 
@@ -2236,7 +2246,8 @@ CROSSHAIR
 CG_DrawCrosshair
 =================
 */
-static void CG_DrawCrosshair(void) {
+static void CG_DrawCrosshair(void)
+{
 	float		w, h;
 	qhandle_t	hShader;
 	float		f;
@@ -2288,6 +2299,87 @@ static void CG_DrawCrosshair(void) {
 	trap_R_DrawStretchPic( x + cg.refdef.x + 0.5 * (cg.refdef.width - w), 
 		y + cg.refdef.y + 0.5 * (cg.refdef.height - h), 
 		w, h, 0, 0, 1, 1, hShader );
+}
+
+/*
+=================
+CG_DrawCrosshair3D
+=================
+*/
+static void CG_DrawCrosshair3D(void)
+{
+	float		w, h;
+	qhandle_t	hShader;
+	float		f;
+	int			ca;
+
+	trace_t trace;
+	vec3_t endpos;
+	float stereoSep, zProj, maxdist, xmax;
+	char rendererinfos[128];
+	refEntity_t ent;
+
+	if ( !cg_drawCrosshair.integer ) {
+		return;
+	}
+
+	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR) {
+		return;
+	}
+
+	if ( cg.renderingThirdPerson ) {
+		return;
+	}
+
+	w = h = cg_crosshairSize.value;
+
+	// pulse the size of the crosshair when picking up items
+	f = cg.time - cg.itemPickupBlendTime;
+	if ( f > 0 && f < ITEM_BLOB_TIME ) {
+		f /= ITEM_BLOB_TIME;
+		w *= ( 1 + f );
+		h *= ( 1 + f );
+	}
+
+	ca = cg_drawCrosshair.integer;
+	if (ca < 0) {
+		ca = 0;
+	}
+	hShader = cgs.media.crosshairShader[ ca % NUM_CROSSHAIRS ];
+
+	// Use a different method rendering the crosshair so players don't see two of them when
+	// focusing their eyes at distant objects with high stereo separation
+	// We are going to trace to the next shootable object and place the crosshair in front of it.
+
+	// first get all the important renderer information
+	trap_Cvar_VariableStringBuffer("r_zProj", rendererinfos, sizeof(rendererinfos));
+	zProj = atof(rendererinfos);
+	trap_Cvar_VariableStringBuffer("r_stereoSeparation", rendererinfos, sizeof(rendererinfos));
+	stereoSep = zProj / atof(rendererinfos);
+	
+	xmax = zProj * tan(cg.refdef.fov_x * M_PI / 360.0f);
+	
+	// let the trace run through until a change in stereo separation of the crosshair becomes less than one pixel.
+	maxdist = cgs.glconfig.vidWidth * stereoSep * zProj / (2 * xmax);
+	VectorMA(cg.refdef.vieworg, maxdist, cg.refdef.viewaxis[0], endpos);
+	CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, endpos, 0, MASK_SHOT);
+	
+	memset(&ent, 0, sizeof(ent));
+	ent.reType = RT_SPRITE;
+	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
+	
+	VectorCopy(trace.endpos, ent.origin);
+	
+	// scale the crosshair so it appears the same size for all distances
+	ent.radius = w / 640 * xmax * trace.fraction * maxdist / zProj;
+	ent.customShader = hShader;
+	
+	ent.shaderRGBA[0] = 255;
+	ent.shaderRGBA[1] = 255;
+	ent.shaderRGBA[2] = 255;
+	ent.shaderRGBA[3] = 255;
+
+	trap_R_AddRefEntityToScene(&ent);
 }
 
 
@@ -2451,7 +2543,7 @@ static void CG_DrawTeamVote(void) {
 }
 
 
-static qboolean CG_DrawScoreboard() {
+static qboolean CG_DrawScoreboard(void) {
 	return CG_DrawOldScoreboard();
 }
 
@@ -2756,7 +2848,8 @@ void CG_GetBalloonStateColor(entityState_t* s, vec4_t col)
 CG_Draw2D
 =================
 */
-static void CG_Draw2D( void ) {
+static void CG_Draw2D(stereoFrame_t stereoFrame)
+{
 	// if we are taking a levelshot for the menu, don't draw anything
 	if ( cg.levelShot ) {
 		return;
@@ -2828,9 +2921,12 @@ static void CG_Draw2D( void ) {
 
 	if(cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR)
 	{
-		CG_DrawUpperRight();
+		CG_DrawUpperRight(stereoFrame);
 		CG_DrawSpectator();
-		CG_DrawCrosshair();
+
+                if(stereoFrame == STEREO_CENTER)
+		        CG_DrawCrosshair();
+
 		CG_DrawCrosshairNames();
 
 		cg.scoreBoardShowing = CG_DrawScoreboard();
@@ -2842,9 +2938,12 @@ static void CG_Draw2D( void ) {
 	else if(cgs.gametype==GT_LPS && cg.snap->ps.stats[STAT_LIVESLEFT]<0 && !(cg.snap->ps.pm_flags & PMF_FOLLOW))
 	{
 		CG_DrawStringExt(320-4*23,50,"Waiting for next Round!",colorGreen,qtrue,qfalse,8,16,32);
-		CG_DrawUpperRight();
+		CG_DrawUpperRight(stereoFrame);
 		CG_DrawSpectator();
-		CG_DrawCrosshair();
+
+		if(stereoFrame == STEREO_CENTER)
+			CG_DrawCrosshair();
+
 		CG_DrawCrosshairNames();
 
 		cg.scoreBoardShowing = CG_DrawScoreboard();
@@ -2880,7 +2979,7 @@ static void CG_Draw2D( void ) {
 		CG_DrawVote();
 		CG_DrawTeamVote();
 		CG_DrawLagometer();
-		CG_DrawUpperRight();
+		CG_DrawUpperRight(stereoFrame);
 		CG_DrawLowerRight();
 		CG_DrawLowerLeft();
 */
@@ -2916,7 +3015,8 @@ static void CG_Draw2D( void ) {
 			(int)((float)cg.refdef.width*0.143f),(int)((float)cg.refdef.height*0.236f),0,0,1,1,cgs.media.hud_br);
 */
 
-		CG_DrawCrosshair();
+		if(stereoFrame == STEREO_CENTER)
+			CG_DrawCrosshair();
 		CG_DrawCrosshairNames();
 //		CG_DrawStatusBar();
 		CG_DrawAmmoWarning();
@@ -2929,7 +3029,7 @@ static void CG_Draw2D( void ) {
 		CG_DrawVote();
 		CG_DrawTeamVote();
 		CG_DrawLagometer();
-		CG_DrawUpperRight();
+		CG_DrawUpperRight(stereoFrame);
 		CG_DrawLowerRight();
 
 		CG_DrawLowerLeft();
@@ -3455,7 +3555,7 @@ static void CG_Draw2D( void ) {
 }
 
 
-static void CG_DrawTourneyScoreboard() {
+static void CG_DrawTourneyScoreboard(void) {
 	CG_DrawOldTourneyScoreboard();
 }
 
@@ -3467,8 +3567,6 @@ Perform all drawing needed to completely fill the screen
 =====================
 */
 void CG_DrawActive( stereoFrame_t stereoView ) {
-	float		separation;
-	vec3_t		baseOrg;
 	int ltiT, waterTime;
 	int notifytime;
 
@@ -3485,26 +3583,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
-	switch ( stereoView ) {
-	case STEREO_CENTER:
-	case STEREO_LEFT:
-	case STEREO_RIGHT:
-		separation = 0;
-		break;
-	default:
-		separation = 0;
-		CG_Error( "CG_DrawActive: Undefined stereoView" );
-	}
-
-
 	// clear around the rendered view if sized down
 	CG_TileClear();
-
-	// offset vieworg appropriately if we're doing stereo separation
-	VectorCopy( cg.refdef.vieworg, baseOrg );
-	if ( separation != 0 ) {
-		VectorMA( cg.refdef.vieworg, -separation, cg.refdef.viewaxis[1], cg.refdef.vieworg );
-	}
 
 	/// draw kma zoom bluescreen-effect (this need to be in real 3d, so it can be overlayed by a higher sorted shader-aura)
 	if ( cg.zoomed && cg.snap->ps.weapon == WP_KMA97 && cgs.media.zoomKMAbluescreen)
@@ -3545,13 +3625,11 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		trap_R_AddPolyToScene(cgs.media.zoomKMAbluescreen, 4, verts );
 	}
 
+	if(stereoView != STEREO_CENTER)
+		CG_DrawCrosshair3D();
+
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );
-
-	// restore original viewpoint if running stereo
-	if ( separation != 0 ) {
-		VectorCopy( baseOrg, cg.refdef.vieworg );
-	}
 
 //	CG_Printf("org={%1.3f|%1.3f|%1.3f}\n",cg.refdef.vieworg[0],cg.refdef.vieworg[1],cg.refdef.vieworg[2]);
 	if(cg_printDir.integer)
@@ -3686,7 +3764,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	// ******************
     
 	// draw status bar and other floating elements
- 	CG_Draw2D();
+ 	CG_Draw2D(stereoView);
 
 
 	// Draw chat messages and icons

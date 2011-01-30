@@ -13,6 +13,7 @@ static qhandle_t	loadingPlayerIcons[MAX_LOADING_PLAYER_ICONS];
 static qhandle_t	loadingItemIcons[MAX_LOADING_ITEM_ICONS];
 
 
+#if 0
 /*
 ===================
 CG_DrawLoadingIcons
@@ -37,7 +38,7 @@ static void CG_DrawLoadingIcons( void ) {
 		CG_DrawPic( x, y, 32, 32, loadingItemIcons[n] );
 	}
 }
-
+#endif
 
 /*
 ======================

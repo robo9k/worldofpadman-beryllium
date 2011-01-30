@@ -746,6 +746,6 @@ void SetAward( gclient_t *client, award_t award ) {
 	client->ps.eFlags |= award;
 	client->rewardTime = ( level.time + REWARD_SPRITE_TIME );
 
-	G_LogPrintf( "Award: %i %s\n", ( client - level.clients ), AwardName( award ) );
+	G_LogPrintf( "Award: %ld %s\n", ( client - level.clients ), AwardName( award ) );
 }
 

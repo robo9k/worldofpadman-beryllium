@@ -154,9 +154,9 @@ Player teleporting in or out
 void CG_TeleOutEffect(vec3_t org, int team, centity_t *cent)
 {
 	clientInfo_t	*ci;
-	refEntity_t*	legs;
-	refEntity_t*	torso;
-	refEntity_t*	head;
+	refEntity_t*	legs = NULL;
+	refEntity_t*	torso = NULL;
+	refEntity_t*	head = NULL;
 	int				clientNum;
 	int				renderfx;
 	localEntity_t	*le;

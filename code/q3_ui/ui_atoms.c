@@ -367,15 +367,15 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 	// draw the colored text
 	trap_R_SetColor( color );
 	
-	ax = x * uis.scale + uis.bias;
-	ay = y * uis.scale + uis.ybias;
+	ax = x * uis.xscale + uis.xbias;
+	ay = y * uis.yscale + uis.ybias;
 
 	s = str;
 	while ( *s )
 	{
 		ch = *s & 127;
 		if ( ch == ' ' ) {
-			ax += ((float)PROPB_SPACE_WIDTH + (float)PROPB_GAP_WIDTH)* uis.scale;
+			ax += ((float)PROPB_SPACE_WIDTH + (float)PROPB_GAP_WIDTH)* uis.xscale;
 		}
 		else if ( ch >= 'A' && ch <= 'Z' ) {
 			ch -= 'A';
@@ -383,10 +383,10 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color )
 			frow = (float)propMapB[ch][1] / 256.0f;
 			fwidth = (float)propMapB[ch][2] / 256.0f;
 			fheight = (float)PROPB_HEIGHT / 256.0f;
-			aw = (float)propMapB[ch][2] * uis.scale;
-			ah = (float)PROPB_HEIGHT * uis.scale;
+			aw = (float)propMapB[ch][2] * uis.xscale;
+			ah = (float)PROPB_HEIGHT * uis.yscale;
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, uis.charsetPropB );
-			ax += (aw + (float)PROPB_GAP_WIDTH * uis.scale);
+			ax += (aw + (float)PROPB_GAP_WIDTH * uis.xscale);
 		}
 		s++;
 	}
@@ -477,27 +477,27 @@ void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t color, fl
 	// draw the colored text
 	trap_R_SetColor( color );
 	
-	ax = x * uis.scale + uis.bias;
-	ay = y * uis.scale + uis.ybias;
+	ax = x * uis.xscale + uis.xbias;
+	ay = y * uis.yscale + uis.ybias;
 
 	s = str;
 	while ( *s )
 	{
 		ch = *s & 127;
 		if ( ch == ' ' ) {
-			aw = (float)PROP_SPACE_WIDTH * uis.scale * sizeScale;
+			aw = (float)PROP_SPACE_WIDTH * uis.xscale * sizeScale;
 		}
 		else if ( propMap[ch][2] != -1 ) {
 			fcol = (float)propMap[ch][0] / 256.0f;
 			frow = (float)propMap[ch][1] / 256.0f;
 			fwidth = (float)propMap[ch][2] / 256.0f;
 			fheight = (float)PROP_HEIGHT / 256.0f;
-			aw = (float)propMap[ch][2] * uis.scale * sizeScale;
-			ah = (float)PROP_HEIGHT * uis.scale * sizeScale;
+			aw = (float)propMap[ch][2] * uis.xscale * sizeScale;
+			ah = (float)PROP_HEIGHT * uis.yscale * sizeScale;
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol+fwidth, frow+fheight, charset );
 		}
 
-		ax += (aw + (float)PROP_GAP_WIDTH * uis.scale * sizeScale);
+		ax += (aw + (float)PROP_GAP_WIDTH * uis.xscale * sizeScale);
 		s++;
 	}
 
@@ -677,11 +677,11 @@ static void UI_DrawString2( int x, int y, const char* str, vec4_t color, int cha
 	// draw the colored text
 	trap_R_SetColor( color );
 	
-	ax = x * uis.scale + uis.bias;
-	ay = y * uis.scale + uis.ybias;
+	ax = x * uis.xscale + uis.xbias;
+	ay = y * uis.yscale + uis.ybias;
 
-	aw = charw * uis.scale;
-	ah = charh * uis.scale;
+	aw = charw * uis.xscale;
+	ah = charh * uis.yscale;
 
 	s = str;
 	while ( *s )
@@ -888,6 +888,7 @@ qboolean UI_IsFullscreen( void ) {
 	return qfalse;
 }
 
+#if 0
 static void NeedCDAction( qboolean result ) {
 	if ( !result ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
@@ -899,6 +900,7 @@ static void NeedCDKeyAction( qboolean result ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, "quit\n" );
 	}
 }
+#endif
 
 void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	// this should be the ONLY way the menu system is brought up
@@ -1254,25 +1256,28 @@ void UI_Init( void ) {
 	trap_GetGlconfig( &uis.glconfig );
 
 	// for 640x480 virtualized screen
-	uis.scale = uis.glconfig.vidHeight * (1.0/480.0);
+	uis.xscale = uis.glconfig.vidWidth * (1.0/640.0);
+	uis.yscale = uis.glconfig.vidHeight * (1.0/480.0);
+	
 	if ( uis.glconfig.vidWidth * 480 > uis.glconfig.vidHeight * 640 ) {
 		// wide screen
-		uis.bias = 0.5 * ( uis.glconfig.vidWidth - ( uis.glconfig.vidHeight * (640.0/480.0) ) );
+		uis.xbias = 0.5 * ( uis.glconfig.vidWidth - ( uis.glconfig.vidHeight * (640.0/480.0) ) );
+		uis.xscale = uis.yscale;
 	}
 	else {
 		// no wide screen
-		uis.bias = 0;
+		uis.xbias = 0;
 	}
 
 	if(uis.glconfig.vidWidth * 480 < uis.glconfig.vidHeight * 640)
 	{
-		uis.scale = uis.glconfig.vidWidth * (1.0f/640.0f);
 		uis.ybias = 0.5f * ( uis.glconfig.vidHeight - ( uis.glconfig.vidWidth * (480.0f/640.0f) ) );
+		uis.yscale = uis.xscale;
 	}
 	else
 		uis.ybias = 0;
 
-	uis.scale1024 = uis.scale * (640.0f/1024.0f);//uis.glconfig.vidHeight * (1.0f/768.0f);
+	uis.scale1024 = uis.xscale * (640.0f/1024.0f);//uis.glconfig.vidHeight * (1.0f/768.0f);
 
 	// initialize the menu system
 	Menu_Cache();
@@ -1290,15 +1295,15 @@ Adjusted for resolution and screen aspect ratio
 */
 void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	// expect valid pointers
-	*x = *x * uis.scale + uis.bias;
-	*y = *y * uis.scale + uis.ybias;
-	*w *= uis.scale;
-	*h *= uis.scale;
+	*x = *x * uis.xscale + uis.xbias;
+	*y = *y * uis.yscale + uis.ybias;
+	*w *= uis.xscale;
+	*h *= uis.yscale;
 }
 
 void UI_AdjustFrom1024( float *x, float *y, float *w, float *h ) {
 	// expect valid pointers
-	*x = *x * uis.scale1024 + uis.bias;
+	*x = *x * uis.scale1024 + uis.xbias;
 	*y = *y * uis.scale1024 + uis.ybias;
 	*w *= uis.scale1024;
 	*h *= uis.scale1024;
@@ -1520,8 +1525,10 @@ void UI_Refresh( int realtime )
 	UI_UpdateCvars();
 
 	if(!trap_Cvar_VariableValue("cl_paused"))
+	{
 		if(!uis.musicbool)
 			UI_StartMusic();
+	}
 	else
 		CheckInGameMusic();
 

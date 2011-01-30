@@ -643,7 +643,7 @@ static void CG_ServerCommand( void ) {
 					trap_SendClientCommand( va( "selectlogo \"%s\"\n", buffer ) );
 				}
 				else {
-					trap_SendClientCommand( va( "selectlogo "SPRAYLOGO_DEFAULT_NAME"\n", buffer ) );
+					trap_SendClientCommand("selectlogo " SPRAYLOGO_DEFAULT_NAME "\n");
 				}
 
 				cg.logoselected = qtrue;

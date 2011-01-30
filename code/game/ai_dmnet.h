@@ -44,5 +44,4 @@ void BotDumpNodeSwitches(bot_state_t *bs);
 
 bot_goal_t* BotChooseWall(bot_state_t* bs);	
 bot_goal_t* BotChooseCorrectWall(bot_state_t* bs);
-char* LastNodeSwitch();
-
+char* LastNodeSwitch(void);
