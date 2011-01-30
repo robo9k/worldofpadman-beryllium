@@ -714,6 +714,12 @@ ClientCheckName
 static void ClientCleanName(const char *in, char *out, int outSize)
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
+	/* added beryllium */
+	int			totalWhitespace = 0;
+	qboolean	invalid = qfalse;
+	char		cleanName[MAX_NETNAME];
+	/* end added */
+
 
 	// discard leading spaces
 	for(; *in == ' '; in++);
@@ -756,6 +762,18 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 			colorlessLen++;
 		}
 		
+		/* added beryllium */
+		/* don't allow nonprinting characters or (dead) console keys */
+		if ( *in < ' ' || *in > '}' || *in == '`' ) {
+			continue;
+		}
+
+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+		if ( *in == ' ' ) {
+			totalWhitespace++;
+		}
+		/* end added */
+
 		outpos++;
 	}
 
@@ -772,7 +790,7 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 		invalid = qtrue;	
 	}
 
-	Q_strncpyz( cleanName, p, sizeof( cleanName ) );
+	Q_strncpyz( cleanName, out, sizeof( cleanName ) );
 	Q_CleanStr( cleanName );
 
 	/* Used to not print text to chat area, but console only */
@@ -799,7 +817,7 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 
 
 	if ( invalid ) {
-		Q_strncpyz( p, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
 	}
 	/* end added */
 }
