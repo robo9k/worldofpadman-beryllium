@@ -1,429 +1,488 @@
 Index: changes.diff
 ===================================================================
---- changes.diff	(Revision 72)
+--- changes.diff	(Revision 73)
 +++ changes.diff	(Arbeitskopie)
-@@ -1,248 +0,0 @@
+@@ -1,429 +0,0 @@
 -Index: changes.diff
 -===================================================================
----- changes.diff	(Revision 70)
+---- changes.diff	(Revision 72)
 -+++ changes.diff	(Arbeitskopie)
--@@ -1,149 +0,0 @@
---Index: code/game/g_local.h
+-@@ -1,248 +0,0 @@
+--Index: changes.diff
 --===================================================================
------ code/game/g_local.h	(Revision 69)
---+++ code/game/g_local.h	(Arbeitskopie)
---@@ -322,6 +322,8 @@
+----- changes.diff	(Revision 70)
+--+++ changes.diff	(Arbeitskopie)
+--@@ -1,149 +0,0 @@
+---Index: code/game/g_local.h
+---===================================================================
+------ code/game/g_local.h	(Revision 69)
+---+++ code/game/g_local.h	(Arbeitskopie)
+---@@ -322,6 +322,8 @@
+--- 
+--- 	int			campCounter;
+--- 	vec3_t		campPosition;
+---+
+---+	int			lifeShards;
+--- 	/* end beryllium */
+--- } clientPersistant_t;
+--- 
+---Index: code/game/g_main.c
+---===================================================================
+------ code/game/g_main.c	(Revision 69)
+---+++ code/game/g_main.c	(Arbeitskopie)
+---@@ -107,6 +107,8 @@
+--- 
+--- vmCvar_t	be_campDistance;
+--- 
+---+vmCvar_t	be_oneUp;
+---+
+--- /* end beryllium */
+--- 
+--- 
+---@@ -229,8 +231,10 @@
+--- 
+--- 	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
+--- 
+----	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
+---+	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
+--- 
+---+	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qfalse }
+---+
+--- 	/* end beryllium */
+--- };
+--- 
+---Index: code/game/g_beryllium.c
+---===================================================================
+------ code/game/g_beryllium.c	(Revision 69)
+---+++ code/game/g_beryllium.c	(Arbeitskopie)
+---@@ -342,3 +342,52 @@
+--- 	}
+--- }
+--- 
+---+
+---+/* Called at the end of ClientBegin() but before ranks are calculated */
+---+void BE_ClientBegin( int clientNum ) {
+---+	gentity_t *ent;
+---+
+---+	/* FIXME: assert() */
+---+	ent = &g_entities[ clientNum ];
+---+
+---+	ent->client->pers.lifeShards = 0;
+---+}
+---+
+---+
+---+/* Called before client tosses items while being killed */
+---+void BE_ClientKilled( gentity_t *self ) {
+---+	gentity_t	*killer_ent;
+---+	gclient_t	*killer;
+---+	int			numShards, neededShards;
+---+
+---+	/* FIXME: assert() */
+---+
+---+	if ( ( GT_LPS != g_gametype.integer ) || !be_oneUp.integer ) {
+---+		return;
+---+	}
+---+
+---+	if ( level.warmupTime ) {
+---+		return;
+---+	}
+---+
+---+	killer_ent = &g_entities[self->client->lasthurt_client];
+---+		
+---+	if ( killer_ent->client ) {
+---+		killer = killer_ent->client;
+---+		killer->pers.lifeShards++;
+---+
+---+		numShards		= killer->pers.lifeShards;
+---+		neededShards	= be_oneUp.integer;
+---+		if ( numShards >= neededShards ) {
+---+			killer->sess.livesleft++;
+---+			killer->pers.lifeShards = 0;
+---+			CalculateRanks();
+---+
+---+			SendClientCommand( CID_ALL, CCMD_PRINT, va( "%s gained an extra life!\n", killer->pers.netname ) );
+---+		}
+---+		else {
+---+			SendClientCommand( ( killer_ent - g_entities ), CCMD_PRINT, va( "You gained a life shard ( %i of %i ).\n", numShards, neededShards ) );
+---+		}
+---+	}
+---+}
+---+
+---Index: code/game/g_beryllium.h
+---===================================================================
+------ code/game/g_beryllium.h	(Revision 69)
+---+++ code/game/g_beryllium.h	(Arbeitskopie)
+---@@ -74,7 +74,9 @@
+--- 
+--- extern vmCvar_t	be_campDistance;
+--- 
+---+extern vmCvar_t	be_oneUp;
+--- 
+---+
+--- extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
+--- extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
+--- 
+---@@ -91,6 +93,9 @@
+--- 
+--- void BE_ClientTimerActions( gentity_t* ent );
+--- 
+---+void BE_ClientBegin( int clientNum );
+---+void BE_ClientKilled( gentity_t *self );
+--- 
+---+
+--- #endif
+--- 
+---Index: code/game/g_combat.c
+---===================================================================
+------ code/game/g_combat.c	(Revision 69)
+---+++ code/game/g_combat.c	(Arbeitskopie)
+---@@ -545,6 +545,10 @@
+--- 		}
+--- 	}
+--- 
+---+	/* added beryllium */
+---+	BE_ClientKilled( self );
+---+	/* end added */
+---+
+--- 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
+--- 	contents = trap_PointContents( self->r.currentOrigin, -1 );
+--- 	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {
+---Index: code/game/g_client.c
+---===================================================================
+------ code/game/g_client.c	(Revision 69)
+---+++ code/game/g_client.c	(Arbeitskopie)
+---@@ -1182,6 +1182,10 @@
+--- 	}
+--- 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
+--- 
+---+	/* added beryllium */
+---+	BE_ClientBegin( clientNum );
+---+	/* end added */
+---+
+--- 	// count current clients and rank for scoreboard
+--- 	CalculateRanks();
+--- 
+--Index: README
+--===================================================================
+----- README	(Revision 70)
+--+++ README	(Arbeitskopie)
+--@@ -153,7 +153,7 @@
 -- 
--- 	int			campCounter;
--- 	vec3_t		campPosition;
---+
---+	int			lifeShards;
--- 	/* end beryllium */
--- } clientPersistant_t;
+--    .: Versions :.
 -- 
+---   This README applies to the current version of Beryllium, which is 0.07b-r69.
+--+   This README applies to the current version of Beryllium, which is 0.08a-r71.
+--    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
+--    with this version of the game. Due to its generic nature, it could also be applied
+--    to other versions or even other ioquake3 based games though.
 --Index: code/game/g_main.c
 --===================================================================
------ code/game/g_main.c	(Revision 69)
+----- code/game/g_main.c	(Revision 70)
 --+++ code/game/g_main.c	(Arbeitskopie)
---@@ -107,6 +107,8 @@
+--@@ -206,7 +206,7 @@
 -- 
--- vmCvar_t	be_campDistance;
+-- 	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+-- 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
+---	{ &g_version, "g_version", "wop 1.5_SVN1863", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+--+	{ &g_version, "g_version", "wop 1.5_SVN1897", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 -- 
---+vmCvar_t	be_oneUp;
---+
--- /* end beryllium */
--- 
--- 
---@@ -229,8 +231,10 @@
--- 
--- 	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
--- 
----	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
---+	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
--- 
---+	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qfalse }
---+
--- 	/* end beryllium */
--- };
--- 
---Index: code/game/g_beryllium.c
---===================================================================
------ code/game/g_beryllium.c	(Revision 69)
---+++ code/game/g_beryllium.c	(Arbeitskopie)
---@@ -342,3 +342,52 @@
--- 	}
--- }
--- 
---+
---+/* Called at the end of ClientBegin() but before ranks are calculated */
---+void BE_ClientBegin( int clientNum ) {
---+	gentity_t *ent;
---+
---+	/* FIXME: assert() */
---+	ent = &g_entities[ clientNum ];
---+
---+	ent->client->pers.lifeShards = 0;
---+}
---+
---+
---+/* Called before client tosses items while being killed */
---+void BE_ClientKilled( gentity_t *self ) {
---+	gentity_t	*killer_ent;
---+	gclient_t	*killer;
---+	int			numShards, neededShards;
---+
---+	/* FIXME: assert() */
---+
---+	if ( ( GT_LPS != g_gametype.integer ) || !be_oneUp.integer ) {
---+		return;
---+	}
---+
---+	if ( level.warmupTime ) {
---+		return;
---+	}
---+
---+	killer_ent = &g_entities[self->client->lasthurt_client];
---+		
---+	if ( killer_ent->client ) {
---+		killer = killer_ent->client;
---+		killer->pers.lifeShards++;
---+
---+		numShards		= killer->pers.lifeShards;
---+		neededShards	= be_oneUp.integer;
---+		if ( numShards >= neededShards ) {
---+			killer->sess.livesleft++;
---+			killer->pers.lifeShards = 0;
---+			CalculateRanks();
---+
---+			SendClientCommand( CID_ALL, CCMD_PRINT, va( "%s gained an extra life!\n", killer->pers.netname ) );
---+		}
---+		else {
---+			SendClientCommand( ( killer_ent - g_entities ), CCMD_PRINT, va( "You gained a life shard ( %i of %i ).\n", numShards, neededShards ) );
---+		}
---+	}
---+}
---+
---Index: code/game/g_beryllium.h
---===================================================================
------ code/game/g_beryllium.h	(Revision 69)
---+++ code/game/g_beryllium.h	(Arbeitskopie)
---@@ -74,7 +74,9 @@
--- 
--- extern vmCvar_t	be_campDistance;
--- 
---+extern vmCvar_t	be_oneUp;
--- 
---+
--- extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
--- extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
--- 
---@@ -91,6 +93,9 @@
--- 
--- void BE_ClientTimerActions( gentity_t* ent );
--- 
---+void BE_ClientBegin( int clientNum );
---+void BE_ClientKilled( gentity_t *self );
--- 
---+
--- #endif
--- 
---Index: code/game/g_combat.c
---===================================================================
------ code/game/g_combat.c	(Revision 69)
---+++ code/game/g_combat.c	(Arbeitskopie)
---@@ -545,6 +545,10 @@
--- 		}
--- 	}
--- 
---+	/* added beryllium */
---+	BE_ClientKilled( self );
---+	/* end added */
---+
--- 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
--- 	contents = trap_PointContents( self->r.currentOrigin, -1 );
--- 	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {
+-- 	/* FIXME: Use proper g_ instead of be_ prefix? */
+-- 	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
 --Index: code/game/g_client.c
 --===================================================================
------ code/game/g_client.c	(Revision 69)
+----- code/game/g_client.c	(Revision 70)
 --+++ code/game/g_client.c	(Arbeitskopie)
---@@ -1182,6 +1182,10 @@
--- 	}
--- 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
--- 
+--@@ -714,7 +714,13 @@
+-- static void ClientCleanName(const char *in, char *out, int outSize)
+-- {
+-- 	int outpos = 0, colorlessLen = 0, spaces = 0;
 --+	/* added beryllium */
---+	BE_ClientBegin( clientNum );
+--+	int			totalWhitespace = 0;
+--+	qboolean	invalid = qfalse;
+--+	char		cleanName[MAX_NETNAME];
 --+	/* end added */
---+
--- 	// count current clients and rank for scoreboard
--- 	CalculateRanks();
 -- 
--Index: README
+--+
+-- 	// discard leading spaces
+-- 	for(; *in == ' '; in++);
+-- 	
+--@@ -756,6 +762,18 @@
+-- 			colorlessLen++;
+-- 		}
+-- 		
+--+		/* added beryllium */
+--+		/* don't allow nonprinting characters or (dead) console keys */
+--+		if ( *in < ' ' || *in > '}' || *in == '`' ) {
+--+			continue;
+--+		}
+--+
+--+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+--+		if ( *in == ' ' ) {
+--+			totalWhitespace++;
+--+		}
+--+		/* end added */
+--+
+-- 		outpos++;
+-- 	}
+-- 
+--@@ -772,7 +790,7 @@
+-- 		invalid = qtrue;	
+-- 	}
+-- 
+---	Q_strncpyz( cleanName, p, sizeof( cleanName ) );
+--+	Q_strncpyz( cleanName, out, sizeof( cleanName ) );
+-- 	Q_CleanStr( cleanName );
+-- 
+-- 	/* Used to not print text to chat area, but console only */
+--@@ -799,7 +817,7 @@
+-- 
+-- 
+-- 	if ( invalid ) {
+---		Q_strncpyz( p, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+--+		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+-- 	}
+-- 	/* end added */
+-- }
+--Index: Makefile
+--===================================================================
+----- Makefile	(Revision 70)
+--+++ Makefile	(Arbeitskopie)
+--@@ -221,7 +221,7 @@
+-- 
+-- # version info
+-- VERSION=1.5
+---BERYLLIUM_VERSION=0.07b
+--+BERYLLIUM_VERSION=0.08a
+-- 
+-- USE_SVN=
+-- ifeq ($(wildcard .svn),.svn)
+-Index: Makefile.local
 -===================================================================
----- README	(Revision 70)
--+++ README	(Arbeitskopie)
--@@ -153,7 +153,7 @@
+---- Makefile.local	(Revision 72)
+-+++ Makefile.local	(Arbeitskopie)
+-@@ -1,8 +1,8 @@
+--BUILD_GAME_SO		= 1
+-+BUILD_GAME_SO		= 0
+- BUILD_GAME_QVM		= 1
+- BUILD_MISSIONPACK	= 0
 - 
--    .: Versions :.
+--BUILD_SERVER		= 1
+-+BUILD_SERVER		= 0
+- BUILD_CLIENT		= 0
+- BUILD_CLIENT_SMP	= 0
 - 
---   This README applies to the current version of Beryllium, which is 0.07b-r69.
--+   This README applies to the current version of Beryllium, which is 0.08a-r71.
--    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
--    with this version of the game. Due to its generic nature, it could also be applied
--    to other versions or even other ioquake3 based games though.
--Index: code/game/g_main.c
+-@@ -25,6 +25,6 @@
+- #DEFAULT_BASEDIR	= /usr/share/games/worldofpadman
+- 
+- # -fprofile-generate/use -fbranch-probabilities
+--FPROFILE		= -fprofile-use
+-+FPROFILE		= -fprofile-generate -fbranch-probabilities
+- CFLAGS			= -O2 -march=native -Wa,-mtune=core2 $(FPROFILE)
+- LDFLAGS			= -Wl,-O2 -Wl,--as-needed $(FPROFILE)
+-Index: code/game/g_items.c
 -===================================================================
----- code/game/g_main.c	(Revision 70)
--+++ code/game/g_main.c	(Arbeitskopie)
--@@ -206,7 +206,7 @@
+---- code/game/g_items.c	(Revision 72)
+-+++ code/game/g_items.c	(Arbeitskopie)
+-@@ -614,7 +614,7 @@
+- 	velocity[2] += 200 + crandom() * 50;
 - 
-- 	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
-- 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
---	{ &g_version, "g_version", "wop 1.5_SVN1863", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
--+	{ &g_version, "g_version", "wop 1.5_SVN1897", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+- 	// FIXME: Cartridges call LaunchItem() directly
+--	G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), item->classname );
+-+	G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), item->classname );
+- 	
+- 	return LaunchItem( item, ent->s.pos.trBase, velocity );
+- }
+-Index: code/game/g_cmds.c
+-===================================================================
+---- code/game/g_cmds.c	(Revision 72)
+-+++ code/game/g_cmds.c	(Arbeitskopie)
+-@@ -891,7 +891,7 @@
+- 		return;
+- 	}
 - 
-- 	/* FIXME: Use proper g_ instead of be_ prefix? */
-- 	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
+--	trap_SendServerCommand( ( other - g_entities ), va( "say %d %ld \"%s%c%c%s\"", 
+-+	trap_SendServerCommand( ( other - g_entities ), va( "say %d %d \"%s%c%c%s\"", 
+- 	                        mode,
+-                             ( ent ? ( ent - g_entities ) : -1 ),
+-                             name, Q_COLOR_ESCAPE, color, message ) );
+-@@ -959,7 +959,7 @@
+- 			break;
+- 
+- 		case SAY_TELL:
+--			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
+-+			G_LogPrintf( "Tell: %d %d %s\n", cid, ( target - g_entities ), chatText );
+- 			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
+- 				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
+- 				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+-@@ -1322,7 +1322,7 @@
+- 	}
+- 
+- 	trap_SendServerCommand( -1, va("print \"%s " S_COLOR_WHITE "called a vote: %s.\n\"", ent->client->pers.netname, level.voteDisplayString ) );
+--	G_LogPrintf( "Callvote: %ld %s\n", ( ent - g_entities ), level.voteString );
+-+	G_LogPrintf( "Callvote: %d %s\n", ( ent - g_entities ), level.voteString );
+- 
+- 	// start the voting, the caller autoamtically votes yes
+- 	level.voteTime = level.time;
+-@@ -1748,7 +1748,7 @@
+- 	}
+- 
+- 	if( tmpGE )
+--		G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), tmpGE->classname );
+-+		G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), tmpGE->classname );
+- }
+- 
+- //cyr{
+-Index: code/game/g_combat.c
+-===================================================================
+---- code/game/g_combat.c	(Revision 72)
+-+++ code/game/g_combat.c	(Arbeitskopie)
+-@@ -75,7 +75,7 @@
+- 
+- 	CalculateRanks();
+- 
+--	G_LogPrintf( "AddScore: %ld %d %s\n", ( ent - g_entities ), score, reason );
+-+	G_LogPrintf( "AddScore: %d %d %s\n", ( ent - g_entities ), score, reason );
+- }
+- 
+- /*
+-Index: code/game/g_session.c
+-===================================================================
+---- code/game/g_session.c	(Revision 72)
+-+++ code/game/g_session.c	(Arbeitskopie)
+-@@ -42,7 +42,7 @@
+- 		,client->sess.selectedlogo
+- 		);
+- 
+--	var = va( "session%ld", client - level.clients );
+-+	var = va( "session%d", client - level.clients );
+- 
+- 	trap_Cvar_Set( var, s );
+- }
+-@@ -63,7 +63,7 @@
+- 	int spectatorState;
+- 	int sessionTeam;
+- 
+--	var = va( "session%ld", client - level.clients );
+-+	var = va( "session%d", client - level.clients );
+- 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
+- 
+- 	sscanf( s, "%i %i %i %i %i %i %i %i %s",
+-Index: code/game/be_svcmds.c
+-===================================================================
+---- code/game/be_svcmds.c	(Revision 72)
+-+++ code/game/be_svcmds.c	(Arbeitskopie)
+-@@ -146,9 +146,15 @@
+- 		cl->sess.sessionTeam = team;
+- 
+- 		/* NOTE: Needed to return team items such as lollies, as this will call Team_ReturnFlag() etc.  */
+-+		/* FIXME: We should really use SetTeam() instead. Be aware of limits within the function! */
+-+		cl->ps.stats[STAT_HEALTH] = ent->health = -999;
+- 		player_die( ent, ent, ent, 100000, MOD_SUICIDE );
+- 
+- 		ClientUserinfoChanged( sortedClients[i] );
+-+		/* NOTE/FIXME: There are some clientside problems with base weapon after ClientBegin(),
+-+		               see "srwc" commands in ClientSpawn(). To reproduce go into sprayroom and shuffleteams.
+-+		               It works without the instant respawn due to ClientBegin(), since we are forcefully setting health.
+-+		*/
+- 		ClientBegin( sortedClients[i] );
+- 	}
+- }
+-Index: code/game/g_utils.c
+-===================================================================
+---- code/game/g_utils.c	(Revision 72)
+-+++ code/game/g_utils.c	(Arbeitskopie)
+-@@ -746,6 +746,6 @@
+- 	client->ps.eFlags |= award;
+- 	client->rewardTime = ( level.time + REWARD_SPRITE_TIME );
+- 
+--	G_LogPrintf( "Award: %ld %s\n", ( client - level.clients ), AwardName( award ) );
+-+	G_LogPrintf( "Award: %d %s\n", ( client - level.clients ), AwardName( award ) );
+- }
+- 
 -Index: code/game/g_client.c
 -===================================================================
----- code/game/g_client.c	(Revision 70)
+---- code/game/g_client.c	(Revision 72)
 -+++ code/game/g_client.c	(Arbeitskopie)
--@@ -714,7 +714,13 @@
+-@@ -711,7 +711,12 @@
+- ClientCheckName
+- ============
+- */
+-+/* changed beryllium */
+-+/*
 - static void ClientCleanName(const char *in, char *out, int outSize)
+-+*/
+-+void ClientCleanName(const char *in, char *out, int outSize)
+-+/* end changed */
 - {
 - 	int outpos = 0, colorlessLen = 0, spaces = 0;
--+	/* added beryllium */
--+	int			totalWhitespace = 0;
--+	qboolean	invalid = qfalse;
--+	char		cleanName[MAX_NETNAME];
--+	/* end added */
-- 
--+
-- 	// discard leading spaces
-- 	for(; *in == ' '; in++);
-- 	
--@@ -756,6 +762,18 @@
-- 			colorlessLen++;
-- 		}
-- 		
--+		/* added beryllium */
--+		/* don't allow nonprinting characters or (dead) console keys */
--+		if ( *in < ' ' || *in > '}' || *in == '`' ) {
--+			continue;
--+		}
--+
--+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
--+		if ( *in == ' ' ) {
--+			totalWhitespace++;
--+		}
--+		/* end added */
--+
-- 		outpos++;
+- 	/* added beryllium */
+-@@ -1333,6 +1338,7 @@
+- 		// add instagib weapon to client's inventory
+- 		client->ps.stats[ STAT_WEAPONS ] = ( 1 << weapon );
+- 		client->ps.ammo[ weapon ] = INFINITE;
+-+trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
+- 	}
+- 	else
+- 	{
+-@@ -1397,6 +1403,7 @@
+- 		// force the base weapon up
+- 		client->ps.weapon = WP_NIPPER;
+- 		client->ps.weaponstate = WEAPON_READY;
+-+trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
 - 	}
 - 
--@@ -772,7 +790,7 @@
-- 		invalid = qtrue;	
-- 	}
-- 
---	Q_strncpyz( cleanName, p, sizeof( cleanName ) );
--+	Q_strncpyz( cleanName, out, sizeof( cleanName ) );
-- 	Q_CleanStr( cleanName );
-- 
-- 	/* Used to not print text to chat area, but console only */
--@@ -799,7 +817,7 @@
-- 
-- 
-- 	if ( invalid ) {
---		Q_strncpyz( p, INVALID_PLAYERNAME_DEFAULT_S, outSize );
--+		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
-- 	}
-- 	/* end added */
-- }
--Index: Makefile
--===================================================================
----- Makefile	(Revision 70)
--+++ Makefile	(Arbeitskopie)
--@@ -221,7 +221,7 @@
-- 
-- # version info
-- VERSION=1.5
---BERYLLIUM_VERSION=0.07b
--+BERYLLIUM_VERSION=0.08a
-- 
-- USE_SVN=
-- ifeq ($(wildcard .svn),.svn)
+- 	// don't allow full run speed for a bit
 Index: Makefile.local
 ===================================================================
---- Makefile.local	(Revision 72)
+--- Makefile.local	(Revision 73)
 +++ Makefile.local	(Arbeitskopie)
-@@ -1,8 +1,8 @@
--BUILD_GAME_SO		= 1
-+BUILD_GAME_SO		= 0
+@@ -1,4 +1,4 @@
+-BUILD_GAME_SO		= 0
++BUILD_GAME_SO		= 1
  BUILD_GAME_QVM		= 1
  BUILD_MISSIONPACK	= 0
  
--BUILD_SERVER		= 1
-+BUILD_SERVER		= 0
- BUILD_CLIENT		= 0
- BUILD_CLIENT_SMP	= 0
- 
-@@ -25,6 +25,6 @@
- #DEFAULT_BASEDIR	= /usr/share/games/worldofpadman
- 
- # -fprofile-generate/use -fbranch-probabilities
--FPROFILE		= -fprofile-use
-+FPROFILE		= -fprofile-generate -fbranch-probabilities
- CFLAGS			= -O2 -march=native -Wa,-mtune=core2 $(FPROFILE)
- LDFLAGS			= -Wl,-O2 -Wl,--as-needed $(FPROFILE)
-Index: code/game/g_items.c
+Index: code/game/be_vote.c
 ===================================================================
---- code/game/g_items.c	(Revision 72)
-+++ code/game/g_items.c	(Arbeitskopie)
-@@ -614,7 +614,7 @@
- 	velocity[2] += 200 + crandom() * 50;
+--- code/game/be_vote.c	(Revision 73)
++++ code/game/be_vote.c	(Arbeitskopie)
+@@ -502,25 +502,25 @@
  
- 	// FIXME: Cartridges call LaunchItem() directly
--	G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), item->classname );
-+	G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), item->classname );
- 	
- 	return LaunchItem( item, ent->s.pos.trBase, velocity );
- }
-Index: code/game/g_cmds.c
-===================================================================
---- code/game/g_cmds.c	(Revision 72)
-+++ code/game/g_cmds.c	(Arbeitskopie)
-@@ -891,7 +891,7 @@
- 		return;
+ 	/* Special: A variant of clientkick vote */
+ 	if ( VOTEID_KICK == id ) {
+-		int id;
++		int cid;
+ 
+ 		if ( strlen( arg2 ) == 0 ) {
+ 			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a client name.\n" );
+ 			return qfalse;
+ 		}
+ 
+-		id = ClientnumFromString( arg2 );
++		cid = ClientnumFromString( arg2 );
+ 
+-		if ( CID_NONE == id ) {
++		if ( CID_NONE == cid ) {
+ 			PrintMessage( ent, S_COLOR_NEGATIVE"No player found with that name. Check for typos or use 'clientkick' instead.\n" );
+ 			return qfalse;
+ 		}
+-		else if ( CID_MULTIPLE == id ) {
++		else if ( CID_MULTIPLE == cid ) {
+ 			PrintMessage( ent, S_COLOR_NEGATIVE"Multiple players found with that name. Use 'clientkick' instead.\n" );
+ 			return qfalse;
+ 		}
+ 
+-		if ( level.clients[id].pers.localClient ) {
++		if ( level.clients[cid].pers.localClient ) {
+ 			/* NOTE: localClient is only set for clients connected to their own computer, not LAN clients in general */
+ 			PrintMessage( ent, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
+ 			return qfalse;
+@@ -530,7 +530,7 @@
+ 		   TODO: Display old and current name in votestring?
+ 		*/
+ 		id = VOTEID_CLIENTKICK;
+-		Com_sprintf( arg2, sizeof( arg2 ), "%i", id );
++		Com_sprintf( arg2, sizeof( arg2 ), "%i", cid );
  	}
  
--	trap_SendServerCommand( ( other - g_entities ), va( "say %d %ld \"%s%c%c%s\"", 
-+	trap_SendServerCommand( ( other - g_entities ), va( "say %d %d \"%s%c%c%s\"", 
- 	                        mode,
-                             ( ent ? ( ent - g_entities ) : -1 ),
-                             name, Q_COLOR_ESCAPE, color, message ) );
-@@ -959,7 +959,7 @@
- 			break;
- 
- 		case SAY_TELL:
--			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
-+			G_LogPrintf( "Tell: %d %d %s\n", cid, ( target - g_entities ), chatText );
- 			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
- 				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
- 				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
-@@ -1322,7 +1322,7 @@
- 	}
- 
- 	trap_SendServerCommand( -1, va("print \"%s " S_COLOR_WHITE "called a vote: %s.\n\"", ent->client->pers.netname, level.voteDisplayString ) );
--	G_LogPrintf( "Callvote: %ld %s\n", ( ent - g_entities ), level.voteString );
-+	G_LogPrintf( "Callvote: %d %s\n", ( ent - g_entities ), level.voteString );
- 
- 	// start the voting, the caller autoamtically votes yes
- 	level.voteTime = level.time;
-@@ -1748,7 +1748,7 @@
- 	}
- 
- 	if( tmpGE )
--		G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), tmpGE->classname );
-+		G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), tmpGE->classname );
- }
- 
- //cyr{
-Index: code/game/g_combat.c
-===================================================================
---- code/game/g_combat.c	(Revision 72)
-+++ code/game/g_combat.c	(Arbeitskopie)
-@@ -75,7 +75,7 @@
- 
- 	CalculateRanks();
- 
--	G_LogPrintf( "AddScore: %ld %d %s\n", ( ent - g_entities ), score, reason );
-+	G_LogPrintf( "AddScore: %d %d %s\n", ( ent - g_entities ), score, reason );
- }
- 
- /*
-Index: code/game/g_session.c
-===================================================================
---- code/game/g_session.c	(Revision 72)
-+++ code/game/g_session.c	(Arbeitskopie)
-@@ -42,7 +42,7 @@
- 		,client->sess.selectedlogo
- 		);
- 
--	var = va( "session%ld", client - level.clients );
-+	var = va( "session%d", client - level.clients );
- 
- 	trap_Cvar_Set( var, s );
- }
-@@ -63,7 +63,7 @@
- 	int spectatorState;
- 	int sessionTeam;
- 
--	var = va( "session%ld", client - level.clients );
-+	var = va( "session%d", client - level.clients );
- 	trap_Cvar_VariableStringBuffer( var, s, sizeof(s) );
- 
- 	sscanf( s, "%i %i %i %i %i %i %i %i %s",
-Index: code/game/be_svcmds.c
-===================================================================
---- code/game/be_svcmds.c	(Revision 72)
-+++ code/game/be_svcmds.c	(Arbeitskopie)
-@@ -146,9 +146,15 @@
- 		cl->sess.sessionTeam = team;
- 
- 		/* NOTE: Needed to return team items such as lollies, as this will call Team_ReturnFlag() etc.  */
-+		/* FIXME: We should really use SetTeam() instead. Be aware of limits within the function! */
-+		cl->ps.stats[STAT_HEALTH] = ent->health = -999;
- 		player_die( ent, ent, ent, 100000, MOD_SUICIDE );
- 
- 		ClientUserinfoChanged( sortedClients[i] );
-+		/* NOTE/FIXME: There are some clientside problems with base weapon after ClientBegin(),
-+		               see "srwc" commands in ClientSpawn(). To reproduce go into sprayroom and shuffleteams.
-+		               It works without the instant respawn due to ClientBegin(), since we are forcefully setting health.
-+		*/
- 		ClientBegin( sortedClients[i] );
- 	}
- }
-Index: code/game/g_utils.c
-===================================================================
---- code/game/g_utils.c	(Revision 72)
-+++ code/game/g_utils.c	(Arbeitskopie)
-@@ -746,6 +746,6 @@
- 	client->ps.eFlags |= award;
- 	client->rewardTime = ( level.time + REWARD_SPRITE_TIME );
- 
--	G_LogPrintf( "Award: %ld %s\n", ( client - level.clients ), AwardName( award ) );
-+	G_LogPrintf( "Award: %d %s\n", ( client - level.clients ), AwardName( award ) );
- }
- 
-Index: code/game/g_client.c
-===================================================================
---- code/game/g_client.c	(Revision 72)
-+++ code/game/g_client.c	(Arbeitskopie)
-@@ -711,7 +711,12 @@
- ClientCheckName
- ============
- */
-+/* changed beryllium */
-+/*
- static void ClientCleanName(const char *in, char *out, int outSize)
-+*/
-+void ClientCleanName(const char *in, char *out, int outSize)
-+/* end changed */
- {
- 	int outpos = 0, colorlessLen = 0, spaces = 0;
- 	/* added beryllium */
-@@ -1333,6 +1338,7 @@
- 		// add instagib weapon to client's inventory
- 		client->ps.stats[ STAT_WEAPONS ] = ( 1 << weapon );
- 		client->ps.ammo[ weapon ] = INFINITE;
-+trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
- 	}
- 	else
- 	{
-@@ -1397,6 +1403,7 @@
- 		// force the base weapon up
- 		client->ps.weapon = WP_NIPPER;
- 		client->ps.weaponstate = WEAPON_READY;
-+trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
- 	}
- 
- 	// don't allow full run speed for a bit
+ 	if ( VOTEID_CLIENTKICK != id ) {

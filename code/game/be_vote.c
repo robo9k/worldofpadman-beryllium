@@ -502,25 +502,25 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 
 	/* Special: A variant of clientkick vote */
 	if ( VOTEID_KICK == id ) {
-		int id;
+		int cid;
 
 		if ( strlen( arg2 ) == 0 ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a client name.\n" );
 			return qfalse;
 		}
 
-		id = ClientnumFromString( arg2 );
+		cid = ClientnumFromString( arg2 );
 
-		if ( CID_NONE == id ) {
+		if ( CID_NONE == cid ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"No player found with that name. Check for typos or use 'clientkick' instead.\n" );
 			return qfalse;
 		}
-		else if ( CID_MULTIPLE == id ) {
+		else if ( CID_MULTIPLE == cid ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"Multiple players found with that name. Use 'clientkick' instead.\n" );
 			return qfalse;
 		}
 
-		if ( level.clients[id].pers.localClient ) {
+		if ( level.clients[cid].pers.localClient ) {
 			/* NOTE: localClient is only set for clients connected to their own computer, not LAN clients in general */
 			PrintMessage( ent, S_COLOR_NEGATIVE"You can not kick the host player.\n" );
 			return qfalse;
@@ -530,7 +530,7 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 		   TODO: Display old and current name in votestring?
 		*/
 		id = VOTEID_CLIENTKICK;
-		Com_sprintf( arg2, sizeof( arg2 ), "%i", id );
+		Com_sprintf( arg2, sizeof( arg2 ), "%i", cid );
 	}
 
 	if ( VOTEID_CLIENTKICK != id ) {
