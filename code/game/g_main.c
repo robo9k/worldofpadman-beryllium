@@ -206,7 +206,7 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
-	{ &g_version, "g_version", "wop 1.5_SVN1897", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+	{ &g_version, "g_version", "wop 1.5_SVN1898", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 
 	/* FIXME: Use proper g_ instead of be_ prefix? */
 	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },

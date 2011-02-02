@@ -849,7 +849,6 @@ void ClientUserinfoChanged( int clientNum ) {
 	char	c1[MAX_INFO_STRING];
 	char	c2[MAX_INFO_STRING];
 	char	userinfo[MAX_INFO_STRING];
-	char    guid[MAX_INFO_STRING];
 
 	ent = g_entities + clientNum;
 	client = ent->client;
@@ -969,7 +968,6 @@ void ClientUserinfoChanged( int clientNum ) {
 	// colors
 	strcpy(c1, Info_ValueForKey( userinfo, "color1" ));
 	strcpy(c2, Info_ValueForKey( userinfo, "syc_color" ));
-	strcpy(guid, Info_ValueForKey(userinfo, "cl_guid"));
 	
 	// send over a subset of the userinfo keys so other clients can
 	// print scoreboards, display models, and play custom sounds
@@ -986,8 +984,8 @@ void ClientUserinfoChanged( int clientNum ) {
             Info_ValueForKey( userinfo, "skill" ), teamTask, teamLeader, client->sess.selectedlogo);
 //cyr}
 	} else {
-		s = va("n\\%s\\guid\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\tt\\%d\\tl\\%d\\sl\\%s",
-			client->pers.netname, guid, client->sess.sessionTeam, model, headModel, c1, c2, 
+		s = va("n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\tt\\%d\\tl\\%d\\sl\\%s",
+			client->pers.netname, client->sess.sessionTeam, model, headModel, c1, c2, 
 			client->pers.maxHealth, client->sess.wins, client->sess.losses, teamTask, teamLeader, client->sess.selectedlogo);
 	}
 
