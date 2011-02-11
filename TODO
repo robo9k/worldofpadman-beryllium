@@ -1,14 +1,8 @@
-Restructure folders like engine code, i.e. ioquake.
-Also use a more advanced Makefile, like the engine does.
-
 Restructure this file; using proper layout and sort by priority!
-
-Print realtime at game startup
 
 Add g_nextmap, which is not executed immediatelly, but at map end. Maybe use already existing cvar nextmapBackUp
 
 Use way more helper functions
-Create helpers to get one or more client numbers (or -1 for world) from a string
 
 Improve vote pass. Print amount of yes-no-dontcare at vote end?
 
@@ -16,8 +10,6 @@ Unlagged?
 
 Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
-
-Fix encoding and linebreaks in all files..
 
 Mute players' chat, vote etc.
 Lock a players name, team. Also globally lock teams. This will most likely cause problems with other code
@@ -28,22 +20,15 @@ Is a command to pause the entire game usefull? Certainly quite some dirty code a
 
 There are quite a bunch of commands which are fun, but not actually usefull: slap, fling, disorient, freeze, kill, swapteams, spec999
 
-Save scores on teamchange between real teams?
-
-Add new votes, like shuffleteams.
-Maybe also read custom votes from a file. Allow scallvote to have voteString, voteDisplayString, voteDuration as parameters?
+Read custom votes from a file. Allow scallvote to have voteString, voteDisplayString, voteDuration as parameters?
 
 Do more sanity checks and calls to G_Error plus some debug output.
 
 Either use less colors/more equal to game's default output or add option to disable/reduce colors
 
-Remove some unused code, like teamLeader, com_blood etc.?
-Maybe fix rank calculation in LPS
-
+Save scores on teamchange between real teams?
 Make client time (and points) persistant across maps.
 This will cause some problems (current map kill/death ratio) and irritation. Needs at least new var for totalTime, spectatorTime, (currentScore) etc.
-
-Also check say/say_team for our (lateron) added custom client commands?
 
 Create sort of a help system, which at least explains votes and newly added commands.
 

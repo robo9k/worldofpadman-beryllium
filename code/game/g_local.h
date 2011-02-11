@@ -322,6 +322,8 @@ typedef struct {
 
 	int			campCounter;
 	vec3_t		campPosition;
+
+	int			connectionCounter;
 	/* end beryllium */
 } clientPersistant_t;
 

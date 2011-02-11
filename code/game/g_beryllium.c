@@ -340,5 +340,29 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 		/* Let them commit suicide! */
 		G_Damage( ent, NULL, ent, NULL, NULL, 3000, 0, MOD_UNKNOWN );
 	}
+
+
+	/* Check ping and connection, then drop client when too bad */
+	/* FIXME: Write some sort of wrapper for DropClient()? */
+	/* FIXME: Can ping ever be < 0? Need to add test whether sv_minPing is set */
+	counter = ( ( ent->client->ps.ping < 999 ) ? ent->client->ps.ping : 999 );
+	remaining = G_GetCvarInt( "sv_maxping" );
+	if ( remaining && ( counter > remaining ) ) {
+		ent->client->pers.connectionCounter++;
+	}
+	else if ( counter < G_GetCvarInt( "sv_minping" ) ) {
+		ent->client->pers.connectionCounter++;
+	}
+	else if ( ent->s.eFlags & EF_CONNECTION ) {
+		ent->client->pers.connectionCounter++;
+	}
+	else {
+		ent->client->pers.connectionCounter = 0;
+	}
+
+	/* TODO: Print a warning */
+	if ( be_checkPings.integer && ( ent->client->pers.connectionCounter > be_checkPings.integer ) ) {
+		trap_DropClient( ( ent - g_entities ), "Bad connection" );
+	}
 }
 

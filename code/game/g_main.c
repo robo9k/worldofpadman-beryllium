@@ -107,6 +107,8 @@ vmCvar_t	be_maxConnections;
 
 vmCvar_t	be_campDistance;
 
+vmCvar_t	be_checkPings;
+
 /* end beryllium */
 
 
@@ -229,7 +231,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_checkPings, "be_checkPings", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 };
