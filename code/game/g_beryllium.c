@@ -366,3 +366,57 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	}
 }
 
+
+/*
+	Called at the end of ClientBegin() but before ranks are calculated
+*/
+void BE_ClientBegan( int clientNum ) {
+	gentity_t *ent;
+
+
+	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+
+	ent = &g_entities[clientNum];
+
+	assert( ent->client );
+
+	ent->client->pers.lifeShards = 0;
+}
+
+
+/*
+	Called after client has been killed but before tossing items
+*/
+void BE_ClientKilled( gentity_t *self ) {
+	assert( self );
+	assert( self->client );
+
+	if ( be_oneUp.integer && !level.warmupTime ) {
+		gentity_t	*killer_ent;
+		gclient_t	*killer;
+		int			numShards, neededShards;
+
+		killer_ent = &g_entities[ self->client->lasthurt_client ];
+		
+		if ( killer_ent->client && ( killer_ent != self ) ) {
+			killer = killer_ent->client;
+
+			killer->pers.lifeShards++;
+
+			numShards		= killer->pers.lifeShards;
+			neededShards	= be_oneUp.integer;
+			if ( numShards >= neededShards ) {
+				killer->sess.livesleft++;
+				CalculateRanks();
+				SendScoreboardMessageToAllClients();
+				killer->pers.lifeShards = 0;
+
+				SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" gained an extra life!\n", killer->pers.netname ) );
+			}
+			else {
+				SendClientCommand( ( killer_ent - g_entities ), CCMD_PRT, va( "You gained a life shard (%i of %i).\n", numShards, neededShards ) );
+			}
+		}
+	}
+}
+

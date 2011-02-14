@@ -545,6 +545,10 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
+	/* added beryllium */
+	BE_ClientKilled( self );
+	/* end added */
+
 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
 	contents = trap_PointContents( self->r.currentOrigin, -1 );
 	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {

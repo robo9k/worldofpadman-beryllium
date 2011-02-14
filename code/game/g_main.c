@@ -109,6 +109,9 @@ vmCvar_t	be_campDistance;
 
 vmCvar_t	be_checkPings;
 
+/* FIXME: Merge this into wop codebase as g_oneUp */
+vmCvar_t	be_oneUp;
+
 /* end beryllium */
 
 
@@ -233,7 +236,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_checkPings, "be_checkPings", "0", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_checkPings, "be_checkPings", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 };
@@ -795,6 +800,13 @@ int QDECL SortRanks( const void *a, const void *b ) {
 		return -1;
 	}
 
+	/* added beryllium */
+	if ( ( GT_LPS == g_gametype.integer ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
+		/* NOTE: PERS_SCORE already equals livesleft, see fix in WoP_RunFrame */
+		goto LPS_NOPOINTS;
+	}
+	/* end added */
+
 	// then sort by score
 	if ( ca->ps.persistant[PERS_SCORE]
 		> cb->ps.persistant[PERS_SCORE] ) {
@@ -804,6 +816,10 @@ int QDECL SortRanks( const void *a, const void *b ) {
 		< cb->ps.persistant[PERS_SCORE] ) {
 		return 1;
 	}
+	
+	/* added beryllium */
+LPS_NOPOINTS:
+	/* end added */
 
 	if ( g_gametype.integer == GT_LPS ) {
 		if ( ca->sess.livesleft
@@ -973,7 +989,16 @@ void CalculateRanks( void ) {
 		for ( i = 0;  i < level.numPlayingClients; i++ ) {
 			cl = &level.clients[ level.sortedClients[i] ];
 			newScore = cl->ps.persistant[PERS_SCORE];
+			/* changed beryllium */
+			/*
 			if ( i == 0 || newScore != score || (g_gametype.integer==GT_LPS && level.clients[ level.sortedClients[i-1] ].sess.livesleft!=level.clients[ level.sortedClients[i] ].sess.livesleft)) {
+			*/
+			if ( ( GT_LPS == g_gametype.integer ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
+				newScore = cl->sess.livesleft;
+			}
+			
+			if ( ( 0 == i ) || ( newScore != score ) ) {
+			/* end changed */
 				rank = i;
 				// assume we aren't tied until the next client is checked
 				level.clients[ level.sortedClients[i] ].ps.persistant[PERS_RANK] = rank;

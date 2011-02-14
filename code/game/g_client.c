@@ -1183,6 +1183,10 @@ void ClientBegin( int clientNum ) {
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
 
+	/* added beryllium */
+	BE_ClientBegan( clientNum );
+	/* end added */
+
 	// count current clients and rank for scoreboard
 	CalculateRanks();
 

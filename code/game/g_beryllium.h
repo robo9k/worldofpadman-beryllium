@@ -76,6 +76,8 @@ extern vmCvar_t	be_campDistance;
 
 extern vmCvar_t	be_checkPings;
 
+extern vmCvar_t	be_oneUp;
+
 
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
@@ -92,6 +94,10 @@ void BE_ClientUserinfoChanged( int clientNum );
 char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
 
 void BE_ClientTimerActions( gentity_t* ent );
+
+void BE_ClientBegan( int clientNum );
+
+void BE_ClientKilled( gentity_t *self );
 
 
 #endif
