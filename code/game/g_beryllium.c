@@ -25,7 +25,7 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 /*
 	Hooks into ClientCommand() in g_cmds.c
 	We can catch any client command here and even override default ones,
-	since our function is called before original ones.
+	since our function is called before original one.
 	We already have a ent->client.
 	If we return qtrue, the original function will return immediatelly.
 */
@@ -346,11 +346,11 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	/* FIXME: Write some sort of wrapper for DropClient()? */
 	/* FIXME: Can ping ever be < 0? Need to add test whether sv_minPing is set */
 	counter = ( ( ent->client->ps.ping < 999 ) ? ent->client->ps.ping : 999 );
-	remaining = G_GetCvarInt( "sv_maxping" );
+	remaining = trap_Cvar_VariableIntegerValue( "sv_maxping" );
 	if ( remaining && ( counter > remaining ) ) {
 		ent->client->pers.connectionCounter++;
 	}
-	else if ( counter < G_GetCvarInt( "sv_minping" ) ) {
+	else if ( counter < trap_Cvar_VariableIntegerValue( "sv_minping" ) ) {
 		ent->client->pers.connectionCounter++;
 	}
 	else if ( ent->s.eFlags & EF_CONNECTION ) {
@@ -391,7 +391,8 @@ void BE_ClientKilled( gentity_t *self ) {
 	assert( self );
 	assert( self->client );
 
-	if ( be_oneUp.integer && !level.warmupTime ) {
+	if ( ( GT_LPS == g_gametype.integer ) &&
+	     be_oneUp.integer && !level.warmupTime ) {
 		gentity_t	*killer_ent;
 		gclient_t	*killer;
 		int			numShards, neededShards;
