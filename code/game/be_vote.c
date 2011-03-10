@@ -39,7 +39,7 @@ const voteEntry_t VOTES[] = {
 	{ { "g_gametype",	VOTEID_G_GAMETYPE	}, VoteH_Gametype	},
 	{ { "shuffleteams",	VOTEID_SHUFFLETEAMS	}, VoteH_Misc		}
 };
-const unsigned int NUM_VOTES = ( sizeof( VOTES ) / sizeof( VOTES[0] ) );
+const unsigned int NUM_VOTES = ARRAY_LEN( VOTES );
 
 
 static const char *GetVoteStr( voteID_t id ) {

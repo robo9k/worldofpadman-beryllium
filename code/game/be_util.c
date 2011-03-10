@@ -26,7 +26,7 @@ typedef struct {
 } mapGametypeString_t;
 
 
-const mapGametypeString_t gametypeRemap[] = {
+const mapGametypeString_t GAMETYPE_REMAP[] = {
 		{ GAMETYPE_NAME( GT_FFA ),			GT_FFA				},
 		{ GAMETYPE_NAME( GT_TOURNAMENT ),	GT_TOURNAMENT		},
 		{ GAMETYPE_NAME( GT_SINGLE_PLAYER ),GT_SINGLE_PLAYER	},
@@ -37,7 +37,7 @@ const mapGametypeString_t gametypeRemap[] = {
 		{ GAMETYPE_NAME( GT_SPRAY ),		GT_SPRAY			},
 		{ GAMETYPE_NAME( GT_BALLOON ),		GT_BALLOON			}
 	};
-const NUM_GTSTRS = ( sizeof( gametypeRemap ) / sizeof( gametypeRemap[0] ) );
+const NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 
 
 /*
@@ -89,8 +89,8 @@ gametype_t StringToGametype( const char *str ) {
 
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
-		if ( Q_stricmp( gametypeRemap[i].str, str ) == 0 ) {
-			return ( gametypeRemap[i].type );
+		if ( Q_stricmp( GAMETYPE_REMAP[i].str, str ) == 0 ) {
+			return ( GAMETYPE_REMAP[i].type );
 		}
 	}
 
@@ -106,8 +106,8 @@ char* GametypeToString( gametype_t gt ) {
 	int i;
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
-		if ( gametypeRemap[i].type == gt ) {
-			return ( gametypeRemap[i].str );
+		if ( GAMETYPE_REMAP[i].type == gt ) {
+			return ( GAMETYPE_REMAP[i].str );
 		}
 	}
 
@@ -170,11 +170,14 @@ qboolean ValidClientID( int clientNum, qboolean allowWorld ) {
 */
 clientNum_t ClientnumFromString( const char *name ) {
 	gclient_t	*player;
-	char		cleanName[MAX_NETNAME];
+	char		cleanName[MAX_NETNAME], cleanquery[MAX_NETNAME];
 	int			id = CID_NONE, matches = 0, i;
 
 
 	assert( name );
+
+	/* FIXME: Const correctness */
+	Q_ExtraCleanStr( (char*)name, cleanquery, sizeof( cleanquery ) );
 
 	/* FIXME: Return as soon as matches > 1? */
 
@@ -192,11 +195,11 @@ clientNum_t ClientnumFromString( const char *name ) {
 			continue;
 		}
 
-		/* match without colorcodes */
+		/* match without colorcodes etc. */
+		/* TODO: Maybe check for 'l' vs. '1' etc., as the font makes them look rather similar */
 		/* FIXME: Does this violate the multiple matches approach? */
-		Q_strncpyz( cleanName, player->pers.netname, sizeof( cleanName ) );
-		Q_CleanStr( cleanName );
-		if ( Q_stricmp( name, cleanName ) == 0 ) {
+		Q_ExtraCleanStr( player->pers.netname, cleanName, sizeof( cleanName ) );
+		if ( Q_stricmp( cleanquery, cleanName ) == 0 ) {
 			id = i;
 			matches++;
 			continue;
@@ -262,6 +265,8 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	if ( !fileExists( va( PLAYERMODEL_PATH_S"%s/head_%s.skin", base, skin ) ) ) {
 		return qfalse;
 	}
+
+	/* TODO: We could also check whether glowskins exist for this (custom-)model */
 
 
 	return qtrue;	
@@ -397,3 +402,76 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 
 	trap_Printf( text );
 }
+
+
+/*
+	Removes all colortags "recursively".
+*/
+void Q_DecolorStr( char *in, char *out, int outsize ) {
+	int outpos = 0;
+
+
+	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
+		out[outpos] = *in;
+
+		if ( ( outpos > 0 ) && ( Q_COLOR_ESCAPE == out[outpos - 1] ) ) {
+			if ( Q_IsColorString( &out[outpos - 1] ) ) {
+					outpos--;
+					continue;
+			}
+		}
+
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+}
+
+
+/*
+	Strips all whitespace from string, not only trailing, leading and double.
+*/
+void Q_StripWhitespace( char *in, char *out, int outsize ) {
+	int outpos = 0, colors = 0;
+
+
+	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
+		out[outpos] = *in;
+
+		if ( ' ' == *in ) {
+			continue;
+		}
+
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+}
+
+
+/*
+	Strips colortags, whitespace and any strange characters and converts to lowercase.
+*/
+void Q_ExtraCleanStr( char *in, char *out, int outsize ) {
+	int outpos = 0;
+
+
+	Q_DecolorStr( in, out, outsize );
+	in = out;
+	Q_StripWhitespace( in, out, outsize );
+
+	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
+		out[outpos] = *in;
+
+		if ( ( *in < ' ' ) || ( *in > '}' ) || ( *in == '`' ) ) {
+			continue;
+		}
+
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+
+	Q_strlwr( out );
+}
+

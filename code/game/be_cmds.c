@@ -21,12 +21,12 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 
 /* Variables */
-const ccmd_t be_ccmds[] = {
+const ccmd_t BE_CCMDS[] = {
 	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f	},
 	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f	},
 	{ "vote",		CMD_MESSAGE,	BE_Cmd_Vote_f		}
 };
-const unsigned int NUM_CCMDS = ( sizeof( be_ccmds ) / sizeof( be_ccmds[0] ) );
+const unsigned int NUM_CCMDS = ARRAY_LEN( BE_CCMDS );
 
 
 /* Functions */
@@ -45,19 +45,19 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 
 
 	for ( i = 0; i < NUM_CCMDS; i++ ) {
-		if ( Q_stricmp( cmd, be_ccmds[i].cmdName ) == 0 ) {
+		if ( Q_stricmp( cmd, BE_CCMDS[i].cmdName ) == 0 ) {
 			/* do tests here to reduce the amount of repeated code */
 			/* We provide this command, but the conditions to actually execute it are not given */
 
-			if ( !( be_ccmds[i].cmdFlags & CMD_INTERMISSION ) && level.intermissiontime ) {
+			if ( !( BE_CCMDS[i].cmdFlags & CMD_INTERMISSION ) && level.intermissiontime ) {
 				return qtrue;
 			}
 
-			if ( ( be_ccmds[i].cmdFlags & CMD_CHEAT ) && !g_cheats.integer ) {
+			if ( ( BE_CCMDS[i].cmdFlags & CMD_CHEAT ) && !g_cheats.integer ) {
 				return qtrue;
 			}
 
-			if ( ( be_ccmds[i].cmdFlags & CMD_LIVING ) && ( PM_DEAD == ent->client->ps.pm_type ) ) {
+			if ( ( BE_CCMDS[i].cmdFlags & CMD_LIVING ) && ( PM_DEAD == ent->client->ps.pm_type ) ) {
 				return qtrue;
 			}
 
@@ -65,7 +65,7 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 
 
 			/* Conditions are met, execute! */
-			be_ccmds[i].cmdHandler( ent );
+			BE_CCMDS[i].cmdHandler( ent );
 			return qtrue;
 		}
 	}

@@ -31,7 +31,7 @@ static void BE_Svcmd_Callvote_f( void );
 /* FIXME: Add this to game headers? Declared in g_main.c */
 int QDECL SortRanks( const void *a, const void *b );
 
-const svcmd_t be_svcmds[] = {
+const svcmd_t BE_SVCMDS[] = {
 	{ "stell",			BE_Svcmd_Say_f				},
 	{ "ssay",			BE_Svcmd_Say_f				}, /* NOTE: Gamecode has a "say" in ConsoleCommand in g_cmds.c, engine in SV_ConSay_f in sv_ccmds.c */
 	{ "ssay_team",		BE_Svcmd_Say_f				},
@@ -44,7 +44,7 @@ const svcmd_t be_svcmds[] = {
 	{ "sprint",			BE_Svcmd_ClientCommand_f	},
 	{ "scallvote",		BE_Svcmd_Callvote_f			}
 };
-const unsigned int NUM_SVCMDS = ( sizeof( be_svcmds ) / sizeof( be_svcmds[0] ) );
+const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
 
 /* FIXME: clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
@@ -60,11 +60,11 @@ qboolean BE_ConCmd( const char *cmd ) {
 
 
 	for ( i = 0; i < NUM_SVCMDS; i++ ) {
-		if ( Q_stricmp( cmd, be_svcmds[i].cmdName ) == 0 ) {
+		if ( Q_stricmp( cmd, BE_SVCMDS[i].cmdName ) == 0 ) {
 			/* TODO: Since some handlers are registered for more than one command, we should pass
 			         the actual command id as an argument so they don't need to Q_stricmp again.
 			*/
-			be_svcmds[i].cmdHandler();
+			BE_SVCMDS[i].cmdHandler();
 			return qtrue;
 		}
 	}

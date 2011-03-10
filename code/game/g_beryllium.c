@@ -91,6 +91,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent = ( g_entities + clientNum );
 	int i;
 	char name[MAX_NETNAME], oldname[MAX_NETNAME];
+	char model[MAX_QPATH], headmodel[MAX_QPATH], *modelInfo, *headmodelInfo;
 
 
 	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
@@ -106,9 +107,22 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	         It seems like team_model and team_headmodel are transmitted as userinfo, but the server never uses
 	         them for player configstrings.
 	*/
-	if ( !validPlayermodel( Info_ValueForKey( userinfo, "model" ), Info_ValueForKey( userinfo, "headmodel" ) ) ) {
-		Info_SetValueForKey( userinfo, "model", DEFAULT_PLAYERMODEL_S );
-		Info_SetValueForKey( userinfo, "headmodel", DEFAULT_PLAYERMODEL_S );
+	if ( g_gametype.integer >= GT_TEAM ) {
+		modelInfo		= "team_model";
+		headmodelInfo	= "team_headmodel";
+	}
+	else {
+		modelInfo		= "model";
+		headmodelInfo	= "headmodel";
+	}
+
+	Q_strncpyz( model, Info_ValueForKey( userinfo, modelInfo ), sizeof( model ) );
+	Q_strncpyz( headmodel, Info_ValueForKey( userinfo, headmodelInfo ), sizeof( headmodel ) );
+
+	if ( !validPlayermodel( model, headmodel ) ) {
+		/* TODO: Add a default model for teamgames? */
+		Info_SetValueForKey( userinfo, modelInfo, DEFAULT_PLAYERMODEL_S );
+		Info_SetValueForKey( userinfo, headmodelInfo, DEFAULT_PLAYERMODEL_S );
 		changed = qtrue;
 	}
 
@@ -161,7 +175,8 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 					/* NOTE: This happens a lot while client connects, only print when intentionally renaming in-game.
 					         Also note that original ClientUserinfoChanged() will not detect this renaming, so we "need" to print some info anyways.
 					*/
-					if ( CON_CONNECTED == ent->client->pers.connected ) {
+					if ( ( CON_CONNECTED == ent->client->pers.connected ) &&
+					     Q_stricmp( oldname, newname ) ) {
 						SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n", oldname, newname ) );
 					}
 					break;

@@ -770,6 +770,7 @@ void ClientCleanName(const char *in, char *out, int outSize)
 		/* added beryllium */
 		/* don't allow nonprinting characters or (dead) console keys */
 		if ( *in < ' ' || *in > '}' || *in == '`' ) {
+			colorlessLen--;
 			continue;
 		}
 
