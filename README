@@ -91,7 +91,16 @@
 
       .: Client :.
 
-      A new "shuffleteams" vote has been added, whose behaviour is equal to the new server command.
+      callvote shuffleteams
+         Will do the same as the server command. Enabled by default, unless
+         blacklisted with be_allowedVotes.
+
+      ignore [cid]
+         Allows to ignore any text chat from a given client.
+         Without arguments the current list of ignored players will be printed.
+         Given a client id, the client will either be ignored or un-ignored, this
+         works as a toggle.
+         Note that upon disconnect, clients are automatically un-ignored.
 
       
       .: Server :.
@@ -160,7 +169,7 @@
 
    .: Versions :.
 
-   This README applies to the current version of Beryllium, which is 0.10a-r82.
+   This README applies to the current version of Beryllium, which is 0.10a-r83.
    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
    with this version of the game. Due to its generic nature, it could also be applied
    to other versions or even other ioquake3 based games though.

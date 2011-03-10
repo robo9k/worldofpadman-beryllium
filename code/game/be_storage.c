@@ -31,7 +31,7 @@ void BE_InitClientStorageData( gclient_t *client ) {
 
 	stor = &client->storage;
 
-	/* TODO: Implement */
+	Com_Memset( &stor->ignoreList, 0, sizeof( stor->ignoreList ) );
 
 	BE_WriteClientStorageData( client );
 }
@@ -41,18 +41,26 @@ void BE_InitClientStorageData( gclient_t *client ) {
 	Called on game shutdown
 */
 void BE_WriteClientStorageData( const gclient_t *client ) {
-	char	*var, *value;
+	char	var[32];
+	char	buff[MAX_STRING_CHARS] = { "" };
 	int		clientNum;
+	int		i;
+	clientStorage_t	*stor;
 
 
 	assert( client );
 
 	clientNum = ( client - level.clients );
-	var = va( STORAGE_CVARNAME"%ld", clientNum );
+	Com_sprintf( var, sizeof( var ), STORAGE_CVARNAME"%ld", clientNum );
 
-	/* TODO: Implement */
+	/* FIXME: Const correctness */
+	stor = (clientStorage_t*)&client->storage;
 
-	trap_Cvar_Set( var, value );
+	for ( i = 0; i < MAX_CLIENTS; i++ ) {
+		Q_strcat( buff, sizeof( buff ), va( "%i ", stor->ignoreList[i] ) );
+	}
+
+	trap_Cvar_Set( var, buff );
 }
 
 
@@ -60,19 +68,27 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 	Called on clients' reconnect
 */
 void BE_ReadClientStorageData( gclient_t *client ) {
-	char	data[MAX_INFO_STRING];
+	char	buff[MAX_STRING_CHARS];
 	int		clientNum;
 	char	*var;
+	const char *endp;
+	int		i;
+	clientStorage_t	*stor;
 
 
 	assert( client );
 
 	clientNum = ( client - level.clients );
 	var = va( STORAGE_CVARNAME"%ld", clientNum );
-	
-	trap_Cvar_VariableStringBuffer( var, data, sizeof( data ) );
 
-	/* TODO: Implement */
+	stor = &client->storage;
+	
+	trap_Cvar_VariableStringBuffer( var, buff, sizeof( buff ) );
+
+	endp = buff;
+	for ( i = 0; i < MAX_CLIENTS; i++ ) {
+		stor->ignoreList[i] = strtol( endp, &endp, 10 );
+	}
 }
 
 
@@ -89,7 +105,6 @@ void BE_InitWorldStorage( void ) {
 */
 void BE_WriteStorageData( void ) {
 	int i;
-
 
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( CON_CONNECTED == level.clients[i].pers.connected ) {

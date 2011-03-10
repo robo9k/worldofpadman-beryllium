@@ -33,3 +33,4 @@ void BE_InitWorldStorage( void );
 void BE_WriteStorageData( void );
 
 #endif /* _BE_STORAGE_H */
+
