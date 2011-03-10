@@ -99,6 +99,12 @@ void BE_ClientBegan( int clientNum );
 
 void BE_ClientKilled( gentity_t *self );
 
+void BE_ClientDisconnect( int clientNum );
+
+qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other );
+
+void BE_Ignore( gentity_t *ent, const gentity_t *other, qboolean mode );
+qboolean BE_Ignored( const gentity_t *ent, const gentity_t *other );
 
 #endif
 

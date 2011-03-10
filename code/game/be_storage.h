@@ -17,29 +17,19 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 ===========================================================================
 */
 
-#ifndef _BE_CMDS_H
-#define _BE_CMDS_H
+#ifndef _BE_STORAGE_H
+#define _BE_STORAGE_H
 
 
-enum {
-	CMD_CHEAT			= 1,
-	CMD_MESSAGE			= 2,
-	CMD_LIVING			= 4,
-	CMD_INTERMISSION	= 8
-};
-
-typedef struct {
-    char		*cmdName;
-    int			cmdFlags;
-	/* FIXME: Really use const correctness here? */
-    void		( *cmdHandler )( const gentity_t *ent );
-} ccmd_t;
+#define STORAGE_CVARNAME	"storage"
 
 
-qboolean BE_ClCmd( const gentity_t *ent, const char *cmd );
+void BE_InitClientStorageData( gclient_t *client );
 
+void BE_WriteClientStorageData( const gclient_t *client );
+void BE_ReadClientStorageData( gclient_t *client );
 
-void BE_Cmd_Ignore_f( const gentity_t *ent );
+void BE_InitWorldStorage( void );
+void BE_WriteStorageData( void );
 
-#endif
-
+#endif /* _BE_STORAGE_H */

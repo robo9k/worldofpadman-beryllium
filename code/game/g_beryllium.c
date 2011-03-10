@@ -436,3 +436,65 @@ void BE_ClientKilled( gentity_t *self ) {
 	}
 }
 
+
+/*
+	Called at the very end of ClientDisconnect()
+*/
+void BE_ClientDisconnect( int clientNum ) {
+	gentity_t *ent, *player;
+	int i;
+
+	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+
+	ent = ( g_entities + clientNum );
+	for ( i = 0; i < level.maxclients; i++ ) {
+		player = ( g_entities + i );
+		
+		/* Make sure new connections do not get ignored */
+		BE_Ignore( player, ent, qfalse );
+	}
+}
+
+
+/*
+	Sets whether ent is ignoring other
+*/
+void BE_Ignore( gentity_t *ent, const gentity_t *other, qboolean mode ) {
+	int clientNum;
+
+	assert( ent );
+	assert( other );
+
+	clientNum = ( other - g_entities );
+
+	ent->client->storage.ignoreList[clientNum] = mode;
+}
+
+/*
+	Returns whether ent is ignoring other
+*/
+qboolean BE_Ignored( const gentity_t *ent, const gentity_t *other ) {
+	int clientNum;
+
+	assert( ent );
+	assert( other );
+
+	clientNum = ( other - g_entities );
+	return ( ent->client->storage.ignoreList[clientNum] );
+}
+
+/*
+	Determines whether two players can chat with each other.
+	This is called after all the original checks in G_SayTo()
+*/
+qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
+	/* NOTE: ent can be NULL for server messages */
+	assert( other );
+
+	if ( ent ) {
+		return ( BE_Ignored( other, ent ) == qfalse );
+	}
+
+	return qtrue;
+}
+

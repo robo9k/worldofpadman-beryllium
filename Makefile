@@ -2002,6 +2002,7 @@ Q3GOBJ_ = \
   $(B)/baseq3/game/be_cmds.o \
   $(B)/baseq3/game/be_svcmds.o \
   $(B)/baseq3/game/be_vote.o \
+  $(B)/baseq3/game/be_storage.o \
   \
   $(B)/baseq3/qcommon/q_math.o \
   $(B)/baseq3/qcommon/q_shared.o

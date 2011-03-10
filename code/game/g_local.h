@@ -330,6 +330,19 @@ typedef struct {
 } clientPersistant_t;
 
 
+/* added beryllium */
+
+/* FIXME: This should be in beryllium's headers, which are included too late */
+/* NOTE: This data remains over nextmap/map_restart and different gametypes. It's
+         basically and extension of clientSession_t.
+*/
+typedef struct {
+	qboolean	ignoreList[MAX_CLIENTS];
+} clientStorage_t;
+
+/* end added */
+
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s {
@@ -410,6 +423,11 @@ struct gclient_s {
 	int			timeResidual;
 
 	char		*areabits;
+
+
+	/* added beryllium */
+	clientStorage_t	storage;
+	/* end added */
 };
 
 //
@@ -1160,6 +1178,7 @@ int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t 
 #include "be_vote.h"
 #include "be_cmds.h"
 #include "be_svcmds.h"
+#include "be_storage.h"
 
 /* end beryllium */
 

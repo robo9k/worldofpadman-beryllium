@@ -505,6 +505,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitWorldSession();
 
+	/* added beryllium */
+	BE_InitWorldStorage();
+	/* end added */
+
 	// initialize all entities for this game
 	memset( g_entities, 0, MAX_GENTITIES * sizeof(g_entities[0]) );
 	level.gentities = g_entities;
@@ -588,6 +592,10 @@ void G_ShutdownGame( int restart ) {
 
 	// write all the client session data so we can get it back
 	G_WriteSessionData();
+
+	/* added beryllium */
+	BE_WriteStorageData();
+	/* end added */
 
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
@@ -1246,6 +1254,10 @@ void ExitLevel (void) {
 
 	// we need to do this here before chaning to CON_CONNECTING
 	G_WriteSessionData();
+
+	/* added beryllium */
+	BE_WriteStorageData();
+	/* end added */
 
 	// change all client states to connecting, so the early players into the
 	// next level will know the others aren't done reconnecting

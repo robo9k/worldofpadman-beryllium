@@ -1079,6 +1079,13 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	}
 	G_ReadSessionData( client );
 
+	/* added beryllium */
+	if ( firstTime ) {
+		BE_InitClientStorageData( client );
+	}
+	BE_ReadClientStorageData( client );
+	/* end added */
+
 	if( isBot ) {
 		ent->r.svFlags |= SVF_BOT;
 		ent->inuse = qtrue;
@@ -1219,6 +1226,9 @@ void ClientSpawn(gentity_t *ent) {
 	int		accuracy_hits, accuracy_shots;
 	int		eventSequence;
 	char	userinfo[MAX_INFO_STRING];
+	/* added beryllium */
+	clientStorage_t	savedStor;
+	/* end added */
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1284,9 +1294,15 @@ void ClientSpawn(gentity_t *ent) {
 		persistant[i] = client->ps.persistant[i];
 	}
 	eventSequence = client->ps.eventSequence;
+	/* added beryllium */
+	savedStor = client->storage;
+	/* end added */
 
 	memset (client, 0, sizeof(*client)); // bk FIXME: Com_Memset?
 
+	/* added beryllium */
+	client->storage = savedStor;
+	/* end added */
 	client->pers = saved;
 	client->sess = savedSess;
 	client->ps.ping = savedPing;
@@ -1541,6 +1557,10 @@ void ClientDisconnect( int clientNum ) {
 	if ( ent->r.svFlags & SVF_BOT ) {
 		BotAIShutdownClient( clientNum, qfalse );
 	}
+
+	/* added beryllium */
+	BE_ClientDisconnect( clientNum );
+	/* end added */
 }
 
 

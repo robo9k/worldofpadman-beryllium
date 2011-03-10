@@ -891,6 +891,12 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 		return;
 	}
 
+	/* added beryllium */
+	if ( BE_CanSayTo( ent, other ) == qfalse ) {
+		return;
+	}
+	/* end added */
+
 	trap_SendServerCommand( ( other - g_entities ), va( "say %d %d \"%s%c%c%s\"", 
 	                        mode,
                             ( ent ? ( ent - g_entities ) : -1 ),

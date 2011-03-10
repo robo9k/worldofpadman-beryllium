@@ -49,3 +49,5 @@ Give points depending on difficulty. For example less points while using padpowe
 
 Looks like EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand() allows to create "fake" client commands such as "voip ignore 42".
 
+Add persistant data like session, which is kept across different gametypes. Store in files and use Infostrings?
+
