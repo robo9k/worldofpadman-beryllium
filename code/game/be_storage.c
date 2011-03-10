@@ -19,6 +19,13 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #include "g_local.h"
 
+/* TODO: Write some doku about this!
+
+         Maybe create some sort of interface to register storage handlers and let them
+         save their data into infostrings?
+         Why must string handling be so awful in C :(
+*/
+
 
 /*
 	Called on clients' first connect
