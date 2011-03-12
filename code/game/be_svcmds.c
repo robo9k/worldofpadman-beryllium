@@ -47,7 +47,7 @@ const svcmd_t BE_SVCMDS[] = {
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
 
-/* FIXME: clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
+/* FIXME: char clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
 
 
 qboolean BE_ConCmd( const char *cmd ) {
@@ -82,6 +82,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 		return;
 	}
 
+
 	/* NOTE: Don't set voteTime to 0, because BE_CheckVote() would return too early */
 	level.voteExecuteTime = 0;
 
@@ -109,10 +110,12 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 	gclient_t *cl;
 	gentity_t *ent;
 
+
 	if ( g_gametype.integer < GT_TEAM ) {
 		G_Printf( "Not in a team gametype." );
 		return;
 	}
+
 
 	/* TODO: Also log this? */
 	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
@@ -135,6 +138,7 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 	/* TODO: Don't shuffle if (human)count <= 1 ? */
 
 	qsort( sortedClients, count, sizeof( sortedClients[0] ), SortRanks );
+
 
 	for( i = 0; i < count; i++ ) {
 		cl = ( level.clients + sortedClients[i] );
@@ -167,6 +171,7 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	char	userinfo[MAX_INFO_STRING];
 	int		clientNum;
 
+
 	if ( trap_Argc() < 3 ) {
 		/* TODO: Move counting of arguments and help into BE_ConCmd() ? */
 		G_Printf( "Usage: rename <cid> <newname>\n" );
@@ -185,6 +190,7 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 		G_Printf( "Not a valid client number.\n" );
 		return;
 	}
+
 
 	trap_Argv( 2, newname, sizeof( newname ) );
 
@@ -250,6 +256,7 @@ static void BE_Svcmd_DropClient_f( void ) {
 		return;
 	}
 
+
 	Q_strncpyz( reason, "was kicked", sizeof( reason ) );
 	if ( trap_Argc() > 2 ) {
 		Com_sprintf( reason, sizeof( reason ), "was kicked: %s", ConcatArgs( 2 ) );
@@ -276,6 +283,7 @@ static void BE_Svcmd_Say_f( void ) {
 			return;
 		}
 
+
 		G_Say( NULL, NULL, SAY_ALL, ConcatArgs( 1 ) );
 	}
 	else if ( Q_stricmp( "ssay_team", arg ) == 0 ) {
@@ -294,6 +302,7 @@ static void BE_Svcmd_Say_f( void ) {
 			G_Printf( "Unknown team.\n" );
 			return;
 		}
+
 
 		/* NOTE: G_Say expects two gentity_t, so we just pick one
 		         which has the desired team.
@@ -325,6 +334,7 @@ static void BE_Svcmd_Say_f( void ) {
 			G_Printf( "You must supply a client number.\n" );
 			return;
 		}
+
 
 		clientNum = atoi( arg );
 		/* NOTE: Don't allow world here. say/print should be used instead */
@@ -385,6 +395,7 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 		G_Printf( "No a valid client number.\n" );
 		return;
 	}
+
 
 	/* See NOTE in SendClientCommand */
 	if ( CCMD_PRINT == cmd ) {

@@ -71,6 +71,7 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 		}
 	}
 
+
 	/* This is none of our business */
 	return qfalse;
 }
@@ -95,6 +96,7 @@ void BE_Cmd_Ignore_f( gentity_t *ent ) {
 			other = ( g_entities + clientNum );
 			
 			if ( ChatIgnored( ent, other ) ) {
+				/* TODO: Print client ids? Names should be unique due to beryllium anyways */
 				Q_strcat( buff, sizeof( buff ), va( "%s%s"S_COLOR_DEFAULT, ( ( count > 0 ) ? ", " : "" ), other->client->pers.netname ) );
 				count++;
 			}

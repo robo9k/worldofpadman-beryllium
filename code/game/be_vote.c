@@ -92,6 +92,7 @@ static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
 		return qfalse;
 	}
 
+
 	if ( limit ) {
 		const char *str = GetVoteStr( id );
 		/* FIXME: Due to cvar.string MAX_CVAR_VALUE_STRING limit, we
@@ -129,6 +130,7 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not allowed to vote as spectator.\n" );
 		return;
 	}
+
 
 	SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote cast, thank you.\n" );
 
@@ -169,7 +171,7 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 
 
 static void PrintValidVotes( gentity_t *ent ) {
-	int i;
+	int i, count = 0;
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
 
 
@@ -184,10 +186,9 @@ static void PrintValidVotes( gentity_t *ent ) {
 
 		/* This is not actually "bold", but needs to differ from the "italic" hint */
 		Q_strcat( validVoteString, sizeof( validVoteString ),
-				  va( S_COLOR_BOLD"%s"S_COLOR_ITALIC", ", VOTES[i].ident.str ) );
+				  va( "%s"S_COLOR_BOLD"%s", ( count > 0 ? S_COLOR_ITALIC", " : "" ), VOTES[i].ident.str ) );
+		count++;
 	}
-	/* Hackity, because I'm too lazy to detect last vote properly */
-	Q_strncpyz( ( validVoteString + strlen( validVoteString ) - strlen( ", " ) ), ".\n" , ( strlen( ", " ) + 1 ) );
 
 	PrintMessage( ent, validVoteString );
 }
@@ -253,6 +254,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 		}
 	}
 
+
 	/* make sure it is a valid command to vote on */
 	trap_Argv( 1, arg1, sizeof( arg1 ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );
@@ -280,6 +282,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 		return;
 	}
 
+
 	/* if there is still a vote to be executed */
 	if ( level.voteExecuteTime ) {
 		level.voteExecuteTime = 0;
@@ -295,13 +298,14 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 		G_Error( "BE_Cmd_CallVote_f: GetVoteHandler() returned 0!\n" );
 		return;
 	}
+
 	if ( handler( ent, id ) ) {
 
 		/* FIXME: There is a problem clientside when displaying a votestring with double " inside.
 		          voteDisplayString is also S_COLOR_ITALIC
 		*/
 		SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
-                                                ( ent ? ent->client->pers.netname : "server" ), level.voteDisplayString ) );
+                                                ( ent ? ent->client->pers.netname : CHAT_SERVER_NAME ), level.voteDisplayString ) );
 		/* TODO: Create a seperate BE_Printf( type, level, text ).
 		         Use voteString or voteDisplayString?
 		*/
@@ -312,6 +316,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 			/* FIXME: #define CID_SERVER/use CID_WORLD? */
 			G_LogPrintf( "callvote %i: '%s'\n", -1, level.voteString );
 		}
+
 
 		/* start vote, the caller autoamtically votes yes */
 		level.voteTime = level.time;
@@ -367,6 +372,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 void BE_CheckVote( void ) {
 	int i;
 
+
 	if ( level.voteExecuteTime && ( level.voteExecuteTime < level.time ) ) {
 		level.voteExecuteTime = 0;
 		trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
@@ -375,6 +381,7 @@ void BE_CheckVote( void ) {
 	if ( !level.voteTime ) {
 		return;
 	}
+
 
 	/* FIXME: Properly count voters/votes. This is already done in CalculateRanks, but does not
 	          account for players that callvote/vote, join spectators (but are still counted, since
@@ -394,6 +401,7 @@ void BE_CheckVote( void ) {
 			level.numVotingClients++;
 		}
 	}
+
 
 	/* TODO: Print numbers of yay-nay-rest? */
 	if ( ( level.time - level.voteTime ) >= level.voteDuration ) {
@@ -454,10 +462,12 @@ static qboolean VoteH_Gametype( gentity_t *ent, voteID_t id ) {
 		Com_sprintf( arg2, sizeof( arg2 ), "%i", gt );
 	}
 
+
 	if ( VOTEID_G_GAMETYPE != id ) {
 		G_Error( "VoteH_Gametype: Invalid id %i!\n", id );
 		return qfalse;
 	}
+
 	
 	/* Now we have a g_gametype vote */
 	if ( strlen( arg2 ) == 0 ) {
@@ -481,6 +491,7 @@ static qboolean VoteH_Gametype( gentity_t *ent, voteID_t id ) {
 		PrintMessage( ent, S_COLOR_NEGATIVE"This is the current gametype.\n" );
 		return qfalse;
 	}
+
 
 	Com_sprintf( level.voteString, sizeof( level.voteString ), "set g_gametype %d", i );
 	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
@@ -527,12 +538,14 @@ static qboolean VoteH_Kick( gentity_t *ent, voteID_t id ) {
 			return qfalse;
 		}
 
+
 		/* We've got one, convert into clientkick vote
 		   TODO: Display old and current name in votestring?
 		*/
 		id = VOTEID_CLIENTKICK;
 		Com_sprintf( arg2, sizeof( arg2 ), "%i", cid );
 	}
+
 
 	if ( VOTEID_CLIENTKICK != id ) {
 		G_Error( "VoteH_Kick: Invalid id %i!\n", id );
@@ -567,6 +580,7 @@ static qboolean VoteH_Kick( gentity_t *ent, voteID_t id ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRINT, S_COLOR_NEGATIVE"You can not kick yourself.\n" );
 		return qfalse;
 	}
+
 
 	Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 	             S_COLOR_ITALIC"Kick %i: '%s'"S_COLOR_DEFAULT, i, level.clients[i].pers.netname );
@@ -620,6 +634,7 @@ static qboolean VoteH_Map( gentity_t *ent, voteID_t id ) {
 			return qfalse;
 		}		
 		
+
 		/* Backup and re-apply current nextmap */
 		/* FIXME: This is copied from original code. Is it neccessary? "/map x" does not affect nextmap cvar */
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof( s ) );
@@ -642,6 +657,7 @@ static qboolean VoteH_Map( gentity_t *ent, voteID_t id ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"nextmap is not set on the server.\n" );
 			return qfalse;
 		}
+
 
 		Q_strncpyz( level.voteString, "vstr nextmap", sizeof( level.voteDisplayString ) );
 		Q_strncpyz( level.voteDisplayString,
@@ -700,6 +716,7 @@ static qboolean VoteH_Misc( gentity_t *ent, voteID_t id ) {
 			return qfalse;
 		}
 
+
 		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %i", variable, i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 		             S_COLOR_ITALIC"%s"S_COLOR_DEFAULT, level.voteString );
@@ -712,6 +729,7 @@ static qboolean VoteH_Misc( gentity_t *ent, voteID_t id ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"Not in a team gametype.\n" );
 			return qfalse;
 		}
+
 
 		Q_strncpyz( level.voteString, "shuffleteams", sizeof( level.voteDisplayString ) );
 		Q_strncpyz( level.voteDisplayString,

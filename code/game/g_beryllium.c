@@ -63,6 +63,7 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		return;
 	}
 
+
 	/* Respawn protection */
 	/* TODO: Visualise this by making weapons non-functional? Or simply centerprint countdown?
 	         Remove protection if weapon fired!
@@ -104,8 +105,6 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	/* Fix wrong player skins */
 	/* NOTE: Clients who have cg_forceModel set might still see wrong models, since we
 	         can not change their clientside setting (needs clientside fixing - should use userinfo as well ).
-	         It seems like team_model and team_headmodel are transmitted as userinfo, but the server never uses
-	         them for player configstrings.
 	*/
 	if ( g_gametype.integer >= GT_TEAM ) {
 		modelInfo		= "team_model";
@@ -131,6 +130,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	ClientCleanName( Info_ValueForKey( userinfo, "name" ), name, sizeof( name ) );
 	Q_strncpyz( oldname, ent->client->pers.netname, sizeof( oldname ) );
 
+
 	/* Limit renaming */
 	if ( strcmp( name, oldname ) != 0 ) {
 		/* FIXME: Needs some better value for default infinite behaviour, at least some #define */
@@ -154,6 +154,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
         	ent->client->pers.nameChanges++;
 		}
 	}
+
 
 	/* Fix multiple names */
 	/* NOTE: Since we only mess with userinfo, the clientside idea of its name remains the same. */	
@@ -232,6 +233,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	Q_strncpyz( ip, value, sizeof( ip ) );
 	/* NOTE: Do not strip port anymore, see NOTE about consistency below */
   
+
 	if( !*ip ) {
     	return "No IP in userinfo.";
 	}
@@ -243,6 +245,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	if ( strlen( ip ) < 7 ) {
 		return "Invalid IP in userinfo.";
 	}
+
 
 	if ( be_maxConnections.integer ) {
 		gclient_t *other;
@@ -319,6 +322,7 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	vec3_t	position;
 	int counter, remaining;
 
+
 	assert( ent );
 	assert( ent->client );
 
@@ -391,6 +395,7 @@ void BE_ClientBegan( int clientNum ) {
 
 	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
 
+
 	ent = &g_entities[clientNum];
 
 	assert( ent->client );
@@ -405,6 +410,7 @@ void BE_ClientBegan( int clientNum ) {
 void BE_ClientKilled( gentity_t *self ) {
 	assert( self );
 	assert( self->client );
+
 
 	if ( ( GT_LPS == g_gametype.integer ) &&
 	     be_oneUp.integer && !level.warmupTime ) {
@@ -444,7 +450,9 @@ void BE_ClientDisconnect( int clientNum ) {
 	gentity_t *ent, *player;
 	int i;
 
+
 	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+
 
 	ent = ( g_entities + clientNum );
 	for ( i = 0; i < level.maxclients; i++ ) {
@@ -467,9 +475,12 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	assert( ent );
 	assert( other );
 
+
 	clientNum = ( other - g_entities );
 
+
 	ent->client->storage.ignoreList[clientNum] = mode;
+
 
 	switch ( mode ) {
 		case qtrue:
@@ -488,18 +499,24 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	}
 }
 
+
 /*
 	Returns whether ent is ignoring other
 */
 qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 	int clientNum;
 
+
 	assert( ent );
 	assert( other );
 
+
 	clientNum = ( other - g_entities );
+
+
 	return ( ent->client->storage.ignoreList[clientNum] );
 }
+
 
 /*
 	Determines whether two players can chat with each other.
@@ -508,6 +525,7 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
 	/* NOTE: ent can be NULL for server messages */
 	assert( other );
+
 
 	if ( ent ) {
 		return ( ChatIgnored( other, ent ) == qfalse );

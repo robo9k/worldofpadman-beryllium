@@ -47,12 +47,12 @@ const NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
 	assert( str );
 
-
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 		return;
 	}
-	/* TODO: Check wheter clientNum is connected */
+	/* TODO: Check whether clientNum is connected */
+
 
 	switch ( cmd ) {
 		case CCMD_CENTERPRINT:
@@ -62,7 +62,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 			trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
 			break;
 		case CCMD_PRINT:
-			/* NOTE: World of Padman v1.2 is flawed with con_notifytime > 0
+			/* NOTE: World of Padman is flawed with con_notifytime > 0
 			         It'll always remove the last character in CG_Printf in cg_main.c
 			*/
 			trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
@@ -76,7 +76,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 
 
 /*
-	Converts a string into a gametype. List is from ui_callvote.c
+	Converts a string into a gametype.
 	Might return invalid gametype if no match
 */
 /* FIXME: Use partial match?
@@ -87,12 +87,12 @@ gametype_t StringToGametype( const char *str ) {
 
 	assert( str );
 
-
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( Q_stricmp( GAMETYPE_REMAP[i].str, str ) == 0 ) {
 			return ( GAMETYPE_REMAP[i].type );
 		}
 	}
+
 
 	return GT_MAX_GAME_TYPE;
 }
@@ -105,11 +105,13 @@ gametype_t StringToGametype( const char *str ) {
 char* GametypeToString( gametype_t gt ) {
 	int i;
 
+
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( GAMETYPE_REMAP[i].type == gt ) {
 			return ( GAMETYPE_REMAP[i].str );
 		}
 	}
+
 
 	return NULL;
 }
@@ -128,6 +130,7 @@ char* TimeToString( int time, char *str, size_t size ) {
 		return NULL;
 	}
 
+
 	sec = ( time / 1000 );
 
 	min   = ( sec / 60 );
@@ -136,6 +139,7 @@ char* TimeToString( int time, char *str, size_t size ) {
 	sec  -= ( tens * 10 );
 
 	Com_sprintf( str, size, "%i:%i%i", min, tens, sec );
+
 
 	return str;
 }
@@ -155,6 +159,7 @@ qboolean ValidClientID( int clientNum, qboolean allowWorld ) {
 		return qfalse;
 	}
 	
+
 	return qtrue;
 }
 
@@ -184,9 +189,11 @@ clientNum_t ClientnumFromString( const char *name ) {
 	for ( i = 0; i < level.maxclients; i++ ) {
 		player = &level.clients[i];
 
+
 		if ( CON_DISCONNECTED == player->pers.connected ) {
 			continue;
 		}
+
 
 		/* exact case-insensitive match */
 		if ( Q_stricmp( name, player->pers.netname ) == 0 ) {
@@ -223,7 +230,6 @@ clientNum_t ClientnumFromString( const char *name ) {
 qboolean fileExists( const char *path ) {
 	assert( path );
 
-
 	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
 }
 
@@ -242,6 +248,7 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 		return qfalse;
 	}
 	
+
 	Q_strncpyz( base, model, sizeof( base ) );
 	skin = strchr( base, '/' );
 	if ( skin ) {
@@ -250,9 +257,11 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	else {
 		skin = DEFAULT_PLAYERSKIN_S;
 	}
+
 	if ( !fileExists( va( PLAYERMODEL_PATH_S"%s/upper_%s.skin", base, skin ) ) ) {
 		return qfalse;
 	}
+
 
 	Q_strncpyz( base, headModel, sizeof( base ) );
 	skin = strchr( base, '/' );
@@ -262,9 +271,11 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	else {
 		skin = DEFAULT_PLAYERSKIN_S;
 	}
+
 	if ( !fileExists( va( PLAYERMODEL_PATH_S"%s/head_%s.skin", base, skin ) ) ) {
 		return qfalse;
 	}
+
 
 	/* TODO: We could also check whether glowskins exist for this (custom-)model */
 
@@ -297,6 +308,7 @@ team_t TeamFromString( const char *s ) {
 		team = TEAM_FREE;
 	}
 
+
 	return team;
 }
 
@@ -313,6 +325,7 @@ void PrintMessage( const gentity_t *ent, const char *msg ) {
 	if ( !msg ) {
 		return;
 	}
+
 
 	if ( NULL == ent ) {
 		/* TODO: Strip colors with Q_CleanStr (violate const / buffer)? */
@@ -338,6 +351,7 @@ qboolean InList( const char *haystack, const char *needle ) {
 		return qfalse;
 	}
 
+
 	Com_sprintf( pattern, sizeof( pattern ), "/%s/", needle );
 
 	return ( Q_stristr( haystack, pattern ) != NULL );
@@ -352,14 +366,17 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 	va_list		argptr;
 	char		text[1024];
 
+
 	/* FIXME: Rather add a new g_debug/g_developer cvar and loglevels for it? */
 	if ( !trap_Cvar_VariableIntegerValue( "developer" ) ) {
 		return;
 	}
 
+
 	va_start( argptr, fmt );
 	vsprintf( text, fmt, argptr );
 	va_end( argptr );
+
 
 	trap_Printf( text );
 }
@@ -449,7 +466,8 @@ void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
 		G_Error( "ExecuteClientCommand: clientNum %i out of range\n", clientNum );
 		return;
 	}
-	/* TODO: Check wheter clientNum is connected */
+	/* TODO: Check whether clientNum is connected */
+
 
 	/* FIXME: Const correctness */
 	trap_EA_Command( clientNum, (char*)cmd );

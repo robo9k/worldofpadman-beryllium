@@ -38,7 +38,9 @@ void BE_InitClientStorageData( gclient_t *client ) {
 
 	stor = &client->storage;
 
+
 	Com_Memset( &stor->ignoreList, 0, sizeof( stor->ignoreList ) );
+
 
 	BE_WriteClientStorageData( client );
 }
@@ -57,10 +59,11 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 
 	assert( client );
 
+
 	clientNum = ( client - level.clients );
 	Com_sprintf( var, sizeof( var ), STORAGE_CVARNAME"%ld", clientNum );
-
 	stor = &client->storage;
+
 
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
 		Q_strcat( buff, sizeof( buff ), va( "%i ", stor->ignoreList[i] ) );
@@ -84,11 +87,12 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 
 	assert( client );
 
+
 	clientNum = ( client - level.clients );
 	var = va( STORAGE_CVARNAME"%ld", clientNum );
-
 	stor = &client->storage;
 	
+
 	trap_Cvar_VariableStringBuffer( var, buff, sizeof( buff ) );
 
 	endp = buff;
@@ -111,6 +115,7 @@ void BE_InitWorldStorage( void ) {
 */
 void BE_WriteStorageData( void ) {
 	int i;
+
 
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( CON_CONNECTED == level.clients[i].pers.connected ) {
