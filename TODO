@@ -51,3 +51,5 @@ Looks like EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand() allow
 
 Add persistant data like session, which is kept across different gametypes. Store in files and use Infostrings?
 
+Implement mpm-like anti-secret
+

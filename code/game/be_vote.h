@@ -38,7 +38,7 @@ typedef enum {
 	VOTEID_NUM_VOTES
 } voteID_t;
 
-typedef qboolean(*voteFunc_t)( const gentity_t *ent, voteID_t id );
+typedef qboolean(*voteFunc_t)( gentity_t *ent, voteID_t id );
 
 /* NOTE: Should be unique */
 typedef struct {
@@ -52,8 +52,8 @@ typedef struct {
 } voteEntry_t;
 
 
-void BE_Cmd_Vote_f( const gentity_t *ent );
-void BE_Cmd_CallVote_f( const gentity_t *ent );
+void BE_Cmd_Vote_f( gentity_t *ent );
+void BE_Cmd_CallVote_f( gentity_t *ent );
 
 void BE_CheckVote( void );
 

@@ -101,6 +101,8 @@
          Given a client id, the client will either be ignored or un-ignored, this
          works as a toggle.
          Note that upon disconnect, clients are automatically un-ignored.
+         You can use -1 as client id to ignore all bots.
+         If the server supports it, VoIP is also disabled for the targets.
 
       
       .: Server :.
@@ -169,7 +171,7 @@
 
    .: Versions :.
 
-   This README applies to the current version of Beryllium, which is 0.11a-r84.
+   This README applies to the current version of Beryllium, which is 0.11a-r85.
    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
    with this version of the game. Due to its generic nature, it could also be applied
    to other versions or even other ioquake3 based games though.

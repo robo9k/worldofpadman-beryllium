@@ -705,9 +705,23 @@ char* Q_strrchr( const char* string, int c )
 
 qboolean Q_isanumber( const char *s )
 {
+/* changed beryllium */
+/* NOTE: Accoring to Thilo, the QVM version of strtod behaves the same way */
 #ifdef Q3_VM
+/*
 	//FIXME: implement
 	return qfalse;
+*/
+	const char	*p;
+	double		d;
+
+	if ( '\0' == *s ) {
+		return qfalse;
+	}
+
+	d = strtod( s, &p );
+
+	return ( '\0' == *p );
 #else
 	char *p;
 	double d;

@@ -21,10 +21,10 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 
 /* Internal functions */
-static qboolean VoteH_Map( const gentity_t *ent, voteID_t id );
-static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id );
-static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id );
-static qboolean VoteH_Misc( const gentity_t *ent, voteID_t id );
+static qboolean VoteH_Map( gentity_t *ent, voteID_t id );
+static qboolean VoteH_Kick( gentity_t *ent, voteID_t id );
+static qboolean VoteH_Gametype( gentity_t *ent, voteID_t id );
+static qboolean VoteH_Misc( gentity_t *ent, voteID_t id );
 
 
 const voteEntry_t VOTES[] = {
@@ -97,6 +97,7 @@ static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
 		/* FIXME: Due to cvar.string MAX_CVAR_VALUE_STRING limit, we
 		          can't have many votes. Use some sort of config, use bitmask?
 		          At least add a qboolean allowed to VOTES.
+		          Maybe don't use the game logic to register cvars, only engine functions.
 		*/
 		return InList( be_allowedVotes.string, str );
 	}
@@ -108,7 +109,7 @@ static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
 /*
 	Beryllium's replacement for Cmd_Vote_f() in g_cmds.c
 */
-void BE_Cmd_Vote_f( const gentity_t *ent ) {
+void BE_Cmd_Vote_f( gentity_t *ent ) {
 	char msg[8];
 
 
@@ -167,7 +168,7 @@ void BE_Cmd_Vote_f( const gentity_t *ent ) {
 }
 
 
-static void PrintValidVotes( const gentity_t *ent ) {
+static void PrintValidVotes( gentity_t *ent ) {
 	int i;
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
 
@@ -195,7 +196,7 @@ static void PrintValidVotes( const gentity_t *ent ) {
 /*
 	Beryllium's replacement for the original Cmd_CallVote_f() in g_cmds.c
 */
-void BE_Cmd_CallVote_f( const gentity_t *ent ) {
+void BE_Cmd_CallVote_f( gentity_t *ent ) {
 	char	arg1[MAX_STRING_TOKENS];
 	char	arg2[MAX_STRING_TOKENS];
 	char	*c;
@@ -424,7 +425,7 @@ void BE_CheckVote( void ) {
 /*
 	Handler for g_gametype and setgametype vote
 */
-static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id ) {
+static qboolean VoteH_Gametype( gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 
@@ -464,7 +465,7 @@ static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id ) {
 			return qfalse;
 	}
 
-	if ( !IsANumber( arg2 ) ) {
+	if ( !Q_isanumber( arg2 ) ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 			return qfalse;		
 	}
@@ -492,7 +493,7 @@ static qboolean VoteH_Gametype( const gentity_t *ent, voteID_t id ) {
 /*
 	Handler for clientkick and kick vote
 */
-static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
+static qboolean VoteH_Kick( gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 
@@ -545,7 +546,7 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 		return qfalse;
 	}
 
-	if ( !IsANumber( arg2 ) ) {
+	if ( !Q_isanumber( arg2 ) ) {
 			PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 			return qfalse;		
 	}
@@ -592,7 +593,7 @@ static qboolean VoteH_Kick( const gentity_t *ent, voteID_t id ) {
 /*
 	Handler for map, nextmap and map_restart vote.
 */
-static qboolean VoteH_Map( const gentity_t *ent, voteID_t id ) {
+static qboolean VoteH_Map( gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 
 
@@ -665,7 +666,7 @@ static qboolean VoteH_Map( const gentity_t *ent, voteID_t id ) {
 /*
 	Handler for any other vote
 */
-static qboolean VoteH_Misc( const gentity_t *ent, voteID_t id ) {
+static qboolean VoteH_Misc( gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 	char	variable[64]; /* Should be enough to hold common cvar/vote names */
@@ -682,7 +683,7 @@ static qboolean VoteH_Misc( const gentity_t *ent, voteID_t id ) {
 			return qfalse;
 		}
 
-		if ( !IsANumber( arg2 ) ) {
+		if ( !Q_isanumber( arg2 ) ) {
 				PrintMessage( ent, S_COLOR_NEGATIVE"You must supply a number.\n" );
 				return qfalse;		
 		}

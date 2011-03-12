@@ -29,7 +29,7 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 	We already have a ent->client.
 	If we return qtrue, the original function will return immediatelly.
 */
-qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd ) {
+qboolean BE_ClientCommand( gentity_t *ent, const char *cmd ) {
 	/* This is just a wrapper function */
 	return BE_ClCmd( ent, cmd );
 }
@@ -451,7 +451,7 @@ void BE_ClientDisconnect( int clientNum ) {
 		player = ( g_entities + i );
 		
 		/* Make sure new connections do not get ignored */
-		BE_Ignore( player, ent, qfalse );
+		IgnoreChat( player, ent, qfalse );
 	}
 }
 
@@ -459,8 +459,10 @@ void BE_ClientDisconnect( int clientNum ) {
 /*
 	Sets whether ent is ignoring other
 */
-void BE_Ignore( gentity_t *ent, const gentity_t *other, qboolean mode ) {
+void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	int clientNum;
+	char cmd[MAX_STRING_TOKENS];
+
 
 	assert( ent );
 	assert( other );
@@ -468,12 +470,28 @@ void BE_Ignore( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	clientNum = ( other - g_entities );
 
 	ent->client->storage.ignoreList[clientNum] = mode;
+
+	switch ( mode ) {
+		case qtrue:
+			Com_sprintf( cmd, sizeof( cmd ), "voip ignore %ld\n", clientNum );
+			break;
+		default:
+			Com_sprintf( cmd, sizeof( cmd ), "voip unignore %ld\n", clientNum );
+			break;
+	}
+
+	/* NOTE: *_voip is meant as a version number, so do not check for == 1 */
+	if ( trap_Cvar_VariableIntegerValue( "sv_voip" ) ) {
+		/* TODO: Check whether client has voip at all? See userinfo "cl_voip". */
+		/* TODO: Test whether client is bot, is connected etc. */
+		ExecuteClientCommand( ( ent - g_entities ), cmd );
+	}
 }
 
 /*
 	Returns whether ent is ignoring other
 */
-qboolean BE_Ignored( const gentity_t *ent, const gentity_t *other ) {
+qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 	int clientNum;
 
 	assert( ent );
@@ -492,7 +510,7 @@ qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
 	assert( other );
 
 	if ( ent ) {
-		return ( BE_Ignored( other, ent ) == qfalse );
+		return ( ChatIgnored( other, ent ) == qfalse );
 	}
 
 	return qtrue;

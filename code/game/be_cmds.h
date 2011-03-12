@@ -31,15 +31,14 @@ enum {
 typedef struct {
     char		*cmdName;
     int			cmdFlags;
-	/* FIXME: Really use const correctness here? */
-    void		( *cmdHandler )( const gentity_t *ent );
+    void		( *cmdHandler )( gentity_t *ent );
 } ccmd_t;
 
 
-qboolean BE_ClCmd( const gentity_t *ent, const char *cmd );
+qboolean BE_ClCmd( gentity_t *ent, const char *cmd );
 
 
-void BE_Cmd_Ignore_f( const gentity_t *ent );
+void BE_Cmd_Ignore_f( gentity_t *ent );
 
 #endif
 

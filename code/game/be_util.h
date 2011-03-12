@@ -69,7 +69,7 @@ char* GametypeToString( gametype_t gt );
 
 char* TimeToString( int time, char *str, size_t size );
 
-qboolean ValidClientID( int clientNum, const qboolean allowWorld );
+qboolean ValidClientID( int clientNum, qboolean allowWorld );
 
 clientNum_t ClientnumFromString( const char *name );
 
@@ -78,8 +78,6 @@ qboolean fileExists( const char *path );
 qboolean validPlayermodel( const char *model, const char *headModel );
 
 team_t TeamFromString( const char *s );
-
-qboolean IsANumber( const char *str );
 
 void PrintMessage( const gentity_t *ent, const char *msg );
 
@@ -90,6 +88,8 @@ void QDECL G_DPrintf( const char *fmt, ... );
 void Q_DecolorStr( char *in, char *out, int outsize );
 void Q_StripWhitespace( char *in, char *out, int outsize );
 void Q_ExtraCleanStr( char *in, char *out, int outsize );
+
+void ExecuteClientCommand( clientNum_t clientNum, const char *cmd );
 
 #endif
 

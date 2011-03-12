@@ -302,45 +302,6 @@ team_t TeamFromString( const char *s ) {
 
 
 /*
-	Returns whether given char is a number
-*/
-qboolean Q_isnumeric( char c ) {
-	if ( ( c >= '0' ) && ( c <= '9' ) ) {
-		return qtrue;
-	}
-	else {
-		return qfalse;
-	}
-}
-
-
-/*
-	Returns whether given string is a simple number.
-	Does work with 0362, NOT +.5e3-2f
-	FIXME: Does not work for negative numbers
-*/
-qboolean IsANumber( const char *str ) {
-	int i, l;
-
-
-	/* FIXME: Replace check below with assert()? */
-	if ( !str ) {
-		return qfalse;
-	}
-
-	l = strlen( str );
-
-	for ( i = 0; i < l; i++ ) {
-		if ( !Q_isnumeric( str[i] ) ) {
-			return qfalse;
-		}
-	}
-
-	return qtrue;
-}
-
-
-/*
 	If ent is given, will use CCMD_PRINT, otherwise G_Printf.
 	This is usefull for functions that can be used by both clients
 	and rcon.
@@ -475,3 +436,21 @@ void Q_ExtraCleanStr( char *in, char *out, int outsize ) {
 	Q_strlwr( out );
 }
 
+
+/*
+	Inserts a client command as if the client sent it.
+	trap_EA_Command() -> EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand()
+*/
+void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
+	assert( cmd );
+
+
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Error( "ExecuteClientCommand: clientNum %i out of range\n", clientNum );
+		return;
+	}
+	/* TODO: Check wheter clientNum is connected */
+
+	/* FIXME: Const correctness */
+	trap_EA_Command( clientNum, (char*)cmd );
+}

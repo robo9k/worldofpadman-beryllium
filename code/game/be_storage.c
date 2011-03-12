@@ -52,7 +52,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 	char	buff[MAX_STRING_CHARS] = { "" };
 	int		clientNum;
 	int		i;
-	clientStorage_t	*stor;
+	const clientStorage_t	*stor;
 
 
 	assert( client );
@@ -60,8 +60,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 	clientNum = ( client - level.clients );
 	Com_sprintf( var, sizeof( var ), STORAGE_CVARNAME"%ld", clientNum );
 
-	/* FIXME: Const correctness */
-	stor = (clientStorage_t*)&client->storage;
+	stor = &client->storage;
 
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
 		Q_strcat( buff, sizeof( buff ), va( "%i ", stor->ignoreList[i] ) );

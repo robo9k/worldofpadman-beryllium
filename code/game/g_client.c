@@ -813,7 +813,7 @@ void ClientCleanName(const char *in, char *out, int outSize)
 	         yet none should use them as names.
 	*/
 	/* "kick 42". Numerical names as in client numbers */
-	if ( IsANumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
+	if ( Q_isanumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
 		invalid = qtrue;
 	}
 	/* "kick all", "kick allbots" */

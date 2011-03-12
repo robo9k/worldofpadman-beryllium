@@ -49,8 +49,6 @@ const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
 /* FIXME: clientStr[3] works for 2 digit clientnums with default MAX_CLIENTS 64 only */
 
-/* TODO: Call IsANumber before atoi and IsValidClientID ? */
-
 
 qboolean BE_ConCmd( const char *cmd ) {
 	unsigned int i;
@@ -176,8 +174,13 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	}
 
 	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-	clientNum = atoi( clientStr );
 
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
 	if ( !ValidClientID( clientNum, qfalse ) ) {
 		G_Printf( "Not a valid client number.\n" );
 		return;
@@ -224,13 +227,18 @@ static void BE_Svcmd_DropClient_f( void ) {
 
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: dropclient <cid> (reason)\n" );
+		G_Printf( "Usage: dropclient <cid> [reason]\n" );
 		return;
 	}
 
 	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-	clientNum = atoi( clientStr );
 
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
 	/* TODO: Shall we allow world here? */
 	if ( !ValidClientID( clientNum, qfalse ) ) {
 		G_Printf( "Not a valid client number.\n" );
@@ -312,6 +320,12 @@ static void BE_Svcmd_Say_f( void ) {
 		}
 
 		trap_Argv( 1, arg, sizeof( arg ) );
+
+		if ( !Q_isanumber( arg ) ) {
+			G_Printf( "You must supply a client number.\n" );
+			return;
+		}
+
 		clientNum = atoi( arg );
 		/* NOTE: Don't allow world here. say/print should be used instead */
 		if ( !ValidClientID( clientNum, qfalse ) ) {
@@ -360,6 +374,12 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
+
+	if ( !Q_isanumber( arg ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
 	clientNum = atoi( arg );
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Printf( "No a valid client number.\n" );

@@ -84,7 +84,7 @@ extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Decla
 
 
 /* "Exported" Functions */
-qboolean BE_ClientCommand( const gentity_t *ent, const char *cmd );
+qboolean BE_ClientCommand( gentity_t *ent, const char *cmd );
 qboolean BE_ConsoleCommand( const char *cmd );
 
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
@@ -103,8 +103,8 @@ void BE_ClientDisconnect( int clientNum );
 
 qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other );
 
-void BE_Ignore( gentity_t *ent, const gentity_t *other, qboolean mode );
-qboolean BE_Ignored( const gentity_t *ent, const gentity_t *other );
+void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode );
+qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other );
 
 #endif
 

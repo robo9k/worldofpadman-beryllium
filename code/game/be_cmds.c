@@ -36,7 +36,7 @@ const unsigned int NUM_CCMDS = ARRAY_LEN( BE_CCMDS );
 	This function just loops through our registered client commands,
 	checks conditions in flags are met and then calls the function.
 */
-qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
+qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
 
@@ -79,24 +79,28 @@ qboolean BE_ClCmd( const gentity_t *ent, const char *cmd ) {
 /*
 	Allows to ignore and unignore chats and voice from other players
 */
-void BE_Cmd_Ignore_f( const gentity_t *ent ) {
+void BE_Cmd_Ignore_f( gentity_t *ent ) {
+	char			buff[MAX_STRING_TOKENS] = { "" };
+	char			message[MAX_STRING_TOKENS];
+	int				clientNum;
+	const gentity_t	*other;
+
+
 	/* Print current list */
 	if ( trap_Argc() == 1 ) {
-		char buff[MAX_STRING_TOKENS] = { "" };
-		char message[MAX_STRING_TOKENS];
-		int i, c = 0;
-		gentity_t *other;
+		int count = 0;
+
 		
-		for ( i = 0; i < level.maxclients; i++ ) {
-			other = ( g_entities + i );
+		for ( clientNum = 0; clientNum < level.maxclients; clientNum++ ) {
+			other = ( g_entities + clientNum );
 			
-			if ( BE_Ignored( ent, other ) ) {
-				Q_strcat( buff, sizeof( buff ), va( "%s%s"S_COLOR_DEFAULT, ( ( c > 0 ) ? ", " : "" ), other->client->pers.netname ) );
-				c++;
+			if ( ChatIgnored( ent, other ) ) {
+				Q_strcat( buff, sizeof( buff ), va( "%s%s"S_COLOR_DEFAULT, ( ( count > 0 ) ? ", " : "" ), other->client->pers.netname ) );
+				count++;
 			}
 		}
 
-		if ( c > 0 ) {
+		if ( count > 0 ) {
 			Q_strncpyz( message, "You are currently ignoring: ", sizeof( message ) );
 			Q_strcat( message, sizeof( message ), buff );
 		}
@@ -108,53 +112,69 @@ void BE_Cmd_Ignore_f( const gentity_t *ent ) {
 	}
 	/* (Un)ignore a client number */
 	else if ( trap_Argc() == 2 ) {
-		char		arg1[MAX_STRING_TOKENS];
-		int			clientNum;
 		qboolean	ignore;
-		const gentity_t	*other;
-		char		*message;
 
-		trap_Argv( 1, arg1, sizeof( arg1 ) );
 
-		if ( !IsANumber( arg1 ) ) {
+		trap_Argv( 1, buff, sizeof( buff ) );
+
+		if ( !Q_isanumber( buff ) ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You must supply a client number.\n" );
 			return;
 		}
 
-		clientNum = atoi( arg1 );
+		clientNum = atoi( buff );
 
-		if ( !ValidClientID( clientNum, qfalse ) ) {
+		if ( !ValidClientID( clientNum, qtrue ) ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not a valid client number.\n" );
 			return;
 		}
 
-		other = ( g_entities + clientNum );
+		/* -1 shall equal "allbots" */
+		if ( CID_WORLD == clientNum ) {
+			for ( clientNum = 0; clientNum < level.maxclients; clientNum++ ) {
+				other = ( g_entities + clientNum );
 
-		if ( CON_CONNECTED != other->client->pers.connected ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Client not connected.\n" );
-			return;			
-		}
-		else if ( other == ent  ) {
-			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not ignore yourself.\n" );
-			return;		
-		}
+				if ( CON_CONNECTED != other->client->pers.connected ) {
+					continue;
+				}
+				if ( other == ent ) {
+					continue;
+				}
 
-		ignore = BE_Ignored( ent, other );
-		ignore = !ignore;
+				if ( other->r.svFlags & SVF_BOT ) {
+					/* TODO: Add an option to un-ignore allbots aswell */
+					IgnoreChat( ent, other, qtrue );
+				}
+			}
 
-		/* FIXME: Const correctness */
-		BE_Ignore( (gentity_t*)ent, other, ignore );
-
-		/* TODO: Ignore VoIP */
-
-		if ( ignore ) {
-			message = va( "You are now ignoring %s"S_COLOR_DEFAULT".\n", other->client->pers.netname );
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, "You are now ignoring all bots.\n" );
 		}
 		else {
-			message = va( "You are no longer ignoring %s"S_COLOR_DEFAULT".\n", other->client->pers.netname );
-		}
+			other = ( g_entities + clientNum );
 
-		SendClientCommand( ( ent - g_entities ), CCMD_PRT, message );	
+			if ( CON_CONNECTED != other->client->pers.connected ) {
+				SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Client not connected.\n" );
+				return;			
+			}
+			else if ( other == ent  ) {
+				SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You can not ignore yourself.\n" );
+				return;		
+			}
+
+			ignore = ChatIgnored( ent, other );
+			ignore = !ignore;
+
+			IgnoreChat( ent, other, ignore );
+
+			if ( ignore ) {
+				Com_sprintf( message, sizeof( message ), "You are now ignoring %s"S_COLOR_DEFAULT".\n", other->client->pers.netname );
+			}
+			else {
+				Com_sprintf( message, sizeof( message ), "You are no longer ignoring %s"S_COLOR_DEFAULT".\n", other->client->pers.netname );
+			}
+
+			SendClientCommand( ( ent - g_entities ), CCMD_PRT, message );
+		}
 	}
 }
 
