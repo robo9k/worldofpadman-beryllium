@@ -1465,6 +1465,17 @@ void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
+	/* added beryllium */
+	if ( be_debugSecrets.integer ) {
+		/* FIXME: assert ent, other? */
+		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Touching %s\n", ent->target ) );
+	}
+
+	if ( !BE_CanUseMover( ent, other ) ) {
+		return;
+	}
+	/* end beryllium */
+
 	if ( ent->moverState == MOVER_POS1 ) {
 		Use_BinaryMover( ent, other, other );
 	}

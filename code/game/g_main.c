@@ -112,6 +112,9 @@ vmCvar_t	be_checkPings;
 /* FIXME: Merge this into wop codebase as g_oneUp */
 vmCvar_t	be_oneUp;
 
+vmCvar_t	be_noSecrets;
+vmCvar_t	be_debugSecrets;
+
 /* end beryllium */
 
 
@@ -218,7 +221,7 @@ static cvarTable_t		gameCvarTable[] = {
 	/* FIXME: Keep in sync with vote command handler string array? */
 	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit/pointlimit"
 	                                       "/g_gametype/setgametype/shuffleteams/",
-	                                       CVAR_ARCHIVE, 0, qfalse },
+	                                       CVAR_ARCHIVE, 0, qtrue },
 	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse },
@@ -238,7 +241,10 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_checkPings, "be_checkPings", "0", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qtrue },
+
+	{ &be_noSecrets, "be_noSecrets", "0", CVAR_ARCHIVE, 0, qtrue },
+	{ &be_debugSecrets, "be_debugSecrets", "0", CVAR_CHEAT, 0, qfalse }
 
 	/* end beryllium */
 };
@@ -565,6 +571,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		trap_Cvar_Set("nextmap",nextmapBackUp.string);
 		trap_Cvar_Set("nextmapBackUp","");
 	}
+
+	/* added beryllium */
+	BE_InitBeryllium();
+	/* end beryllium */
 }
 
 /*

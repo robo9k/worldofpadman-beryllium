@@ -1,0 +1,10 @@
+//
+// Example file for beryllium's be_noSecrets cvar
+//
+
+// Please note that you might want to copy this into a new
+// config for wop_dinerBB as well.
+
+secret monroe
+secret t9
+

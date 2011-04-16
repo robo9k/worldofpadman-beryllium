@@ -32,6 +32,8 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #define S_COLOR_ITALIC		S_COLOR_YELLOW	/* Important output */
 #define S_COLOR_BOLD		S_COLOR_CYAN	/* Even more important output */
 
+#define BE_LOG_PREFIX		"beryllium: "
+
 
 #define DEFAULT_PLAYERMODEL_S	"padman"
 #define DEFAULT_PLAYERSKIN_S	"default"
@@ -43,6 +45,9 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #define CHAT_SERVER_NAME	"server"
 
 #define MAX_CAMPTIME		20
+
+#define MAX_TARGETNAME		64
+#define MAX_SECRETS			64
 
 enum {
 	GUIDCHECK_EMPTY		= 1,
@@ -78,6 +83,9 @@ extern vmCvar_t	be_checkPings;
 
 extern vmCvar_t	be_oneUp;
 
+extern vmCvar_t	be_noSecrets;
+extern vmCvar_t	be_debugSecrets;
+
 
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
@@ -105,6 +113,11 @@ qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other );
 
 void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode );
 qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other );
+
+void BE_InitBeryllium( void );
+
+qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other );
+qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other );
 
 #endif
 

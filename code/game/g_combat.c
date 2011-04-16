@@ -776,6 +776,17 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// shootable doors / buttons don't actually have any health
 	if ( targ->s.eType == ET_MOVER ) {
 		if ( targ->use && ( targ->moverState == MOVER_POS1 || targ->moverState == ROTATOR_POS1 ) ) {
+			/* added beryllium */
+			if ( be_debugSecrets.integer ) {
+				/* FIXME: assert ent, other? */
+				SendClientCommand( ( attacker - g_entities ), CCMD_PRT, va( "Shooting %s\n", targ->target ) );
+			}
+
+			if ( !BE_CanUseMover( targ, attacker ) ) {
+				return;
+			}
+			/* end beryllium */
+
 			targ->use( targ, inflictor, attacker );
 		}
 		return;

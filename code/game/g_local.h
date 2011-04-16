@@ -535,6 +535,9 @@ typedef struct {
 	/* added beryllium */
 	int			voteDuration;
 	int			voteEnd;
+
+	/* FIXME: len is a bit too much */
+	char		mapname[MAX_INFO_VALUE];
 	/* end beryllium */
 } level_locals_t;
 

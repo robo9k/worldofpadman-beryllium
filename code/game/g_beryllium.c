@@ -20,6 +20,10 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #include "g_local.h"
 
 
+int		numSecrets;
+char	secretNames[MAX_SECRETS][MAX_TARGETNAME];
+
+
 /* Functions */
 
 /*
@@ -529,6 +533,153 @@ qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
 
 	if ( ent ) {
 		return ( ChatIgnored( other, ent ) == qfalse );
+	}
+
+	return qtrue;
+}
+
+
+/*
+	Parses the given buffer for secrets :)
+*/
+static void ParseSecrets( char *buff ) {
+	const char	*token;
+	char		*target;
+
+	while ( qtrue ) {
+		token = COM_Parse( &buff );
+		if ( !*token ) {
+			break;
+		}
+
+		if ( Q_stricmp( token, "secret" ) == 0 ) {
+			if ( numSecrets >= MAX_SECRETS ) {
+				G_Printf( BE_LOG_PREFIX"Secrets limit of %d exceeded.\n", MAX_SECRETS );
+				break;
+			}
+
+			/* TODO: Use G_Alloc or another way of "dynamic" memory */
+
+			target = secretNames[ numSecrets++ ];
+
+			token = COM_Parse( &buff );
+			if ( !*token ) {
+				G_Printf( BE_LOG_PREFIX"Missing target name for secret\n." );
+				break;
+			}
+
+			/* FIXME: Use sizeof */
+			Q_strncpyz( target, token, MAX_TARGETNAME );
+		}		
+	}
+
+	/* TODO: Validate each target name by parsing actual entities in map? */
+
+	G_Printf( BE_LOG_PREFIX"Parsed %d secret%s.\n", numSecrets, ( numSecrets > 1 ? "s" : "" ) );
+}
+
+
+/*
+	Loads secrets for be_noSecrets from a file specific for current map
+*/
+static void BE_LoadSecrets( void ) {
+	int				len;
+	fileHandle_t	f;
+	char			buff[8192];
+	char			filename[MAX_QPATH];
+
+
+	Com_sprintf( filename, sizeof( filename ), "maps/%s.dat", level.mapname );
+	
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( !f ) {
+		G_Printf( BE_LOG_PREFIX"Could not open \"%s\"\n.", filename );
+		return;
+	}
+	else if ( len >= sizeof( buff ) ) {
+		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %d\n.", filename, len, sizeof( buff ) );
+		trap_FS_FCloseFile( f );
+		return;
+	}
+
+	trap_FS_Read( buff, len, f );
+	buff[len] = '\0';
+	trap_FS_FCloseFile( f );
+
+	ParseSecrets( buff );
+}
+
+
+/*
+	Called at end of G_InitGame().
+	Initialize structures specific to beryllium here
+*/
+void BE_InitBeryllium( void ) {
+	char serverinfo[MAX_INFO_STRING];
+	
+
+	trap_GetServerinfo( serverinfo, sizeof( serverinfo ) );
+
+	/* NOTE: This is used in several places in original code, but strage enough never cached */
+	Q_strncpyz( level.mapname, Info_ValueForKey( serverinfo, "mapname" ), sizeof( level.mapname ) );
+
+	/* NOTE: Always read secrets, so they can be disabled on-the-fly */
+	BE_LoadSecrets();
+}
+
+
+/*
+	Determines whether the given teleporter can be used
+	Will spawn the player at a random position instead of original target.
+*/
+qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
+	if ( be_noSecrets.integer ) {
+		int i;
+		vec3_t	origin, angles;
+		qboolean allowed = qtrue;
+
+
+		assert( ent );
+
+
+		for ( i = 0; i < numSecrets; i++ ) {
+			if ( Q_stricmp( ent->target, secretNames[i] ) == 0 ) {
+				allowed = qfalse;
+				break;
+			}
+		}
+
+		if ( !allowed ) {
+			assert( other );
+
+
+			/* TODO: Print some info to the player? */
+			SelectSpawnPoint( other->r.currentOrigin, origin, angles, qfalse );
+			TeleportPlayer( other, origin, angles );
+		}
+		
+		return allowed;
+	}
+
+	return qtrue;
+}
+
+
+/*
+	Returns whether the mover can be used/shot
+*/
+qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other ) {
+	if ( be_noSecrets.integer ) {
+		int i;
+
+
+		assert( ent );
+
+		for ( i = 0; i < numSecrets; i++ ) {
+			if ( Q_stricmp( ent->target, secretNames[i] ) == 0 ) {
+				return qfalse;
+			}
+		}
 	}
 
 	return qtrue;

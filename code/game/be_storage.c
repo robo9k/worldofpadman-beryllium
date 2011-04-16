@@ -61,7 +61,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 
 
 	clientNum = ( client - level.clients );
-	Com_sprintf( var, sizeof( var ), STORAGE_CVARNAME"%ld", clientNum );
+	Com_sprintf( var, sizeof( var ), STORAGE_CVARNAME"%d", clientNum );
 	stor = &client->storage;
 
 

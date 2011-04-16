@@ -304,6 +304,17 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 		return;
 	}
 
+	/* added beryllium */
+	if ( be_debugSecrets.integer ) {
+		/* FIXME: assert ent, other? */
+		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Using %s\n", self->target ) );
+	}
+
+	if ( !BE_CanUseTeleporter( self, other ) ) {
+		return;
+	}
+	/* end beryllium */
+
 	TeleportPlayer( other, dest->s.origin, dest->s.angles );
 
 }
