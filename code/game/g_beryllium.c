@@ -56,10 +56,10 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
 
-	assert( targ );
-	assert( attacker );
-	assert( mod );
-	assert( damage );
+	G_assert( targ );
+	G_assert( attacker );
+	G_assert( mod );
+	G_assert( damage );
 
 
 	/* We are only interested in clients' damage */
@@ -99,8 +99,8 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	char model[MAX_QPATH], headmodel[MAX_QPATH], *modelInfo, *headmodelInfo;
 
 
-	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
-	assert( ent->client );
+	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+	G_assert( ent->client );
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
@@ -217,7 +217,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	char ip[NET_ADDRSTRMAXLEN], guid[GUIDSTRMAXLEN];
 
 
-	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
@@ -327,8 +327,8 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	int counter, remaining;
 
 
-	assert( ent );
-	assert( ent->client );
+	G_assert( ent );
+	G_assert( ent->client );
 
 
 	if ( CON_CONNECTED != ent->client->pers.connected ) {
@@ -397,12 +397,12 @@ void BE_ClientBegan( int clientNum ) {
 	gentity_t *ent;
 
 
-	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
 
 
 	ent = &g_entities[clientNum];
 
-	assert( ent->client );
+	G_assert( ent->client );
 
 	ent->client->pers.lifeShards = 0;
 }
@@ -412,8 +412,8 @@ void BE_ClientBegan( int clientNum ) {
 	Called after client has been killed but before tossing items
 */
 void BE_ClientKilled( gentity_t *self ) {
-	assert( self );
-	assert( self->client );
+	G_assert( self );
+	G_assert( self->client );
 
 
 	if ( ( GT_LPS == g_gametype.integer ) &&
@@ -455,7 +455,7 @@ void BE_ClientDisconnect( int clientNum ) {
 	int i;
 
 
-	assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
+	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
 
 
 	ent = ( g_entities + clientNum );
@@ -476,8 +476,8 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	char cmd[MAX_STRING_TOKENS];
 
 
-	assert( ent );
-	assert( other );
+	G_assert( ent );
+	G_assert( other );
 
 
 	clientNum = ( other - g_entities );
@@ -488,10 +488,10 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 
 	switch ( mode ) {
 		case qtrue:
-			Com_sprintf( cmd, sizeof( cmd ), "voip ignore %ld\n", clientNum );
+			Com_sprintf( cmd, sizeof( cmd ), "voip ignore %d\n", clientNum );
 			break;
 		default:
-			Com_sprintf( cmd, sizeof( cmd ), "voip unignore %ld\n", clientNum );
+			Com_sprintf( cmd, sizeof( cmd ), "voip unignore %d\n", clientNum );
 			break;
 	}
 
@@ -511,8 +511,8 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 	int clientNum;
 
 
-	assert( ent );
-	assert( other );
+	G_assert( ent );
+	G_assert( other );
 
 
 	clientNum = ( other - g_entities );
@@ -528,7 +528,7 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 */
 qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
 	/* NOTE: ent can be NULL for server messages */
-	assert( other );
+	G_assert( other );
 
 
 	if ( ent ) {
@@ -597,7 +597,7 @@ static void BE_LoadSecrets( void ) {
 		return;
 	}
 	else if ( len >= sizeof( buff ) ) {
-		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %d\n.", filename, len, sizeof( buff ) );
+		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld\n.", filename, len, sizeof( buff ) );
 		trap_FS_FCloseFile( f );
 		return;
 	}
@@ -639,7 +639,7 @@ qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
 		qboolean allowed = qtrue;
 
 
-		assert( ent );
+		G_assert( ent );
 
 
 		for ( i = 0; i < numSecrets; i++ ) {
@@ -650,7 +650,7 @@ qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
 		}
 
 		if ( !allowed ) {
-			assert( other );
+			G_assert( other );
 
 
 			/* TODO: Print some info to the player? */
@@ -673,7 +673,7 @@ qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other ) {
 		int i;
 
 
-		assert( ent );
+		G_assert( ent );
 
 		for ( i = 0; i < numSecrets; i++ ) {
 			if ( Q_stricmp( ent->target, secretNames[i] ) == 0 ) {

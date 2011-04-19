@@ -40,9 +40,9 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
 
-	assert( ent );
-	assert( ent->client );
-	assert( cmd );
+	G_assert( ent );
+	G_assert( ent->client );
+	G_assert( cmd );
 
 
 	for ( i = 0; i < NUM_CCMDS; i++ ) {

@@ -1467,7 +1467,7 @@ void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
 
 	/* added beryllium */
 	if ( be_debugSecrets.integer ) {
-		/* FIXME: assert ent, other? */
+		/* FIXME: G_assert ent, other? */
 		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Touching %s\n", ent->target ) );
 	}
 

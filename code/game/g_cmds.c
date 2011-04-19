@@ -897,7 +897,7 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 	}
 	/* end added */
 
-	trap_SendServerCommand( ( other - g_entities ), va( "say %d %d \"%s%c%c%s\"", 
+	trap_SendServerCommand( ( other - g_entities ), va( "say %d %ld \"%s%c%c%s\"", 
 	                        mode,
                             ( ent ? ( ent - g_entities ) : -1 ),
                             name, Q_COLOR_ESCAPE, color, message ) );
@@ -965,7 +965,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 			break;
 
 		case SAY_TELL:
-			G_LogPrintf( "Tell: %d %d %s\n", cid, ( target - g_entities ), chatText );
+			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
 			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
 				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
 				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
@@ -1328,7 +1328,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	}
 
 	trap_SendServerCommand( -1, va("print \"%s " S_COLOR_WHITE "called a vote: %s.\n\"", ent->client->pers.netname, level.voteDisplayString ) );
-	G_LogPrintf( "Callvote: %d %s\n", ( ent - g_entities ), level.voteString );
+	G_LogPrintf( "Callvote: %ld %s\n", ( ent - g_entities ), level.voteString );
 
 	// start the voting, the caller autoamtically votes yes
 	level.voteTime = level.time;
@@ -1754,7 +1754,7 @@ void Cmd_dropCartridge_f( gentity_t *ent ) {
 	}
 
 	if( tmpGE )
-		G_LogPrintf( "DropItem: %d %s\n", ( ent - g_entities ), tmpGE->classname );
+		G_LogPrintf( "DropItem: %ld %s\n", ( ent - g_entities ), tmpGE->classname );
 }
 
 //cyr{
@@ -1885,7 +1885,7 @@ void Cmd_EditBotInv_f( gentity_t *ent ){
 	spec_ent = &g_entities[ ent->client->sess.spectatorClient ];
 
 	if(spec_ent != ent){
-		if(!ent->r.svFlags & SVF_BOT){
+		if(!(ent->r.svFlags & SVF_BOT)){
 			trap_SendServerCommand(ent-g_entities, va("print \"error: target is human \n\"" ) );
 			return;
 		}
@@ -1896,7 +1896,7 @@ void Cmd_EditBotInv_f( gentity_t *ent ){
 		// item for all bots
 		ent2 = &g_entities[0];
 		for ( i = 0; i < MAX_CLIENTS; i++, ent2++ ) {
-			if(!ent2->r.svFlags & SVF_BOT) continue;
+			if(!(ent2->r.svFlags & SVF_BOT)) continue;
 			EditPlayerInventory( ent2, 1);
 		}
 	}

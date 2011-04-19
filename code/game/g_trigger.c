@@ -306,7 +306,7 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 
 	/* added beryllium */
 	if ( be_debugSecrets.integer ) {
-		/* FIXME: assert ent, other? */
+		/* FIXME: G_assert ent, other? */
 		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Using %s\n", self->target ) );
 	}
 

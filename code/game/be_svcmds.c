@@ -54,7 +54,7 @@ qboolean BE_ConCmd( const char *cmd ) {
 	unsigned int i;
 
 
-	assert( cmd );
+	G_assert( cmd );
 
 
 	for ( i = 0; i < NUM_SVCMDS; i++ ) {
@@ -102,7 +102,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
           Maybe also use kills-deaths/time instead of simply current points to get best
 	      players.
 */
-/* TODO: assert() any pointer dereferencing */
+/* TODO: G_assert() any pointer dereferencing */
 static void BE_Svcmd_ShuffleTeams_f( void ) {
 	int i, p, team;
 	int count = 0;

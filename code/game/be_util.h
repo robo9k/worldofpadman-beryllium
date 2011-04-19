@@ -23,13 +23,13 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 /* assert macros for game logic, will only be used when compiled as debug version */
 #if NDEBUG
-	#define assert(_e)		((void)0)
-	#define massert(_e,_m)	((void)0)
+	#define G_assert(_e)		((void)0)
+	#define G_massert(_e,_m)	((void)0)
 #else
 	/* standard assert macro */
-	#define assert(_e)		((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, #_e))
+	#define G_assert(_e)		((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, #_e))
 	/* assert variant which prints a custom message */
-	#define massert(_e, _m)	((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, _m))
+	#define G_massert(_e, _m)	((_e)?(void)0:G_Error("assert \"%s\" failed: file %s, line %i\n", __FILE__, __LINE__, _m))
 #endif
 
 

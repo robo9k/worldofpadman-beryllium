@@ -34,7 +34,7 @@ void BE_InitClientStorageData( gclient_t *client ) {
 	clientStorage_t *stor;
 
 
-	assert( client );
+	G_assert( client );
 
 	stor = &client->storage;
 
@@ -57,7 +57,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 	const clientStorage_t	*stor;
 
 
-	assert( client );
+	G_assert( client );
 
 
 	clientNum = ( client - level.clients );
@@ -66,7 +66,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 
 
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
-		Q_strcat( buff, sizeof( buff ), va( "%i ", stor->ignoreList[i] ) );
+		Q_strcat( buff, sizeof( buff ), va( "%d ", stor->ignoreList[i] ) );
 	}
 
 	trap_Cvar_Set( var, buff );
@@ -85,11 +85,11 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 	clientStorage_t	*stor;
 
 
-	assert( client );
+	G_assert( client );
 
 
 	clientNum = ( client - level.clients );
-	var = va( STORAGE_CVARNAME"%ld", clientNum );
+	var = va( STORAGE_CVARNAME"%d", clientNum );
 	stor = &client->storage;
 	
 
@@ -97,6 +97,7 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 
 	endp = buff;
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
+		/* NOTE: QVM version of strtol() uses const char**, stdlib does not */
 		stor->ignoreList[i] = strtol( endp, &endp, 10 );
 	}
 }

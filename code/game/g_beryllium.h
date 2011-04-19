@@ -90,6 +90,8 @@ extern vmCvar_t	be_debugSecrets;
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
 
+extern void ClientCleanName( const char *in, char *out, int outSize ); /* Declared in g_client.c, formerly static */
+
 
 /* "Exported" Functions */
 qboolean BE_ClientCommand( gentity_t *ent, const char *cmd );

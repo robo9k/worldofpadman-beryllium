@@ -37,7 +37,7 @@ const mapGametypeString_t GAMETYPE_REMAP[] = {
 		{ GAMETYPE_NAME( GT_SPRAY ),		GT_SPRAY			},
 		{ GAMETYPE_NAME( GT_BALLOON ),		GT_BALLOON			}
 	};
-const NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
+const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 
 
 /*
@@ -45,7 +45,7 @@ const NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 	See CG_ServerCommand() in cg_servercmds.c
 */
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
-	assert( str );
+	G_assert( str );
 
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
@@ -85,7 +85,7 @@ gametype_t StringToGametype( const char *str ) {
 	int i;
 
 
-	assert( str );
+	G_assert( str );
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( Q_stricmp( GAMETYPE_REMAP[i].str, str ) == 0 ) {
@@ -125,7 +125,7 @@ char* TimeToString( int time, char *str, size_t size ) {
 	int min, tens, sec;
 
 
-	/* FIXME: Replace check below with assert()? */
+	/* FIXME: Replace check below with G_assert()? */
 	if ( ( str == NULL ) || ( size <= 0 ) ) {
 		return NULL;
 	}
@@ -179,7 +179,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 	int			id = CID_NONE, matches = 0, i;
 
 
-	assert( name );
+	G_assert( name );
 
 	/* FIXME: Const correctness */
 	Q_ExtraCleanStr( (char*)name, cleanquery, sizeof( cleanquery ) );
@@ -228,7 +228,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 	Helper function to check whether a file exists serverside
 */
 qboolean fileExists( const char *path ) {
-	assert( path );
+	G_assert( path );
 
 	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
 }
@@ -243,7 +243,7 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	char *skin;
 
 
-	/* FIXME: Replace check below with assert()? */
+	/* FIXME: Replace check below with G_assert()? */
 	if ( ( model == NULL ) || ( headModel == NULL ) ) {
 		return qfalse;
 	}
@@ -292,7 +292,7 @@ team_t TeamFromString( const char *s ) {
 	team_t team = TEAM_NUM_TEAMS;
 
 
-	assert( s );
+	G_assert( s );
 
 
 	if ( ( Q_stricmp( "spectator", s ) == 0 ) || ( Q_stricmp( "s", s ) == 0 ) )  {
@@ -321,7 +321,7 @@ team_t TeamFromString( const char *s ) {
 	TODO: Use fmt and .. once va functions are buffer safe?
 */
 void PrintMessage( const gentity_t *ent, const char *msg ) {
-	/* FIXME: Replace check below with assert()? */
+	/* FIXME: Replace check below with G_assert()? */
 	if ( !msg ) {
 		return;
 	}
@@ -329,7 +329,7 @@ void PrintMessage( const gentity_t *ent, const char *msg ) {
 
 	if ( NULL == ent ) {
 		/* TODO: Strip colors with Q_CleanStr (violate const / buffer)? */
-		G_Printf( msg );
+		G_Printf( "%s", msg );
 	}
 	else {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRINT, msg );
@@ -346,7 +346,7 @@ qboolean InList( const char *haystack, const char *needle ) {
 
 
 	/* Should no needle but haystack return qtrue? :D */
-	/* FIXME: Replace check below with assert()? */
+	/* FIXME: Replace check below with G_assert()? */
 	if ( !needle || !haystack ) {
 		return qfalse;
 	}
@@ -374,7 +374,7 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 
 
 	va_start( argptr, fmt );
-	vsprintf( text, fmt, argptr );
+	Q_vsnprintf( text, sizeof( text ), fmt, argptr );
 	va_end( argptr );
 
 
@@ -410,7 +410,7 @@ void Q_DecolorStr( char *in, char *out, int outsize ) {
 	Strips all whitespace from string, not only trailing, leading and double.
 */
 void Q_StripWhitespace( char *in, char *out, int outsize ) {
-	int outpos = 0, colors = 0;
+	int outpos = 0;
 
 
 	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
@@ -459,7 +459,7 @@ void Q_ExtraCleanStr( char *in, char *out, int outsize ) {
 	trap_EA_Command() -> EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand()
 */
 void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
-	assert( cmd );
+	G_assert( cmd );
 
 
 	if ( !ValidClientID( clientNum, qfalse ) ) {

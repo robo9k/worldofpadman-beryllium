@@ -60,7 +60,7 @@ static voteID_t GetVoteID( const char *str ) {
 	int i;
 
 
-	assert( str );
+	G_assert( str );
 
 
 	for ( i = 0; i < NUM_VOTES; i++ ) {
@@ -114,8 +114,8 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 	char msg[8];
 
 
-	assert( ent );
-	assert( ent->client );
+	G_assert( ent );
+	G_assert( ent->client );
 
 
 	if ( !level.voteTime ) {
@@ -175,7 +175,7 @@ static void PrintValidVotes( gentity_t *ent ) {
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
 
 
-	/* NOTE: No assert( ent ) here, since console might call this */
+	/* NOTE: No G_assert( ent ) here, since console might call this */
 
 	for ( i = 0; i < NUM_VOTES; i++ ) {
 		/* FIXME: This is a horribly duplicated and nested, but somewhat clean implementation.. */
@@ -206,7 +206,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 	voteFunc_t	handler;
 
 	
-	/* TODO: If ent is given, assert( ent->client ) etc? */
+	/* TODO: If ent is given, G_assert( ent->client ) etc? */
 
 
 	/* Console is always allowed to callvote */
@@ -310,11 +310,11 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 		         Use voteString or voteDisplayString?
 		*/
 		if ( ent ) {
-			G_LogPrintf( "callvote %i: '%s'\n", ( ent - g_entities ), level.voteString );
+			G_LogPrintf( "callvote %ld: '%s'\n", ( ent - g_entities ), level.voteString );
 		}
 		else {
 			/* FIXME: #define CID_SERVER/use CID_WORLD? */
-			G_LogPrintf( "callvote %i: '%s'\n", -1, level.voteString );
+			G_LogPrintf( "callvote %d: '%s'\n", -1, level.voteString );
 		}
 
 

@@ -75,7 +75,7 @@ void AddScore( gentity_t *ent, vec3_t origin, int score, char *reason ) {
 
 	CalculateRanks();
 
-	G_LogPrintf( "AddScore: %d %d %s\n", ( ent - g_entities ), score, reason );
+	G_LogPrintf( "AddScore: %ld %d %s\n", ( ent - g_entities ), score, reason );
 }
 
 /*
@@ -778,7 +778,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		if ( targ->use && ( targ->moverState == MOVER_POS1 || targ->moverState == ROTATOR_POS1 ) ) {
 			/* added beryllium */
 			if ( be_debugSecrets.integer ) {
-				/* FIXME: assert ent, other? */
+				/* FIXME: G_assert ent, other? */
 				SendClientCommand( ( attacker - g_entities ), CCMD_PRT, va( "Shooting %s\n", targ->target ) );
 			}
 

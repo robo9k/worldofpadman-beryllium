@@ -8,10 +8,10 @@
 
    .: Installation :.
 
-   The usual distribution includes a file called qagame.qvm. You need to
+   The usual distribution includes a vm/qagame.qvm. You need to
    copy this file into a vm/ folder below your mod's folder.
    The full path depends on your fs_homepath (and fs_basepath) and fs_game (and fs_basegame )
-   setting.
+   setting. One example is /home/wopded/.padman/beryllium/vm/qagame.qvm
    Since this is a serverside mod, you do not need to serve beryllium's
    files via autodownload.
 
@@ -184,7 +184,7 @@
 
    .: Versions :.
 
-   This README applies to the current version of Beryllium, which is 0.12a-r87.
+   This README applies to the current version of Beryllium, which is 0.12b-r88.
    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
    with this version of the game. Due to its generic nature, it could also be applied
    to other versions or even other ioquake3 based games though.
