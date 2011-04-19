@@ -184,7 +184,7 @@
 
    .: Versions :.
 
-   This README applies to the current version of Beryllium, which is 0.12b-r88.
+   This README applies to the current version of Beryllium, which is 0.12b-r90.
    The code bases upon World of Padman's v1.5 gamecode and is thus only compatible
    with this version of the game. Due to its generic nature, it could also be applied
    to other versions or even other ioquake3 based games though.
