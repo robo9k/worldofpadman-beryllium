@@ -10,8 +10,10 @@
 
    The usual distribution includes a vm/qagame.qvm. You need to
    copy this file into a vm/ folder below your mod's folder.
-   The full path depends on your fs_homepath (and fs_basepath) and fs_game (and fs_basegame )
-   setting. One example is /home/wopded/.padman/beryllium/vm/qagame.qvm
+   The full path depends on your fs_homepath (and fs_basepath) and fs_game
+   (and fs_basegame ) setting.
+   One example is /home/wopded/.padman/beryllium/vm/qagame.qvm
+
    Since this is a serverside mod, you do not need to serve beryllium's
    files via autodownload.
 
@@ -67,12 +69,13 @@
                           1 - Reject empty GUIDs
                           2 - Reject invalid GUIDs
 
-                       Please note that World of Padman v1.1 did not yet use
-                       GUIDs, so people using the old (v1.2 compatible) engine
-                       will be rejected for emtpy GUIDs.
+                       With wrong game installations, the GUID of players may
+                       sometimes be empty, but this is a rare case.
+                       Cheat tools like aimbots etc. tend to change
+                       the GUID to invalid values.
+
                        A valid GUID is exactly 32 chars long and only consists
-                       of 0-9 and A-F. Cheat tools like aimbots etc. sometimes
-                       change the GUID to invalid values.
+                       of 0-9 and A-F.
 
                        Please also read ioquake's README concerning the purpose
                        of cl_guid!
@@ -98,6 +101,11 @@
    be_debugSecrets   - Will print debug output to players using teleporters and movers,
                        which can be used for be_noSecrets. This cvar has the cheat flag
                        and can thus only be set in combination with devmap.
+
+   be_hideChat       - If set, will hide chat prefixed with this string. E.g. if you set
+                       it to "!", chat text like "!kick me" will only be written to log
+                       and echoed back to you, but not be send to anyone else.
+                       This is useful to reduce chat spam when using tools like B3.
 
 
    .: Commands :.
@@ -146,7 +154,7 @@
       Messages sent with stell, ssay and ssay_team will use "server" as playername.
 
 
-      dropclient cid reason
+      dropclient cid [reason]
          Basically the same as clientkick, but you can supply an
          additional argument which will be displayed.
 
@@ -210,7 +218,4 @@
         ExcessivePlus,
         ETpro,
         BigBrotherBot
-
-
-EOF
 

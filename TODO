@@ -45,11 +45,5 @@ Properly sync the versionstring in README with the actual current version (in co
 
 Maybe record some stats? Those stimulate players and could be used to detect noobs or cheaters.
 
-Give points depending on difficulty. For example less points while using padpower, more when on low health while killing with punchy. OneUp after x kills in LPS etc.
-
-Looks like EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand() allows to create "fake" client commands such as "voip ignore 42".
-
-Add persistant data like session, which is kept across different gametypes. Store in files and use Infostrings?
-
-Implement mpm-like anti-secret
+Give points depending on difficulty. For example less points while using padpower, more when on low health while killing with punchy.
 

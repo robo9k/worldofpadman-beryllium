@@ -115,6 +115,8 @@ vmCvar_t	be_oneUp;
 vmCvar_t	be_noSecrets;
 vmCvar_t	be_debugSecrets;
 
+vmCvar_t	be_hideChat;
+
 /* end beryllium */
 
 
@@ -244,7 +246,9 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qtrue },
 
 	{ &be_noSecrets, "be_noSecrets", "0", CVAR_ARCHIVE, 0, qtrue },
-	{ &be_debugSecrets, "be_debugSecrets", "0", CVAR_CHEAT, 0, qfalse }
+	{ &be_debugSecrets, "be_debugSecrets", "0", CVAR_CHEAT, 0, qfalse },
+
+	{ &be_hideChat, "be_hideChat", "", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 };

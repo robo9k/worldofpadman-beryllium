@@ -981,6 +981,12 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 	Q_strncpyz( text, chatText, sizeof(text) );
 
+	/* added beryllium */
+	if ( BE_HideChat( ent, target, mode, color, name, text ) ) {
+		return;
+	}
+	/* end added */
+
 	if ( target ) {
 		G_SayTo( ent, target, mode, color, name, text );
 		return;

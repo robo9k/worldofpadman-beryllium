@@ -86,6 +86,8 @@ extern vmCvar_t	be_oneUp;
 extern vmCvar_t	be_noSecrets;
 extern vmCvar_t	be_debugSecrets;
 
+extern vmCvar_t	be_hideChat;
+
 
 extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
@@ -120,6 +122,8 @@ void BE_InitBeryllium( void );
 
 qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other );
 qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other );
+
+qboolean BE_HideChat( const gentity_t *ent, const gentity_t *target, int mode, int color, const char *name, const char *message );
 
 #endif
 
