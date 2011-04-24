@@ -722,7 +722,7 @@ void Cmd_Team_f( gentity_t *ent ) {
 		/*trap_SendServerCommand( ent-g_entities, "print \"May not switch teams more than once per 5 seconds.\n\"" );*/
 		/* TODO: Use proper beryllium colors and TimeToString()? */
 		trap_SendServerCommand( ( ent - g_entities ), va( "print \"May not switch teams more than once per %i seconds.\n\"", be_switchTeamTime.integer ) );
-		/* end changed*/
+		/* end beryllium*/
 		return;
 	}
 
@@ -739,7 +739,7 @@ void Cmd_Team_f( gentity_t *ent ) {
 	/* changed beryllium */
 	/*ent->client->switchTeamTime = level.time + 5000;*/
 	ent->client->switchTeamTime = ( level.time + ( be_switchTeamTime.integer * 1000 ) );
-	/* end changed */
+	/* end beryllium */
 }
 
 
@@ -868,7 +868,12 @@ G_Say
 ==================
 */
 
+/* changed beryllium */
+/*
 static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message ) {
+*/
+void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message ) {
+/* end beryllium */
 	if (!other) {
 		return;
 	}
@@ -895,7 +900,7 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 	if ( BE_CanSayTo( ent, other ) == qfalse ) {
 		return;
 	}
-	/* end added */
+	/* end beryllium */
 
 	trap_SendServerCommand( ( other - g_entities ), va( "say %d %ld \"%s%c%c%s\"", 
 	                        mode,
@@ -926,7 +931,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		namesrc = "server";
 		*/
 		namesrc = CHAT_SERVER_NAME;
-		/* end changed */
+		/* end beryllium */
 		realEnt = qfalse;
 		cid = -1;
 	}
@@ -985,7 +990,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	if ( BE_HideChat( ent, target, mode, color, name, text ) ) {
 		return;
 	}
-	/* end added */
+	/* end beryllium */
 
 	if ( target ) {
 		G_SayTo( ent, target, mode, color, name, text );

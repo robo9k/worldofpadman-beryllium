@@ -460,7 +460,7 @@ typedef enum {
 	CCMD_PRINT
 } clientCommand_t;
 */
-/* end changed */
+/* end beryllium */
 
 /*
 ===================
@@ -956,7 +956,7 @@ qboolean	ConsoleCommand( void ) {
 		trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(0) ) );
 		return qtrue;
 		*/
-		/* end changed */
+		/* end beryllium */
 	}
 
 	return qfalse;

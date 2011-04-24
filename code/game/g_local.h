@@ -288,7 +288,7 @@ typedef enum {
 /* FIXME: These should go into berylliums headers, which are included too late */
 #define NET_ADDRSTRMAXLEN		48 			/* NOTE: Must match NET_ADDRSTRMAXLEN in qcommon.h */
 #define GUIDSTRMAXLEN			33			/* NOTE: Length must match max result of Com_MD5File() / cl_guid */
-/* end added */
+/* end beryllium */
 
 
 // client data that stays across multiple respawns, but is cleared
@@ -340,7 +340,7 @@ typedef struct {
 	qboolean	ignoreList[MAX_CLIENTS];
 } clientStorage_t;
 
-/* end added */
+/* end beryllium */
 
 
 // this structure is cleared on each ClientSpawn(),
@@ -427,7 +427,7 @@ struct gclient_s {
 
 	/* added beryllium */
 	clientStorage_t	storage;
-	/* end added */
+	/* end beryllium */
 };
 
 //

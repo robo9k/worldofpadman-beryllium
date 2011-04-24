@@ -690,7 +690,7 @@ qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other ) {
 	Decides whether to "hide" the given chat.
 	The chatline has already been written to gamelog.
 */
-qboolean BE_HideChat( const gentity_t *ent, const gentity_t *target, int mode, int color, const char *name, const char *message ) {
+qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, const char *name, const char *message ) {
 	int len;
 
 

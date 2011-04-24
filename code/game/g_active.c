@@ -425,7 +425,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 		/* added beryllium */
 		BE_ClientTimerActions( ent );
-		/* end added */
+		/* end beryllium */
 
 
 		if ( client->ps.powerups[PW_REVIVAL] ) {

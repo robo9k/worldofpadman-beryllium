@@ -716,14 +716,14 @@ ClientCheckName
 static void ClientCleanName(const char *in, char *out, int outSize)
 */
 void ClientCleanName(const char *in, char *out, int outSize)
-/* end changed */
+/* end beryllium */
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
 	/* added beryllium */
 	int			totalWhitespace = 0;
 	qboolean	invalid = qfalse;
 	char		cleanName[MAX_NETNAME];
-	/* end added */
+	/* end beryllium */
 
 
 	// discard leading spaces
@@ -778,7 +778,7 @@ void ClientCleanName(const char *in, char *out, int outSize)
 		if ( *in == ' ' ) {
 			totalWhitespace++;
 		}
-		/* end added */
+		/* end beryllium */
 
 		outpos++;
 	}
@@ -825,7 +825,7 @@ void ClientCleanName(const char *in, char *out, int outSize)
 	if ( invalid ) {
 		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
 	}
-	/* end added */
+	/* end beryllium */
 }
 
 /*
@@ -857,7 +857,7 @@ void ClientUserinfoChanged( int clientNum ) {
 
 	/* added beryllium */
 	BE_ClientUserinfoChanged( clientNum );
-	/* end added */
+	/* end beryllium */
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
@@ -896,7 +896,7 @@ void ClientUserinfoChanged( int clientNum ) {
 	*/
 	Info_SetValueForKey( userinfo, "name", client->pers.netname );
 	trap_SetUserinfo( clientNum , userinfo );
-	/* end added */
+	/* end beryllium */
 
 
 	if ( ( client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( client ) ) {
@@ -1032,7 +1032,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	if ( value != NULL ) {
 		return value;
 	}
-	/* end added */
+	/* end beryllium */
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
@@ -1084,7 +1084,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		BE_InitClientStorageData( client );
 	}
 	BE_ReadClientStorageData( client );
-	/* end added */
+	/* end beryllium */
 
 	if( isBot ) {
 		ent->r.svFlags |= SVF_BOT;
@@ -1100,7 +1100,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	/* Copy pasta .. */
 	Q_strncpyz( client->pers.guid, Info_ValueForKey( userinfo, "cl_guid" ), sizeof( client->pers.guid ) );
 	Q_strncpyz( client->pers.ip, Info_ValueForKey( userinfo, "ip" ), sizeof( client->pers.ip ) );
-	/* end added */
+	/* end beryllium */
 
 	
 	// get and distribute relevent paramters
@@ -1193,7 +1193,7 @@ void ClientBegin( int clientNum ) {
 
 	/* added beryllium */
 	BE_ClientBegan( clientNum );
-	/* end added */
+	/* end beryllium */
 
 	// count current clients and rank for scoreboard
 	CalculateRanks();
@@ -1228,7 +1228,7 @@ void ClientSpawn(gentity_t *ent) {
 	char	userinfo[MAX_INFO_STRING];
 	/* added beryllium */
 	clientStorage_t	savedStor;
-	/* end added */
+	/* end beryllium */
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1296,13 +1296,13 @@ void ClientSpawn(gentity_t *ent) {
 	eventSequence = client->ps.eventSequence;
 	/* added beryllium */
 	savedStor = client->storage;
-	/* end added */
+	/* end beryllium */
 
 	memset (client, 0, sizeof(*client)); // bk FIXME: Com_Memset?
 
 	/* added beryllium */
 	client->storage = savedStor;
-	/* end added */
+	/* end beryllium */
 	client->pers = saved;
 	client->sess = savedSess;
 	client->ps.ping = savedPing;
@@ -1560,7 +1560,7 @@ void ClientDisconnect( int clientNum ) {
 
 	/* added beryllium */
 	BE_ClientDisconnect( clientNum );
-	/* end added */
+	/* end beryllium */
 }
 
 

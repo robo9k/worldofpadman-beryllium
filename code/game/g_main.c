@@ -517,7 +517,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	/* added beryllium */
 	BE_InitWorldStorage();
-	/* end added */
+	/* end beryllium */
 
 	// initialize all entities for this game
 	memset( g_entities, 0, MAX_GENTITIES * sizeof(g_entities[0]) );
@@ -609,7 +609,7 @@ void G_ShutdownGame( int restart ) {
 
 	/* added beryllium */
 	BE_WriteStorageData();
-	/* end added */
+	/* end beryllium */
 
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
@@ -827,7 +827,7 @@ int QDECL SortRanks( const void *a, const void *b ) {
 		/* NOTE: PERS_SCORE already equals livesleft, see fix in WoP_RunFrame */
 		goto LPS_NOPOINTS;
 	}
-	/* end added */
+	/* end beryllium */
 
 	// then sort by score
 	if ( ca->ps.persistant[PERS_SCORE]
@@ -841,7 +841,7 @@ int QDECL SortRanks( const void *a, const void *b ) {
 	
 	/* added beryllium */
 LPS_NOPOINTS:
-	/* end added */
+	/* end beryllium */
 
 	if ( g_gametype.integer == GT_LPS ) {
 		if ( ca->sess.livesleft
@@ -1020,7 +1020,7 @@ void CalculateRanks( void ) {
 			}
 			
 			if ( ( 0 == i ) || ( newScore != score ) ) {
-			/* end changed */
+			/* end beryllium */
 				rank = i;
 				// assume we aren't tied until the next client is checked
 				level.clients[ level.sortedClients[i] ].ps.persistant[PERS_RANK] = rank;
@@ -1271,7 +1271,7 @@ void ExitLevel (void) {
 
 	/* added beryllium */
 	BE_WriteStorageData();
-	/* end added */
+	/* end beryllium */
 
 	// change all client states to connecting, so the early players into the
 	// next level will know the others aren't done reconnecting

@@ -89,10 +89,13 @@ extern vmCvar_t	be_debugSecrets;
 extern vmCvar_t	be_hideChat;
 
 
-extern void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
-extern char *ConcatArgs( int start ); /* FIXME: Add these to game headers? Declared in g_cmds.c */
+/* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
+char *ConcatArgs( int start );
+void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message );
 
-extern void ClientCleanName( const char *in, char *out, int outSize ); /* Declared in g_client.c, formerly static */
+/* Declared in g_client.c, formerly static */
+extern void ClientCleanName( const char *in, char *out, int outSize );
 
 
 /* "Exported" Functions */
@@ -123,7 +126,7 @@ void BE_InitBeryllium( void );
 qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other );
 qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other );
 
-qboolean BE_HideChat( const gentity_t *ent, const gentity_t *target, int mode, int color, const char *name, const char *message );
+qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, const char *name, const char *message );
 
 #endif
 
