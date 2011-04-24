@@ -695,11 +695,10 @@ qboolean BE_HideChat( const gentity_t *ent, const gentity_t *target, int mode, i
 
 
 	G_assert( message );
-	G_assert( ent );
 
 
 	len = strlen( be_hideChat.string );
-	if ( len > 0 ) {
+	if ( ( len > 0 ) && ent ) {
 		if ( Q_strncmp( be_hideChat.string, message, len ) == 0 ) {
 			/* Echo back to author, so it does not seem "lost" */
 			G_SayTo( ent, ent, mode, /*color*/COLOR_WHITE, name, message );
