@@ -22,7 +22,7 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 
 /* assert macros for game logic, will only be used when compiled as debug version */
-#if NDEBUG
+#ifdef NDEBUG
 	#define G_assert( _e )		( (void)0 )
 	#define G_massert( _e, _m )	( (void)0 )
 #else
