@@ -85,9 +85,9 @@ qboolean InList( const char *needle, const char *haystack );
 
 void QDECL G_DPrintf( const char *fmt, ... );
 
-void Q_DecolorStr( char *in, char *out, int outsize );
-void Q_StripWhitespace( char *in, char *out, int outsize );
-void Q_ExtraCleanStr( char *in, char *out, int outsize );
+void Q_DecolorStr( char *in, char *out, size_t outsize );
+void Q_StripWhitespace( char *in, char *out, size_t outsize );
+void Q_ExtraCleanStr( char *in, char *out, size_t outsize );
 
 void ExecuteClientCommand( clientNum_t clientNum, const char *cmd );
 

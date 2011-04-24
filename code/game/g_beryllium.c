@@ -55,7 +55,6 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 */
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
-
 	G_assert( targ );
 	G_assert( attacker );
 	G_assert( mod );
@@ -66,6 +65,10 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( !( targ->client ) || !( attacker->client ) ) {
 		return;
 	}
+
+	
+	G_assert( mod );
+	G_assert( damage );
 
 
 	/* Respawn protection */
@@ -100,7 +103,6 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 
 
 	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
-	G_assert( ent->client );
 
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
@@ -182,7 +184,9 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 					*/
 					if ( ( CON_CONNECTED == ent->client->pers.connected ) &&
 					     Q_stricmp( oldname, newname ) ) {
-						SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n", oldname, newname ) );
+						SendClientCommand( CID_ALL, CCMD_PRT,
+						                   va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" was automatically renamed to %s"S_COLOR_ITALIC".\n",
+						                       oldname, newname ) );
 					}
 					break;
 				}
@@ -302,7 +306,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			}
 		}
 		else if ( be_checkGUIDs.integer & GUIDCHECK_EMPTY ) {
-			/* NOTE: This happens with v1.1 engine clients in World of Padman.
+			/* NOTE: This happens with bad installations (no rw on wopkey).
 			         So maybe we should return a more helpfull "error message"?
 			*/
 			return "No GUID in userinfo.";
@@ -328,7 +332,6 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 
 
 	G_assert( ent );
-	G_assert( ent->client );
 
 
 	if ( CON_CONNECTED != ent->client->pers.connected ) {
@@ -402,8 +405,6 @@ void BE_ClientBegan( int clientNum ) {
 
 	ent = &g_entities[clientNum];
 
-	G_assert( ent->client );
-
 	ent->client->pers.lifeShards = 0;
 }
 
@@ -413,7 +414,6 @@ void BE_ClientBegan( int clientNum ) {
 */
 void BE_ClientKilled( gentity_t *self ) {
 	G_assert( self );
-	G_assert( self->client );
 
 
 	if ( ( GT_LPS == g_gametype.integer ) &&
@@ -482,9 +482,7 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 
 	clientNum = ( other - g_entities );
 
-
 	ent->client->storage.ignoreList[clientNum] = mode;
-
 
 	switch ( mode ) {
 		case qtrue:
@@ -516,7 +514,6 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 
 
 	clientNum = ( other - g_entities );
-
 
 	return ( ent->client->storage.ignoreList[clientNum] );
 }
@@ -564,7 +561,7 @@ static void ParseSecrets( char *buff ) {
 
 			token = COM_Parse( &buff );
 			if ( !*token ) {
-				G_Printf( BE_LOG_PREFIX"Missing target name for secret\n." );
+				G_Printf( BE_LOG_PREFIX"Missing target name for secret.\n" );
 				break;
 			}
 
@@ -593,11 +590,11 @@ static void BE_LoadSecrets( void ) {
 	
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		G_Printf( BE_LOG_PREFIX"Could not open \"%s\"\n.", filename );
+		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
 		return;
 	}
 	else if ( len >= sizeof( buff ) ) {
-		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld\n.", filename, len, sizeof( buff ) );
+		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, sizeof( buff ) );
 		trap_FS_FCloseFile( f );
 		return;
 	}
@@ -629,8 +626,8 @@ void BE_InitBeryllium( void ) {
 
 
 /*
-	Determines whether the given teleporter can be used
-	Will spawn the player at a random position instead of original target.
+	Determines whether the given teleporter can be used.
+	if not, will spawn the player at a random position instead of original target.
 */
 qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
 	if ( be_noSecrets.integer ) {
@@ -675,6 +672,7 @@ qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other ) {
 
 		G_assert( ent );
 
+
 		for ( i = 0; i < numSecrets; i++ ) {
 			if ( Q_stricmp( ent->target, secretNames[i] ) == 0 ) {
 				return qfalse;
@@ -698,6 +696,7 @@ qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, co
 
 
 	len = strlen( be_hideChat.string );
+	/* Only filter player messages, not those from server chat */
 	if ( ( len > 0 ) && ent ) {
 		if ( Q_strncmp( be_hideChat.string, message, len ) == 0 ) {
 			/* Echo back to author, so it does not seem "lost" */

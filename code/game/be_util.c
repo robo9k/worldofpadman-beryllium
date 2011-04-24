@@ -47,6 +47,7 @@ const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
 	G_assert( str );
 
+
 	if ( !ValidClientID( clientNum, qtrue ) ) {
 		G_Error( "SendClientCommand: clientNum %i out of range\n", clientNum );
 		return;
@@ -62,7 +63,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 			trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
 			break;
 		case CCMD_PRINT:
-			/* NOTE: World of Padman is flawed with con_notifytime > 0
+			/* NOTE: World of Padman is flawed with con_notifytime < 0
 			         It'll always remove the last character in CG_Printf in cg_main.c
 			*/
 			trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
@@ -86,6 +87,7 @@ gametype_t StringToGametype( const char *str ) {
 
 
 	G_assert( str );
+
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( Q_stricmp( GAMETYPE_REMAP[i].str, str ) == 0 ) {
@@ -124,11 +126,9 @@ char* GametypeToString( gametype_t gt ) {
 char* TimeToString( int time, char *str, size_t size ) {
 	int min, tens, sec;
 
-
-	/* FIXME: Replace check below with G_assert()? */
-	if ( ( str == NULL ) || ( size <= 0 ) ) {
-		return NULL;
-	}
+	
+	G_assert( str );
+	G_assert( size );
 
 
 	sec = ( time / 1000 );
@@ -181,6 +181,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 
 	G_assert( name );
 
+
 	/* FIXME: Const correctness */
 	Q_ExtraCleanStr( (char*)name, cleanquery, sizeof( cleanquery ) );
 
@@ -230,6 +231,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 qboolean fileExists( const char *path ) {
 	G_assert( path );
 
+
 	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
 }
 
@@ -243,10 +245,8 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	char *skin;
 
 
-	/* FIXME: Replace check below with G_assert()? */
-	if ( ( model == NULL ) || ( headModel == NULL ) ) {
-		return qfalse;
-	}
+	G_assert( model );
+	G_assert( headModel );
 	
 
 	Q_strncpyz( base, model, sizeof( base ) );
@@ -289,25 +289,32 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	SetTeam() has some implementation of this..
 */
 team_t TeamFromString( const char *s ) {
-	team_t team = TEAM_NUM_TEAMS;
+	team_t team;
 
 
 	G_assert( s );
 
 
-	if ( ( Q_stricmp( "spectator", s ) == 0 ) || ( Q_stricmp( "s", s ) == 0 ) )  {
-		team = TEAM_SPECTATOR;
-	}
-	else if (  ( Q_stricmp( "red", s ) == 0 ) || ( Q_stricmp( "r", s ) == 0 ) ) {
-		team = TEAM_RED;
-	}
-	else if ( ( Q_stricmp( "blue", s ) == 0 ) || ( Q_stricmp( "b", s ) == 0 ) ) {
-		team = TEAM_BLUE;
-	}
-	else if ( ( Q_stricmp( "free", s ) == 0 ) || ( Q_stricmp( "f", s ) == 0 ) ) {
-		team = TEAM_FREE;
-	}
+	/* TODO: Restore old verbose, case insensitive "spectator", "red", "blue", "free" logic? */
 
+	switch ( s[0] ) {
+		case 'r':
+			team = TEAM_RED;
+			break;
+		case 'b':
+			team = TEAM_BLUE;
+			break;
+		case 's':
+			team = TEAM_SPECTATOR;
+			break;
+		case 'f':
+			team = TEAM_FREE;
+			break;
+
+		default:
+			team = TEAM_NUM_TEAMS;
+			break;
+	}
 
 	return team;
 }
@@ -345,11 +352,8 @@ qboolean InList( const char *haystack, const char *needle ) {
 	char pattern[MAX_STRING_TOKENS];
 
 
-	/* Should no needle but haystack return qtrue? :D */
-	/* FIXME: Replace check below with G_assert()? */
-	if ( !needle || !haystack ) {
-		return qfalse;
-	}
+	G_assert( haystack );
+	G_assert( needle );
 
 
 	Com_sprintf( pattern, sizeof( pattern ), "/%s/", needle );
@@ -365,6 +369,9 @@ qboolean InList( const char *haystack, const char *needle ) {
 void QDECL G_DPrintf( const char *fmt, ... ) {
 	va_list		argptr;
 	char		text[1024];
+
+
+	G_assert( fmt );
 
 
 	/* FIXME: Rather add a new g_debug/g_developer cvar and loglevels for it? */
@@ -385,8 +392,13 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 /*
 	Removes all colortags "recursively".
 */
-void Q_DecolorStr( char *in, char *out, int outsize ) {
+void Q_DecolorStr( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
+
+
+	G_assert( in );
+	G_assert( out );
+	G_assert( outsize );
 
 
 	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
@@ -409,8 +421,13 @@ void Q_DecolorStr( char *in, char *out, int outsize ) {
 /*
 	Strips all whitespace from string, not only trailing, leading and double.
 */
-void Q_StripWhitespace( char *in, char *out, int outsize ) {
+void Q_StripWhitespace( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
+
+
+	G_assert( in );
+	G_assert( out );
+	G_assert( outsize );
 
 
 	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
@@ -430,8 +447,13 @@ void Q_StripWhitespace( char *in, char *out, int outsize ) {
 /*
 	Strips colortags, whitespace and any strange characters and converts to lowercase.
 */
-void Q_ExtraCleanStr( char *in, char *out, int outsize ) {
+void Q_ExtraCleanStr( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
+
+
+	G_assert( in );
+	G_assert( out );
+	G_assert( outsize );
 
 
 	Q_DecolorStr( in, out, outsize );
@@ -472,3 +494,4 @@ void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
 	/* FIXME: Const correctness */
 	trap_EA_Command( clientNum, (char*)cmd );
 }
+

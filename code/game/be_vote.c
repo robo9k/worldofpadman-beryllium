@@ -88,6 +88,7 @@ static voteFunc_t GetVoteHandler( voteID_t id ) {
 
 
 static qboolean IsAllowedVote( voteID_t id, qboolean limit ) {
+	/* No G_assert() here! typeof( id ) is basically int */
 	if ( ( id <= VOTEID_NONE ) || ( id >= VOTEID_NUM_VOTES ) ) {
 		return qfalse;
 	}
@@ -115,7 +116,6 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 
 
 	G_assert( ent );
-	G_assert( ent->client );
 
 
 	if ( !level.voteTime ) {
@@ -173,13 +173,18 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 static void PrintValidVotes( gentity_t *ent ) {
 	int i, count = 0;
 	char validVoteString[MAX_STRING_TOKENS] = { S_COLOR_ITALIC"Valid and allowed vote commands are: " };
+	qboolean unpriv = qtrue;
 
 
 	/* NOTE: No G_assert( ent ) here, since console might call this */
 
+	if ( !ent ) {
+		unpriv = qfalse;
+	}
+
 	for ( i = 0; i < NUM_VOTES; i++ ) {
 		/* FIXME: This is a horribly duplicated and nested, but somewhat clean implementation.. */
-		if ( !IsAllowedVote( VOTES[i].ident.id, ( ent ? qtrue : qfalse  ) ) ) {
+		if ( !IsAllowedVote( VOTES[i].ident.id, unpriv ) ) {
 			/* FIXME: Handle case when there are no allowed votes? Set g_allowVote 0? */
 			continue;
 		}			
@@ -204,9 +209,6 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 	int		i;
 	voteID_t	id;
 	voteFunc_t	handler;
-
-	
-	/* TODO: If ent is given, G_assert( ent->client ) etc? */
 
 
 	/* Console is always allowed to callvote */
@@ -301,7 +303,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 
 	if ( handler( ent, id ) ) {
 
-		/* FIXME: There is a problem clientside when displaying a votestring with double " inside.
+		/* FIXME: Votestring can not include \" since it is already escaped once.
 		          voteDisplayString is also S_COLOR_ITALIC
 		*/
 		SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_ITALIC"%s"S_COLOR_ITALIC" called a vote: %s"S_COLOR_ITALIC".\n",
@@ -686,6 +688,7 @@ static qboolean VoteH_Misc( gentity_t *ent, voteID_t id ) {
 	char	arg2[MAX_STRING_TOKENS];
 	int		i;
 	char	variable[64]; /* Should be enough to hold common cvar/vote names */
+
 
 	Q_strncpyz( variable, GetVoteStr( id ), sizeof( variable ) );
 	trap_Argv( 2, arg2, sizeof( arg2 ) );

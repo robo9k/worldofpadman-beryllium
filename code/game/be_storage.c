@@ -36,11 +36,10 @@ void BE_InitClientStorageData( gclient_t *client ) {
 
 	G_assert( client );
 
+
 	stor = &client->storage;
 
-
 	Com_Memset( &stor->ignoreList, 0, sizeof( stor->ignoreList ) );
-
 
 	BE_WriteClientStorageData( client );
 }
@@ -90,8 +89,7 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 
 	clientNum = ( client - level.clients );
 	var = va( STORAGE_CVARNAME"%d", clientNum );
-	stor = &client->storage;
-	
+	stor = &client->storage;	
 
 	trap_Cvar_VariableStringBuffer( var, buff, sizeof( buff ) );
 
