@@ -5,6 +5,8 @@ SRC="release"
 ## destination could include VERSION
 DST=$MODNAME
 
+svn up
+
 make clean && make
 
 ## export versioned content
