@@ -428,6 +428,10 @@ struct gclient_s {
 	/* added beryllium */
 	clientStorage_t	storage;
 	/* end beryllium */
+
+	/* added beryllium */
+	int			dropTime;
+	/* end beryllium */
 };
 
 //
@@ -641,6 +645,11 @@ typedef enum {
 } award_t;
 
 void SetAward( gclient_t *client, award_t award );
+
+/* added beryllium */
+qboolean IsItemSameTeam( gentity_t *item, gentity_t *player );
+void RemoveOwnedItems( gentity_t *client );
+/* end added */
 
 //
 // g_combat.c

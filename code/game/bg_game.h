@@ -99,6 +99,9 @@
 #define FIREDELAY_BAMBAM	1000
 #define FIRESTART_BAMBAM	1000
 #define MAX_TEAM_BAMBAMS	5
+/* added beryllium */
+#define RANGE_BAMBAM_VISIONLESS	320.0f // rather magical constant
+/* end beryllium */
 
 // Not a real weapon ..
 #define SPLASHDMG_BOOMIE	200
@@ -116,4 +119,8 @@
 #define MAX_KILLERDUCKS		5
 #define MAX_BOOMIES			3
 #define MAX_BAMBAMS			1
+
+/* added beryllium */
+#define	DROP_DELAY_LOLLY	5000
+/* end beryllium */
 

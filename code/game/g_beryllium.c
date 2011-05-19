@@ -586,6 +586,11 @@ static void BE_LoadSecrets( void ) {
 	char			filename[MAX_QPATH];
 
 
+	/* Don't even bother parsing if disabled. This is CVAR_LATCH, don't worry */
+	if ( !be_noSecrets.integer ) {
+		return;
+	}
+
 	Com_sprintf( filename, sizeof( filename ), "maps/%s.dat", level.mapname );
 	
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
@@ -620,7 +625,7 @@ void BE_InitBeryllium( void ) {
 	/* NOTE: This is used in several places in original code, but strage enough never cached */
 	Q_strncpyz( level.mapname, Info_ValueForKey( serverinfo, "mapname" ), sizeof( level.mapname ) );
 
-	/* NOTE: Always read secrets, so they can be disabled on-the-fly */
+	/* NOTE: Function decides whether to actually load anything */
 	BE_LoadSecrets();
 }
 

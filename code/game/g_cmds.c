@@ -617,6 +617,9 @@ void SetTeam( gentity_t *ent, char *s ) {
 		ent->flags &= ~FL_GODMODE;
 		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
 		player_die (ent, ent, ent, 100000, MOD_SUICIDE);
+		/* added beryllium */
+		RemoveOwnedItems( ent );
+		/* end added */
 
 	}
 	// they go to the end of the line for tournements
@@ -687,6 +690,16 @@ void StopFollowing( gentity_t *ent ) {
 	ent->client->ps.pm_flags &= ~PMF_FOLLOW;
 	ent->r.svFlags &= ~SVF_BOT;
 	ent->client->ps.clientNum = ent - g_entities;
+
+	/* added beryllium */
+	/* Maybe this fixes wrong view? */
+	if ( ent->client->sess.spectatorClient >= 0 ) {
+		gclient_t *cl;
+
+		cl = &level.clients[ent->client->sess.spectatorClient];
+		SetClientViewAngle( ent, cl->ps.viewangles );
+	}
+	/* end beryllium */
 }
 
 /*
@@ -1750,6 +1763,14 @@ void Cmd_dropCartridge_f( gentity_t *ent ) {
 		}
 
 		if ( item ) {
+			/* added beryllium */
+			if ( ent->client->dropTime > level.time ) {
+				// TODO: Print some info to player?
+				return;
+			}
+			ent->client->dropTime = ( level.time + DROP_DELAY_LOLLY );
+			/* end beryllium */
+
 			VectorCopy( ent->s.pos.trBase, origin );
 			origin[2] += 50;
 

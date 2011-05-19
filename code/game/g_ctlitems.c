@@ -120,6 +120,15 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 //		BG_EvaluateTrajectory(&other->s.pos,level.time+50, end );
 		VectorSubtract(other->s.pos.trBase,start,end); // 'end' temporary used for distance calculation
 		tmpLen = VectorLength(end);
+
+		/* added beryllium */
+		if ( other->client->ps.powerups[PW_VISIONLESS] && ( tmpLen > RANGE_BAMBAM_VISIONLESS ) ) {
+			// I'm the invisible man I'm the invisible man
+			// Incredible how you can see right through me
+			return;
+		}
+		/* end added */
+
 		VectorMA(other->s.pos.trBase, (tmpLen/missileVelocity), other->s.pos.trDelta, end);
 		trap_Trace(&tr,start,NULL,NULL,end,ent - g_entities,MASK_SHOT);
 
@@ -267,6 +276,15 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 		return qfalse;
 	}
 
+	/* added beryllium */
+	// Make a trace without bbox, since there are problems with bbox size/curves and wrong startsolid results
+	trap_Trace( &tr, start, NULL, NULL, tr.endpos, ( pEnt - g_entities ), MASK_SHOT );
+	if ( tr.fraction != 1.0 ) {
+		trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Can't build %s here\"", pickupName ) );
+		return qfalse;
+	}
+	/* end beryllium */
+
 	VectorCopy( tr.endpos, start );
 	VectorCopy( tr.endpos, end );
 	end[2] -= 256;
@@ -325,6 +343,10 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 		entBam->die = bambam_die;
 		entBam->takedamage = qtrue;
 		entBam->health = HEALTH_BAMBAM;
+
+		/* added beryllium */
+		entBam->parent = pEnt;
+		/* end added */
 
 		// Needed for clientside bambam health bar, abuse some vars
 		entBam->s.angles2[2] = (float)( (float)entBam->health / HEALTH_BAMBAM );
@@ -433,8 +455,13 @@ qboolean BoomieSpotClean( vec3_t spot, gentity_t *pEnt, char* pickupName )
 		else if( otherEnt->s.eType == ET_ITEM && otherEnt->item->giType == IT_WEAPON )
 		{
 			float distSqr = DistanceSquared2D( otherEnt->s.pos.trBase, spot );
+			/* changed beryllium */
+			/*
 			if( distSqr < Square(50) )
 			{
+			*/
+			if ( ( distSqr < Square( 50 ) ) && !( otherEnt->flags & FL_DROPPED_ITEM ) ) {
+			/* end beryllium */
 				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to weapon spawnpoint\"" ) );
 				return qfalse;
 			}

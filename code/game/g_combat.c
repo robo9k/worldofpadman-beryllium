@@ -482,7 +482,12 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	{
 		attacker->client->lastkilled_client = self->s.number;
 
+		/* changed beryllium */
+		/*
 		if ( attacker == self || OnSameTeam (self, attacker ) ) {
+		*/		
+		if ( attacker == self || ( OnSameTeam (self, attacker ) || IsItemSameTeam( attacker, self ) ) ) {
+		/* end beryllium */
 			if(g_gametype.integer!=GT_LPS)
 				AddScore( attacker, self->r.currentOrigin, SCORE_TEAMKILL, SCORE_TEAMKILL_S );
 		} else {
@@ -873,7 +878,14 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 		// if TF_NO_FRIENDLY_FIRE is set, don't do damage to the target
 		// if the attacker was on the same team
+		/* changed beryllium */
+		/*
 		if ( targ != attacker && OnSameTeam (targ, attacker)  ) {
+		*/
+		// NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage
+		if ( ( ( targ != attacker ) && ( OnSameTeam( targ, attacker ) || IsItemSameTeam( attacker, targ ) ) )
+	         || ( ( targ == attacker ) && ( mod == MOD_BOOMIES ) ) ) {
+		/* end changed */
 			if ( !g_friendlyFire.integer ) {
 				return;
 			}

@@ -47,3 +47,9 @@ Maybe record some stats? Those stimulate players and could be used to detect noo
 
 Give points depending on difficulty. For example less points while using padpower, more when on low health while killing with punchy.
 
+According to rambetters iourt patches, there are more bad chars than vanilla Info_Validate() checks for
+
+Make PickTeam() / autoteam pick the team with lower score and less human players?
+
+Reenable botcode to use bambams and boomies or make them ingore those items
+

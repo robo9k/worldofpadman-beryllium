@@ -856,7 +856,13 @@ gentity_t *fire_bambamMissile(gentity_t *self, vec3_t start, vec3_t dir, float v
 	bolt->s.pos.trTime = level.time;
 	VectorCopy( start, bolt->s.pos.trBase );
 
+	/* changed beryllium */
+	/*
 	bolt->r.ownerNum = ENTITYNUM_WORLD;
+	*/
+	bolt->parent = self; // BamBam missile parent is BamBam. Or should it be player?
+	bolt->r.ownerNum = self->parent->s.number;
+	/* end beryllium */
 
 	// add random spread
 	vectoangles(dir, angles);

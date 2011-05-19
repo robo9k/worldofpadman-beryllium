@@ -972,6 +972,9 @@ void ClientUserinfoChanged( int clientNum ) {
 	
 	// send over a subset of the userinfo keys so other clients can
 	// print scoreboards, display models, and play custom sounds
+
+	/* changed beryllium */
+/*
 	if (ent->r.svFlags & SVF_BOT)
 	{
 //cyr{
@@ -994,6 +997,32 @@ void ClientUserinfoChanged( int clientNum ) {
 
 	// this is not the userinfo, more like the configstring actually
 	G_LogPrintf( "ClientUserinfoChanged: %i %s\n", clientNum, s );
+*/
+	/* NOTE: According to r1ch's tremulous patch, the original code can cause problems;
+	         "we can't use va() here, if the configstring call below overflows a client,
+	          then clientdisconnect is called which trashes the static buffer, causing all
+	          clients after the overflown one to receive garbage. this is the cause of the 'sarge bug'"
+	*/
+	if ( ent->r.svFlags & SVF_BOT ) {
+		Com_sprintf( userinfo, sizeof( userinfo ),
+		             "n\\%s\\t\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%d\\hc\\%d\\w\\%d\\l\\%d\\skill\\%s\\tt\\%d\\tl\\%d\\sl\\%s",
+		             client->pers.netname, team, model, headModel, c1, (int)( random() * 5.9f ),
+		             client->pers.maxHealth, client->sess.wins, client->sess.losses,
+		             Info_ValueForKey( userinfo, "skill" ), teamTask, teamLeader, client->sess.selectedlogo );
+	}
+	else {
+		Com_sprintf( userinfo, sizeof( userinfo ),
+		            "n\\%s\\t\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%d\\w\\%d\\l\\%d\\tt\\%d\\tl\\%d\\sl\\%s",
+		            client->pers.netname, client->sess.sessionTeam, model, headModel, c1, c2, 
+		            client->pers.maxHealth, client->sess.wins, client->sess.losses, teamTask, teamLeader, client->sess.selectedlogo );
+	}
+
+	trap_SetConfigstring( ( CS_PLAYERS + clientNum ), userinfo );
+
+	/* this is not the ClientUserinfo, more like the configstring actually */
+	G_LogPrintf( "ClientUserinfoChanged: %d %s\n", clientNum, userinfo );
+
+	/* end beryllium */
 }
 
 
@@ -1186,6 +1215,7 @@ void ClientBegin( int clientNum ) {
 		tent->s.clientNum = ent->s.clientNum;
 
 		if ( g_gametype.integer != GT_TOURNAMENT  ) {
+			/* beryllium TODO: Don't print this with players which were already connected */
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
 		}
 	}
@@ -1528,6 +1558,9 @@ void ClientDisconnect( int clientNum ) {
 			// They don't get to take powerups with them!
 			// Especially important for stuff like CTF flags
 			TossClientItems( ent );
+			/* added beryllium */
+			RemoveOwnedItems( ent );
+			/* end beryllium */
 		}
 
 		G_LogPrintf( "ClientDisconnect: %i\n", clientNum );

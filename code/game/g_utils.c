@@ -749,3 +749,29 @@ void SetAward( gclient_t *client, award_t award ) {
 	G_LogPrintf( "Award: %ld %s\n", ( client - level.clients ), AwardName( award ) );
 }
 
+
+/* added beryllium */
+// Removes any items owned by the player; e.g. Killerducks, Bambams, Boomies etc.
+// This should be called on disconnect and team change in team games
+void RemoveOwnedItems( gentity_t *client ) {
+	int			i;
+	gentity_t	*ent;
+
+	for ( i = MAX_CLIENTS, ent = &g_entities[i]; i < level.num_entities; ++i, ++ent ) {
+		if ( !ent->inuse ) {
+			continue;
+		}
+
+		if ( ( ent->s.eType == ET_BAMBAM ) || ( ent->s.eType == ET_BOOMIES ) ||
+		     ( ( ent->s.eType == ET_MISSILE ) && ( ent->s.weapon == WP_KILLERDUCKS ) ) ) {
+			if ( ent->parent == client ) {
+				if ( ent->die ) {
+					ent->die( ent, ent, client, 999, MOD_SUICIDE );
+				}
+			}
+		}
+
+	}
+}
+/* end beryllium */
+
