@@ -855,6 +855,8 @@ void BotCtfSeekGoals(bot_state_t* bs){
 			}
 			else if( flagstatus == FLAG_TAKEN )
 			{
+				/* changed beryllium */
+				/*
 				if( bs->ltgtype != LTG_GETFLAG) {
 					// attack enemy flag/base
 					bs->decisionmaker = bs->client;
@@ -863,6 +865,11 @@ void BotCtfSeekGoals(bot_state_t* bs){
 					bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
 				}
 				return;
+				*/
+				// roam around so you get a chance to encounter the enemy
+				bs->ltgtype = 0; 
+				return;
+				/* end beryllium */
 			}
 			// flag is at base, all good
 		}

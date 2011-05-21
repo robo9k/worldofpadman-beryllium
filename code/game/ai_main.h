@@ -81,7 +81,12 @@ extern vmCvar_t bot_developer;
 #define AIDBG_ROUTES		16
 #define AIDBG_GAMETYPE		32
 #define AIDBG_MOVE			64
+/* changed beryllium */
+/*
 #define AIDBG_NBG			128
+*/
+#define AIDBG_GOAL			128
+/* end beryllium */
 #define AIDBG_COMBAT		256
 #define AIDBG_ALL			32767
 

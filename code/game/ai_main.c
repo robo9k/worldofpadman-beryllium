@@ -838,6 +838,17 @@ void BotAddInfoLtg( bot_state_t *bs ){
 			}
 			break;
 		}
+		/* added beryllium */
+		case LTG_TEAMACCOMPANY:
+			BotAddInfo( bs, "ltg: accompany", AIDBG_ALL );
+			break;
+		case LTG_GO_FOR_HEALTH:
+			BotAddInfo( bs, "ltg: going for health", AIDBG_ALL );
+			break;
+		case LTG_PICKUPFLAG:
+			BotAddInfo( bs, "ltg: pickup", AIDBG_ALL );
+			break;
+		/* end beryllium */
         case LTG_RUSHBASE:
 			BotAddInfo(bs, "ltg: going for spraywall", AIDBG_ALL );	
 			break;
@@ -886,7 +897,12 @@ void BotAddInfoLtg( bot_state_t *bs ){
 			break;
 		}
         default:
+			/* changed beryllium */
+			/*
 			BotAddInfo(bs, "ltg: unknown", AIDBG_ALL );
+			*/
+			BotAddInfo( bs, va( "ltg: %d", bs->ltgtype ), AIDBG_ALL );
+			/* end beryllium */
 	}
 }
 
