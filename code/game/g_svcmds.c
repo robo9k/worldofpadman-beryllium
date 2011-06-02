@@ -950,12 +950,13 @@ qboolean	ConsoleCommand( void ) {
 		}
 
 		/* changed beryllium
-		/* This "feature" is annoying, disable */
+		/* This "feature" is annoying, disable say text, but still print a message */
 		/*
 		// everything else will also be printed as a say command
 		trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(0) ) );
 		return qtrue;
 		*/
+		G_Printf( "Unknown game command: %s\n", ConcatArgs( 0 ) );
 		/* end beryllium */
 	}
 
