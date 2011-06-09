@@ -432,6 +432,9 @@ void BE_ClientKilled( gentity_t *self ) {
 			numShards		= killer->pers.lifeShards;
 			neededShards	= be_oneUp.integer;
 			if ( numShards >= neededShards ) {
+				/* NOTE: AWARD_IMPRESSIVE has no clientside code */
+				SetAward( killer , AWARD_EXCELLENT );
+
 				killer->sess.livesleft++;
 				CalculateRanks();
 				SendScoreboardMessageToAllClients();

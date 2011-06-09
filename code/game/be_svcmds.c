@@ -27,6 +27,8 @@ static void BE_Svcmd_RenamePlayer_f( void );
 static void BE_Svcmd_DropClient_f( void );
 static void BE_Svcmd_ClientCommand_f( void );
 static void BE_Svcmd_Callvote_f( void );
+static void BE_Svcmd_LogPrint_f( void );
+
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
 int QDECL SortRanks( const void *a, const void *b );
@@ -42,7 +44,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "scp",			BE_Svcmd_ClientCommand_f	},
 	{ "smp",			BE_Svcmd_ClientCommand_f	},
 	{ "sprint",			BE_Svcmd_ClientCommand_f	},
-	{ "scallvote",		BE_Svcmd_Callvote_f			}
+	{ "scallvote",		BE_Svcmd_Callvote_f			},
+	{ "logprint",		BE_Svcmd_LogPrint_f			}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -416,5 +419,18 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 */
 static void BE_Svcmd_Callvote_f( void ) {
 	BE_Cmd_CallVote_f( NULL );
+}
+
+
+/*
+	A way for external tools to add entries to the logfile
+*/
+static void BE_Svcmd_LogPrint_f( void ) {
+	if ( trap_Argc() < 2 ) {
+		G_Printf( "Usage: logprint <text>\n" );
+		return;
+	}
+
+	G_LogPrintf( "%s\n", ConcatArgs( 1 ) );
 }
 

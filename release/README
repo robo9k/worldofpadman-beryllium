@@ -238,8 +238,14 @@
     :: scallvote vote
     Almost the same as client's callvote, but some restrictions
     do not apply.
-  
-  
+
+
+    :: logprint text
+    Will add an entry to the game log, just like the regular
+    entries. Since this uses game logic, the entry will also
+    be printed to the server console.
+
+
   :: Other changes
   
     Beryllium also includes some changes to the game which are
@@ -257,7 +263,7 @@
   
   :: Versions
   
-   * The current version of Beryllium is 0.12e-r98.
+   * The current version of Beryllium is 0.12f-r99.
    * The code bases upon World of Padman's v1.5 gamecode and is
     thus only compatible with this version of the game.
     Due to its generic nature, it could also be applied to other
