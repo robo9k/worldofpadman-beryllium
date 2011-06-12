@@ -20,13 +20,13 @@
 ## Changelog:
 ##
 ## 19:00 11.06.2011 by thbrn
-##  * add command beryllium, which displays plugin version and author
-##  * add command cancelvote, which allows to cancel the running vote
-##  * add command shuffleteams, which shuffles teams in team gametypes
-##  * add command callvote, which will call a server vote instead of a regular
+##  * Added command beryllium, which displays plugin version and author
+##  * Added command cancelvote, which allows to cancel the running vote
+##  * Added command shuffleteams, which shuffles teams in team gametypes
+##  * Added command callvote, which will call a server vote instead of a regular
 ##    client one
-##  * add centerprint command, which prints centered text to every player
-##  * add rename command, which allows to rename players ingame
+##  * Added centerprint command, which prints centered text to every player
+##  * Added rename command, which allows to rename players ingame
 ##
 ## 23:30 11.06.2011 by thbrn
 ##  * Added TODO section
@@ -42,6 +42,12 @@
 ##  * Updated command descriptions, hopefully following "standards" this time
 ##  * Added info print for commands which affect players
 ##  * Fixed callvote for votes with arguments
+##
+## 12:30 12.06.2011 by thbrn
+##  * Made Changelog more consistend
+##  * Made !rcon and !callvote spit out possible commands if none given
+##  * Changed versioning
+##  * Added NOTES section
 ##
 ##
 ## TODO:
@@ -61,9 +67,16 @@
 ##    Currently only change would be 'dropclient %(cid)s %(reason)s' instead of
 ##    vanilla clientkick
 ##  * Make error messages to clients more specific about what data is missing
+##  * Find a way to add help for !rcon and !callvote sub-functions?
+##
+##
+## NOTES:
+##  * You should read beryllium mod's README, really!
+##  * beryllium converts "\n" into a real \n, see cmd_rename(), cmd_forceteam()
 ##
 
-__version__ = '0.0.4'
+## major.minor.(svn)revision
+__version__ = '0.5.101'
 __author__  = 'thbrn'
 
 import b3
@@ -95,6 +108,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         if 'commands' in self.config.sections():
             for cmd in self.config.options('commands'):
                 try:
+                    ## TODO: This prevents "None" to disable the command in config
                     level = self.config.getint('commands', cmd)
                 except:
                     self.error('No valid level for command %s, skipping', cmd)
@@ -116,6 +130,8 @@ class BerylliumPlugin(b3.plugin.Plugin):
         ## TODO: We could check whether be_version cvar is present and
         ##       either bail out, warn or disable beryllium specific commands.
         ##       This would even allow syncing mod<->plugin versions.
+
+		## Current target mod version: 0.12g-r101
 
 
     def onLoadConfig(self):
@@ -206,15 +222,22 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
     def cmd_callvote(self, data, client, cmd=None):
         """\
-        <vote> [options] - calls the vote as server, options depend on the specific vote
+        <vote> [options] - calls the vote as server, options depend on the specific vote.
+        Will print a list of possible votes of none given.
         """
 
         input = self._adminPlugin.parseUserCmd(data)
 
         ## no vote command given, most likely wants a list of votes
         if not input:
-            result = self.console.write('scallvote')
-            client.message(result)
+            votes = []
+            for cmd,level in self._votes.items():
+                if level > client.maxLevel:
+                    continue
+                votes.append(cmd)
+            votes.sort()
+            ## TODO: Different message if none
+            client.message('^7Available votes: %s' % ', '.join(votes))
             return True
 
         votecmd = input[0]
@@ -236,14 +259,23 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
     def cmd_rcon(self, data, client, cmd=None):
         """\
-        <command> [options] - will execute command via rcon, options depend on the specific command
+        <command> [options] - will execute command via rcon, options depend on the specific command.
+        Will print a list of possible commands if none given.
         """
 
         input = self._adminPlugin.parseUserCmd(data)
 
+        ## no rcon command given, most likely wants a list of commands
         if not input:
-            client.message('^7Missing data, try !help rcon')
-            return False
+            rcommands = []
+            for cmd,level in self._rcon.items():
+                if level > client.maxLevel:
+                    continue
+                rcommands.append(cmd)
+            rcommands.sort()
+            ## TODO: Different message if none
+            client.message('^7Available rcon commands: %s' % ', '.join(rcommands))
+            return True
 
         rconcmd = input[0]
 
@@ -303,7 +335,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         self.console.write('rename %s "%s"' % (sclient.cid, ' '.join(input[1:])))
         ## TODO: Don't use a hardcoded message and command
-        self.console.write('scp %s "^3Renamed by admin"' % sclient.cid)
+        self.console.write('scp %s "^3You were renamed\\n^3by admin"' % sclient.cid)
         return None
 
 
@@ -336,8 +368,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         self.console.write('forceteam %s %s' % (sclient.cid, input[1]))
         ## TODO: Don't use a hardcoded message and command
-        ##       Message can not contain \n, since write() seems to escape it?
-        self.console.write('scp %s "^3Moved to team by admin"' % sclient.cid)
+        self.console.write('scp %s "^3You were moved to\\n^3another team by an admin"' % sclient.cid)
         return True
 
         

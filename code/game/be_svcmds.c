@@ -65,6 +65,7 @@ qboolean BE_ConCmd( const char *cmd ) {
 			/* TODO: Since some handlers are registered for more than one command, we should pass
 			         the actual command id as an argument so they don't need to Q_stricmp again.
 			*/
+			/* FIXME: assert( cmdHandler ) */
 			BE_SVCMDS[i].cmdHandler();
 			return qtrue;
 		}

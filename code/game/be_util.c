@@ -45,6 +45,10 @@ const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 	See CG_ServerCommand() in cg_servercmds.c
 */
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
+	int i, j;
+	char buffer[MAX_STRING_CHARS];
+
+
 	G_assert( str );
 
 
@@ -55,18 +59,52 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 	/* TODO: Check whether clientNum is connected */
 
 
+	/* NOTE: Here's a special problem; You can not send newlines via rcon, not even
+	         via server console, only via game code. Thus we'll need to replace
+             \\n with a real \n.
+             Code will also convert \\ into real \
+	*/
+	/* FIXME: Only do conversion for print and centerprint */
+	/* NOTE: This most likely won't work for stell, ssay(_team) and smp anyways,
+	         since they suffer from the same bug; not even aware of newlines
+	*/
+
+	Q_strncpyz( buffer, str, sizeof( buffer ) );
+	for ( i = j = 0; i < strlen( buffer ); i++, j++ ) {
+		if ( !buffer[i] ) {
+			break;
+		}
+
+		if ( buffer[i] == '\\' ) {
+			if ( buffer[i + 1] && ( '\\' == buffer[i + 1] ) ) {
+				buffer[j] = buffer[++i];
+			}
+			else if( buffer[i + 1] && ( 'n' == buffer[i + 1] ) ) {
+				buffer[j] = '\n';
+				i++;
+			}
+			else {
+				buffer[j] = buffer[i];
+			}
+		}
+		else {
+			buffer[j] = buffer[i];
+		}
+	}
+	buffer[j] = '\0';
+
 	switch ( cmd ) {
 		case CCMD_CENTERPRINT:
-			trap_SendServerCommand( clientNum, va( "cp \"%s\"", str ) );
+			trap_SendServerCommand( clientNum, va( "cp \"%s\"", buffer ) );
 			break;
 		case CCMD_MESSAGEPRINT:
-			trap_SendServerCommand( clientNum, va( "mp \"%s\"", str ) );
+			trap_SendServerCommand( clientNum, va( "mp \"%s\"", buffer ) );
 			break;
 		case CCMD_PRINT:
 			/* NOTE: World of Padman is flawed with con_notifytime < 0
 			         It'll always remove the last character in CG_Printf in cg_main.c
 			*/
-			trap_SendServerCommand( clientNum, va( "print \"%s\"", str ) );
+			trap_SendServerCommand( clientNum, va( "print \"%s\"", buffer ) );
 			break;
 
 		default:

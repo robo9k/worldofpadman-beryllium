@@ -206,6 +206,9 @@
     to every client.
     Messages sent with stell, ssay and ssay_team will use
     "server" as the player name.
+
+    You can print newlines with scp and sprint by using "\n" in
+    the text, which will get expanded to a real newline.
   
   
     :: dropclient cid [reason]
@@ -263,7 +266,7 @@
   
   :: Versions
   
-   * The current version of Beryllium is 0.12f-r100.
+   * The current version of Beryllium is 0.12g-r101.
    * The code bases upon World of Padman's v1.5 gamecode and is
     thus only compatible with this version of the game.
     Due to its generic nature, it could also be applied to other

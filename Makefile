@@ -221,7 +221,7 @@ endif
 
 # version info
 VERSION=1.5
-BERYLLIUM_VERSION=0.12f
+BERYLLIUM_VERSION=0.12g
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)

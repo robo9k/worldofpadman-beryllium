@@ -64,6 +64,7 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 
 			/* TODO: Test for CMD_MESSAGE. This is only useful with muting implemented */
 
+			/* FIXME: assert( cmdHandler ) */
 
 			/* Conditions are met, execute! */
 			BE_CCMDS[i].cmdHandler( ent );
