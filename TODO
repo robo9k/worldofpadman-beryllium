@@ -53,3 +53,5 @@ Make PickTeam() / autoteam pick the team with lower score and less human players
 
 Reenable botcode to use bambams and boomies or make them ingore those items
 
+Merge b3 plugin into release? Or Move to its own repo, so revision numbers are separated?
+

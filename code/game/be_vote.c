@@ -194,6 +194,7 @@ static void PrintValidVotes( gentity_t *ent ) {
 				  va( "%s"S_COLOR_BOLD"%s", ( count > 0 ? S_COLOR_ITALIC", " : "" ), VOTES[i].ident.str ) );
 		count++;
 	}
+	Q_strcat( validVoteString, sizeof( validVoteString ), "\n" );
 
 	PrintMessage( ent, validVoteString );
 }
@@ -302,7 +303,6 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 	}
 
 	if ( handler( ent, id ) ) {
-
 		/* FIXME: Votestring can not include \" since it is already escaped once.
 		          voteDisplayString is also S_COLOR_ITALIC
 		*/

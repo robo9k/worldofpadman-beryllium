@@ -1,0 +1,39 @@
+<!-- b3 config for beryllium plugin 0.0.4 -->
+<configuration plugin="beryllium">
+	<settings name="commands">
+		<set name="forceteam-ft">60</set>
+
+		<!-- commands added due to beryllium mod -->
+		<set name="cancelvote-xv">60</set>
+		<set name="callvote-cv">20</set>
+		<set name="centerprint-cp">40</set>
+		<set name="shuffleteams-st">40</set>
+		<set name="rename-rn">60</set>
+
+		<!-- pass-through rcon commands from b3 -->
+		<set name="rcon-rc">60</set>
+	</settings>
+
+	<settings name="callvote">
+		<!-- votename, level -->
+		<set name="nextmap">20</set>
+		<set name="map">40</set>
+		<set name="map_restart">20</set>
+		<set name="kick">20</set>
+		<set name="clientkick">20</set>
+		<set name="timelimit">40</set>
+		<set name="pointlimit">40</set>
+		<set name="g_gametype">40</set>
+		<set name="setgametype">40</set>
+		<!-- added due to beryllium mod -->
+		<set name="shuffleteams">20</set>
+	</settings>
+
+	<settings name="rcon">
+		<!-- command, level -->
+		<set name="status">60</set>
+		<set name="devmap">80</set>
+		<set name="dumpuser">60</set>
+	</settings>
+</configuration>
+

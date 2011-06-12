@@ -263,7 +263,7 @@
   
   :: Versions
   
-   * The current version of Beryllium is 0.12f-r99.
+   * The current version of Beryllium is 0.12f-r100.
    * The code bases upon World of Padman's v1.5 gamecode and is
     thus only compatible with this version of the game.
     Due to its generic nature, it could also be applied to other
