@@ -53,6 +53,14 @@
 ##  * Added a README
 ##  * Moved beryllium.xml to plugin_beryllium.xml
 ##
+## 16:00 12.06.2011 by thbrn
+##  * Split rcon results at linebreak and print in separate chunks.
+##    General problem; e.g. !rc devmap foo spits out all the output when loading
+##    a map and does not print it to server console anymore, since redirected
+##    due to being invoked by rcon. Not quite intended behaviour
+##  * !beryllium now also prints mod version
+##  * Check and warn at startup, if mod could not be detected
+##
 ##
 ## TODO:
 ##
@@ -73,6 +81,7 @@
 ##  * Find a way to add help for !rcon and !callvote sub-functions?
 ##  * Filter rcon responses? We rely on beryllium mod anyways, so we could
 ##    could add some regexp as well
+##    This obviously won't work for !rcon, since it's meant to be dynamic
 ##
 ##
 ## NOTES:
@@ -81,9 +90,11 @@
 ##  * The entire voting *could* be done with b3 and rcon, see b3 voting plugin,
 ##    but why reinvent the wheel (and all sanity checks)
 ##
+##
+
 
 ## major.minor.(svn)revision
-__version__ = '0.5.102'
+__version__ = '0.6.103'
 __author__  = 'thbrn'
 
 import b3
@@ -111,6 +122,19 @@ class BerylliumPlugin(b3.plugin.Plugin):
             self.error('Could not find admin plugin')
             return False
 
+        ## TODO: We could check whether be_version cvar is present and
+        ##       either bail out or disable beryllium specific commands.
+        ##       This would even allow syncing mod<->plugin versions.
+
+		## Current target mod version: 0.12g-r101
+
+        ## see whether beryllium mod in installed
+        try:
+            be_version = self.console.getCvar('be_version').getString()
+            self.debug('Beryllium mod %s' % be_version)
+        except:
+            self.warning('Beryllium mod is not running')
+
         ## register our commands
         if 'commands' in self.config.sections():
             for cmd in self.config.options('commands'):
@@ -133,12 +157,6 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         ## version command is not in config, always add
         self._adminPlugin.registerCommand(self, 'beryllium', 40, self.cmd_version)
-
-        ## TODO: We could check whether be_version cvar is present and
-        ##       either bail out, warn or disable beryllium specific commands.
-        ##       This would even allow syncing mod<->plugin versions.
-
-		## Current target mod version: 0.12g-r101
 
 
     def onLoadConfig(self):
@@ -192,16 +210,16 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
     def cmd_version(self, data, client, cmd=None):
         """\
-        prints beryllium plugin version and creator
+        prints beryllium mod version, plugin version and creator
         """
 
-        ## getCvar() in q3::abstractParser() does not really work due to regex
-        ## Once it does or there's a workaround, don't forget to edit description
-        ## regarding mod version.
-        #be_version = self.console.getCvar('be_version')
-        #client.message('^7This is beryllium ^2%s, ^7plugin version ^4%s^7 by ^5%s^7.' % (be_version, __version__, __author__))
+        ## This won't work correct as long as getCvar() is bugged
+        try:
+            be_version = self.console.getCvar('be_version').getString()
+        except:
+            be_version = '^1NOT-RUNNING'
+        client.message('^7This is beryllium ^2%s, ^7plugin version ^4%s^7 by ^5%s^7.' % (be_version, __version__, __author__))
 
-        client.message('^7This is beryllium plugin version ^4%s^7 by ^5%s^7.' % (__version__, __author__))
         return None
 
 
@@ -211,7 +229,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         """
 
         result = self.console.write('cancelvote')
-        client.message(result)
+        self.printLines(client, result.split('\n'))
         ## TODO: Print info to players on success?
         return None
 
@@ -222,7 +240,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         """
 
         result = self.console.write('shuffleteams')
-        client.message(result)
+        self.printLines(client, result.split('\n'))
         ## TODO: Print info to players on success?
         return None
 
@@ -260,7 +278,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
             return False
 
         result = self.console.write('scallvote %s' % data)
-        client.message(result)
+        self.printLines(client, result.split('\n'))
         return True
 
 
@@ -297,7 +315,8 @@ class BerylliumPlugin(b3.plugin.Plugin):
             return False
 
         result = self.console.write(data)
-        client.message(result)
+        self.printLines(client, result.split('\n'))
+
         return None
 
 
@@ -377,5 +396,38 @@ class BerylliumPlugin(b3.plugin.Plugin):
         ## TODO: Don't use a hardcoded message and command
         self.console.write('scp %s "^3You were moved to\\n^3another team by an admin"' % sclient.cid)
         return True
+
+
+    def printLines(self, client, lines):
+        ## Prints a bunch of lines to a client
+
+        ## ioquake3 server won't send commands longer than 1022 chars
+        ## console.write() will strip whitespace if not quoted
+        ## So what we need to do is construct quoted chunks which do
+        ## not exceed the command limit and send each one
+        ## Plus we'll need to use beryllium mod's sprint with modified
+        ## newlines
+
+        maxlen = 1022
+
+        if not client:
+            cid = -1
+        else:
+            cid = client.cid
+
+        if not lines:
+            return None
+
+        ## TODO: Don't add linebreak if only one line
+        ##       Rewrite loop logic, current one is sh*
+
+        cmd = 'sprint %s "' % cid
+        for l in lines:
+            if len(cmd + '\\n' + l + '"') <= (maxlen):
+                cmd = cmd + '\\n' + l
+            else:
+                self.console.write(cmd + '"')
+                cmd = 'sprint %s "%s' % (cid,l)
+        self.console.write(cmd + '"')
 
         
