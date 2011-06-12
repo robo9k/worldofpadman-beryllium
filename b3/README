@@ -1,0 +1,51 @@
+               _____             _ _ _           
+              | __  |___ ___ _ _| | |_|_ _ _____ 
+              | __ -| -_|  _| | | | | | | |     |
+              |_____|___|_| |_  |_|_|_|___|_|_|_|
+                            |___|                
+  
+  :: Description
+
+  This is a plugin for b3 (bigbrotherbot.net), which adds functionality of
+  the beryllium mod (http://brain.utopia4.de/projects/beryllium).
+
+  IT WILL ONLY WORK WITH THE BERYLLIUM MOD INSTALLED.
+
+  Its main purpose is to add "VIP-votes", i.e. ingame votes which can only
+  be called by certain b3 groups. To do so, disable votes for usual clients in
+  your server.cfg with
+
+    set g_allowVote "0"
+
+  Then take a look at the plugin's settings in conf/plugin_beryllium.xml,
+  especially the "callvote" section.
+
+  The plugin furthermore adds the option to pass-through rcon commands. This is
+  a rather mighty and dirty method and should thus only be allowed to trusted
+  admin users.
+
+
+  :: Installation
+
+  * Install beryllium mod
+  * Copy extplugins/* into b3/
+  * Add to b3.xml
+
+      <plugin name="beryllium" priority="42" config="@b3/extplugins/conf/plugin_beryllium.xml"/>
+
+    Adjust priority to your needs.
+
+
+  :: Usage
+
+  Use b3's ingame help. New commands are
+
+  * forceteam
+  * cancelvote
+  * callvote
+  * centerprint
+  * shuffleteams
+  * rename
+  * rcon
+
+

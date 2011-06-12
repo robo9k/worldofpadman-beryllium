@@ -49,10 +49,13 @@
 ##  * Changed versioning
 ##  * Added NOTES section
 ##
+## 15:00 12.06.2011 by thbrn
+##  * Added a README
+##  * Moved beryllium.xml to plugin_beryllium.xml
+##
 ##
 ## TODO:
 ##
-##  * Write a README
 ##  * Report bug in q3::abstractParser.getCvar()
 ##  * Most rcon results are scrambled when being output, report feature request
 ##    for getWrap() to consider \n as well. Currently those newlines seem to be
@@ -68,15 +71,19 @@
 ##    vanilla clientkick
 ##  * Make error messages to clients more specific about what data is missing
 ##  * Find a way to add help for !rcon and !callvote sub-functions?
+##  * Filter rcon responses? We rely on beryllium mod anyways, so we could
+##    could add some regexp as well
 ##
 ##
 ## NOTES:
 ##  * You should read beryllium mod's README, really!
 ##  * beryllium converts "\n" into a real \n, see cmd_rename(), cmd_forceteam()
+##  * The entire voting *could* be done with b3 and rcon, see b3 voting plugin,
+##    but why reinvent the wheel (and all sanity checks)
 ##
 
 ## major.minor.(svn)revision
-__version__ = '0.5.101'
+__version__ = '0.5.102'
 __author__  = 'thbrn'
 
 import b3

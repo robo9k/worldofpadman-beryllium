@@ -34,6 +34,8 @@
 		<set name="status">60</set>
 		<set name="devmap">80</set>
 		<set name="dumpuser">60</set>
+
+		<!-- you can add your own rcon commands here -->
 	</settings>
 </configuration>
 

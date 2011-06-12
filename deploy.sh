@@ -5,9 +5,7 @@ SRC="release"
 ## destination could include VERSION
 DST=$MODNAME
 
-svn up
-
-make clean && make
+make -j3
 
 ## export versioned content
 rm -rf $DST
@@ -21,4 +19,16 @@ rm $MODNAME.zip
 zip -r -9 $MODNAME $DST/*
 
 rm -rf $DST
+
+
+PLUGINNAME="b3-beryllium"
+PLUGINSRC="b3"
+PLUGINDST=$PLUGINNAME
+
+svn export $PLUGINSRC $PLUGINDST
+
+rm $PLUGINNAME.zip
+zip -r -9 $PLUGINNAME $PLUGINDST/*
+
+rm -rf $PLUGINDST
 
