@@ -55,3 +55,16 @@ Reenable botcode to use bambams and boomies or make them ingore those items
 
 Merge b3 plugin into release? Or Move to its own repo, so revision numbers are separated?
 
+Make versioning more convenient. Makefile could write entire version string into a VERSION file. code can use it via -D define from make, readme could be split
+into a README.tpl, which is being run through deploy with final README and version as output. Similar for b3 plugin. Maybe save svnversion into a global file, since mod and plugin version differ?
+Merge deploy into "make deploy" and maybe include do_stuff (like versioning) for plugin there as well?
+use svnversion --committed ?
+
+/
+	/mod
+		VERSION
+		--> g_main.c, README
+	/plugin
+		VERSION
+		--> beryllium.py, plugin_beryllium.xml, README
+

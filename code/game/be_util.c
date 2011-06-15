@@ -71,15 +71,16 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 
 	Q_strncpyz( buffer, str, sizeof( buffer ) );
 	for ( i = j = 0; i < strlen( buffer ); i++, j++ ) {
-		if ( !buffer[i] ) {
+		if ( '\0' == buffer[i] ) {
 			break;
 		}
 
-		if ( buffer[i] == '\\' ) {
-			if ( buffer[i + 1] && ( '\\' == buffer[i + 1] ) ) {
-				buffer[j] = buffer[++i];
+		if ( '\\' == buffer[i] ) {
+			if ( '\\' == buffer[i + 1] ) {
+				buffer[j] = '\\';
+				i++;
 			}
-			else if( buffer[i + 1] && ( 'n' == buffer[i + 1] ) ) {
+			else if( 'n' == buffer[i + 1] ) {
 				buffer[j] = '\n';
 				i++;
 			}
@@ -92,6 +93,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 		}
 	}
 	buffer[j] = '\0';
+
 
 	switch ( cmd ) {
 		case CCMD_CENTERPRINT:

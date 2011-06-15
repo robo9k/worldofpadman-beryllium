@@ -61,10 +61,13 @@
 ##  * !beryllium now also prints mod version
 ##  * Check and warn at startup, if mod could not be detected
 ##
+## 00:15 15.06.2011 by thbrn
+##  * Rewrote printLines() loop logic
+##  * Reported bug in q3::abstractParser.getCvar()
+##
 ##
 ## TODO:
 ##
-##  * Report bug in q3::abstractParser.getCvar()
 ##  * Most rcon results are scrambled when being output, report feature request
 ##    for getWrap() to consider \n as well. Currently those newlines seem to be
 ##    dropped (and would not work with client cgame print anyways).
@@ -82,6 +85,9 @@
 ##  * Filter rcon responses? We rely on beryllium mod anyways, so we could
 ##    could add some regexp as well
 ##    This obviously won't work for !rcon, since it's meant to be dynamic
+##  * Don't require a config, make bare metal commands have a fallback if not
+##    present (i.e. no votes, rcon).
+##    This is close to make the mod optional
 ##
 ##
 ## NOTES:
@@ -94,7 +100,7 @@
 
 
 ## major.minor.(svn)revision
-__version__ = '0.6.103'
+__version__ = '0.7.104'
 __author__  = 'thbrn'
 
 import b3
@@ -105,9 +111,15 @@ import b3.plugin
 
 
 class BerylliumPlugin(b3.plugin.Plugin):
+    ## this is the default, just here to be explicitly verbose
+    requiresConfigFile = True
+
     _adminPlugin = None
     _votes = {}
     _rcon = {}
+
+    ## NOTE: b3 has a verbose warning if no handle(), but at
+    ##       same time says "Depreciated. Use onEvent()"
 
 
     def startup(self):
@@ -126,7 +138,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         ##       either bail out or disable beryllium specific commands.
         ##       This would even allow syncing mod<->plugin versions.
 
-		## Current target mod version: 0.12g-r101
+		## Current target mod version: 0.12g-r104
 
         ## see whether beryllium mod in installed
         try:
@@ -418,16 +430,20 @@ class BerylliumPlugin(b3.plugin.Plugin):
         if not lines:
             return None
 
-        ## TODO: Don't add linebreak if only one line
-        ##       Rewrite loop logic, current one is sh*
-
-        cmd = 'sprint %s "' % cid
+        buff = ''
         for l in lines:
-            if len(cmd + '\\n' + l + '"') <= (maxlen):
-                cmd = cmd + '\\n' + l
+            if len(buff) > 0:
+                toadd = '\\n' + l
             else:
-                self.console.write(cmd + '"')
-                cmd = 'sprint %s "%s' % (cid,l)
-        self.console.write(cmd + '"')
+                toadd = l
 
-        
+            if len('sprint %s "%s%s"' % (cid,buff,toadd)) < maxlen:
+                buff = buff + toadd
+            else:
+                self.console.write('sprint %s "%s"' % (cid,buff))
+                buff = ''
+
+        if len(buff) > 0:
+            self.console.write('sprint %s "%s"' % (cid,buff))
+
+
