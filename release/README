@@ -149,6 +149,10 @@
     to the logfile and echoed back to you, but not be send to
     anyone else.
     This is useful to reduce chat spam when using tools like B3.
+
+
+    :: be_banFile
+    Path where to save bans from beryllium's GUID ban system.
   
   
   :: Commands
@@ -249,6 +253,29 @@
     be printed to the server console.
 
 
+    :: rehashguids
+    Reload GUID bans from disk.
+
+
+    :: listguids
+    Print all GUID bans.
+
+
+    :: flushguids
+    Delete all GUID bans, also on disk.
+
+
+    :: banguid cid|guid
+    Add a GUID to the list, either using a client id of a connected player, or
+    by supplying the GUID directly.
+
+
+    :: delguid id|guid
+    Delete a GUID from the list, either by using an id from listguids or by
+    supplying the GUID directly.
+    
+
+
   :: Other changes
   
     Beryllium also includes some changes to the game which are
@@ -266,7 +293,7 @@
   
   :: Versions
   
-   * The current version of Beryllium is 0.12g-r104.
+   * The current version of Beryllium is 0.13a-r106.
    * The code bases upon World of Padman's v1.5 gamecode and is
     thus only compatible with this version of the game.
     Due to its generic nature, it could also be applied to other

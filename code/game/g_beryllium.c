@@ -23,6 +23,9 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 int		numSecrets;
 char	secretNames[MAX_SECRETS][MAX_TARGETNAME];
 
+int			numGUIDBans;
+guidBan_t	guidBans[MAX_GUIDBANS];
+
 
 /* Functions */
 
@@ -210,6 +213,28 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 
 
 /*
+	Returns whether the given guid is banned due to ban list
+*/
+static qboolean GUIDBanned( const char *guid ) {
+	int index;
+
+
+	if ( !guid ) {
+		// If no guid is supplied, let them pass. GUIDCHECK_EMPTY is supposed to check this
+		return qfalse;
+	}
+
+	for ( index = 0; index < numGUIDBans; index++ ) {
+		if ( Q_stricmp( guidBans[ index ].guid, guid ) == 0 ) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+
+/*
 	Hooks early into ClientConnect() in g_client.c.
 	If we return NULL, ClientConnect() continues, otherwise client will be
 	rejected with our return value.
@@ -280,28 +305,14 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		}
 	}
 
+	value = Info_ValueForKey( userinfo, "cl_guid" );
+  	Q_strncpyz( guid, value, sizeof( guid ) );
 
 	if ( be_checkGUIDs.integer ) {
-		/* "Its value is a 32 character string made up of [a-f] and [0-9] characters." */
-		value = Info_ValueForKey( userinfo, "cl_guid" );
-  		Q_strncpyz( guid, value, sizeof( guid ) );
-
 		/* TODO: Add GUIDCHECK_MULTIPLE? */
 
 		if ( *guid && ( be_checkGUIDs.integer & GUIDCHECK_FORMAT ) ) {
-			int count = 0;
-			qboolean valid = qtrue;
-
-			while ( guid[count] != '\0' && valid ) {
-				if( ( ( guid[count] < '0' ) || ( guid[count] > '9' ) ) &&
-				    ( ( guid[count] < 'A' ) || ( guid[count] > 'F' ) ) ) {
-					valid = qfalse;
-					break;
-	   			}
-      			count++;
-		    }
-
-			if ( !valid || ( count != 32 ) )  {
+			if ( !validGUID( guid ) ) {
 				return "Invalid GUID in userinfo.";
 			}
 		}
@@ -311,6 +322,11 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			*/
 			return "No GUID in userinfo.";
 		}
+	}
+
+	// Check against banlist now that guid was most likely validated
+	if ( GUIDBanned( guid ) ) {
+		return "You are banned from this server.";
 	}
 
 
@@ -564,7 +580,7 @@ static void ParseSecrets( char *buff ) {
 
 			token = COM_Parse( &buff );
 			if ( !*token ) {
-				G_Printf( BE_LOG_PREFIX"Missing target name for secret.\n" );
+				COM_ParseWarning( "Missing target name for secret." );
 				break;
 			}
 
@@ -575,7 +591,7 @@ static void ParseSecrets( char *buff ) {
 
 	/* TODO: Validate each target name by parsing actual entities in map? */
 
-	G_Printf( BE_LOG_PREFIX"Parsed %d secret%s.\n", numSecrets, ( numSecrets > 1 ? "s" : "" ) );
+	G_Printf( BE_LOG_PREFIX"Parsed %d secret%s.\n", numSecrets, ( numSecrets != 1 ? "s" : "" ) );
 }
 
 
@@ -602,7 +618,7 @@ static void BE_LoadSecrets( void ) {
 		return;
 	}
 	else if ( len >= sizeof( buff ) ) {
-		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, sizeof( buff ) );
+		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, ( sizeof( buff ) -1 ) );
 		trap_FS_FCloseFile( f );
 		return;
 	}
@@ -611,7 +627,152 @@ static void BE_LoadSecrets( void ) {
 	buff[len] = '\0';
 	trap_FS_FCloseFile( f );
 
+	COM_BeginParseSession( filename );
 	ParseSecrets( buff );
+}
+
+
+/*
+	Adds a new ban to memory list
+*/
+qboolean AddBan( guidBan_t ban ) {
+	int index;
+
+	if ( numGUIDBans > ARRAY_LEN( guidBans ) ) {
+		return qfalse;
+	}
+
+	// check whether it's already in list
+	for ( index = 0; index < numGUIDBans; index++ ) {
+		if ( Q_stricmp( guidBans[ index ].guid, ban.guid ) == 0 ) {
+			return qtrue;
+		}
+	}
+
+	Q_strncpyz( guidBans[ numGUIDBans ].guid, ban.guid, sizeof( guidBans[ numGUIDBans ].guid ) );
+	numGUIDBans++;
+
+	return qtrue;
+}
+
+
+/*
+	Deletes the given guid ban from memory
+*/
+qboolean DeleteBan( unsigned int index ) {
+	if ( index == ( numGUIDBans - 1 ) ) {
+		numGUIDBans--;
+		return qtrue;
+	}
+	else if ( index < ( ARRAY_LEN( guidBans ) - 1 ) ) {
+		memmove( ( guidBans + index ), ( guidBans + index + 1 ), ( ( numGUIDBans - index - 1 ) * sizeof( *guidBans ) ) );
+		numGUIDBans--;
+		return qtrue;
+	}
+
+	// Not present or invalid index
+	return qfalse;
+}
+
+
+/*
+	Writes all guid bans from memory to disk
+*/
+void BE_WriteBans( void ) {
+	int				index, len;
+	fileHandle_t	f;
+	char			*filename;
+	char			buff[GUIDSTRMAXLEN+1];
+
+	filename = be_banFile.string;
+	if ( !filename[0] ) {
+		// FIXME: Hardcoded cvar name, use #define?
+		G_Printf( "be_banFile not set, will not save to disk.\n" );
+		return;
+	}
+
+	len = trap_FS_FOpenFile( filename, &f, FS_WRITE );
+	if ( !f ) {
+		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
+		return;	
+	}
+
+	for ( index = 0; index < numGUIDBans; index++ ) {
+		Com_sprintf( buff, sizeof( buff ), "%s\n", guidBans[ index ].guid );
+		len = strlen( buff );
+		trap_FS_Write( buff, len, f );		
+	}
+	trap_FS_FCloseFile( f );
+}
+
+/*
+	Parses the given buffer for guid bans
+*/
+static void ParseBans( char *buff ) {
+	const char	*token;
+	guidBan_t	ban;
+
+
+	numGUIDBans = 0;
+
+	while ( qtrue ) {
+		token = COM_Parse( &buff );
+		if ( !token[0] ) {
+			break;
+		}
+
+		if ( !validGUID( token ) ) {
+			COM_ParseWarning( "Not a valid GUID %s", token );
+			continue;
+		}
+
+		if ( numGUIDBans >= MAX_GUIDBANS ) {
+			G_Printf( BE_LOG_PREFIX"GUID bans limit of %d exceeded.\n", MAX_GUIDBANS );
+			break;
+		}
+
+		Q_strncpyz( ban.guid, token, sizeof( ban.guid ) );
+		// TODO: Check return value
+		AddBan( ban );
+	}
+
+	G_Printf( BE_LOG_PREFIX"Parsed %d GUID ban%s.\n", numGUIDBans, ( numGUIDBans != 1 ? "s" : "" ) );
+}
+
+
+/*
+	Loads GUID bans from disk
+*/
+void BE_LoadBans( void ) {
+	int				len;
+	fileHandle_t	f;
+	char			buff[8192];
+	char			*filename;
+
+	filename = be_banFile.string;
+	if ( !filename[0] ) {
+		// FIXME: Hardcoded cvar name, use #define?
+		G_Printf( BE_LOG_PREFIX"be_banFile not set, will not read banlist from disk.\n" );
+		return;
+	}
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( !f ) {
+		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
+		return;	
+	}
+	else if ( len >= sizeof( buff ) ) {
+		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, ( sizeof( buff ) - 1 ) );
+		trap_FS_FCloseFile( f );
+		return;
+	}
+
+	trap_FS_Read( buff, len, f );
+	buff[len] = '\0';
+	trap_FS_FCloseFile( f );
+
+	COM_BeginParseSession( filename );
+	ParseBans( buff );
 }
 
 
@@ -630,6 +791,7 @@ void BE_InitBeryllium( void ) {
 
 	/* NOTE: Function decides whether to actually load anything */
 	BE_LoadSecrets();
+	BE_LoadBans();
 }
 
 

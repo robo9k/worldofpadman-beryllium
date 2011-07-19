@@ -49,10 +49,19 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #define MAX_TARGETNAME		64
 #define MAX_SECRETS			64
 
+#define MAX_GUIDBANS		128
+
+typedef struct {
+	char guid[GUIDSTRMAXLEN];
+} guidBan_t;
+
 enum {
 	GUIDCHECK_EMPTY		= 1,
 	GUIDCHECK_FORMAT	= 2
 };
+
+extern int			numGUIDBans;
+extern guidBan_t	guidBans[MAX_GUIDBANS];
 
 
 /* Cvars. See g_main.c */
@@ -87,6 +96,8 @@ extern vmCvar_t	be_noSecrets;
 extern vmCvar_t	be_debugSecrets;
 
 extern vmCvar_t	be_hideChat;
+
+extern vmCvar_t	be_banFile;
 
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
@@ -127,6 +138,11 @@ qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other );
 qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other );
 
 qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, const char *name, const char *message );
+
+void BE_LoadBans( void );
+void BE_WriteBans( void );
+qboolean AddBan( guidBan_t ban );
+qboolean DeleteBan( unsigned int index );
 
 #endif
 

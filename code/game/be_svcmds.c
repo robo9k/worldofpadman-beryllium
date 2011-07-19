@@ -28,6 +28,11 @@ static void BE_Svcmd_DropClient_f( void );
 static void BE_Svcmd_ClientCommand_f( void );
 static void BE_Svcmd_Callvote_f( void );
 static void BE_Svcmd_LogPrint_f( void );
+static void BE_Svcmd_RehashGUIDs_f( void );
+static void BE_Svcmd_ListGUIDs_f( void );
+static void BE_Svcmd_BanGUID_f( void );
+static void BE_Svcmd_DelGUID_f( void );
+static void BE_Svcmd_FlushGUIDs_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -45,7 +50,12 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "smp",			BE_Svcmd_ClientCommand_f	},
 	{ "sprint",			BE_Svcmd_ClientCommand_f	},
 	{ "scallvote",		BE_Svcmd_Callvote_f			},
-	{ "logprint",		BE_Svcmd_LogPrint_f			}
+	{ "logprint",		BE_Svcmd_LogPrint_f			},
+	{ "rehashguids",	BE_Svcmd_RehashGUIDs_f		},
+	{ "listguids",		BE_Svcmd_ListGUIDs_f		},
+	{ "banguid",		BE_Svcmd_BanGUID_f			},
+	{ "delguid",		BE_Svcmd_DelGUID_f			},
+	{ "flushguids",		BE_Svcmd_FlushGUIDs_f		}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -433,5 +443,170 @@ static void BE_Svcmd_LogPrint_f( void ) {
 	}
 
 	G_LogPrintf( "%s\n", ConcatArgs( 1 ) );
+}
+
+
+/*
+	Reloads guid bans from disk, dropping current ones in memory
+*/
+static void BE_Svcmd_RehashGUIDs_f( void ) {
+	BE_LoadBans();
+}
+
+
+/*
+	Lists all guid bans
+*/
+static void BE_Svcmd_ListGUIDs_f( void ) {
+	int index;
+
+	for ( index = 0; index < numGUIDBans; index++ ) {
+		G_Printf( "Ban #%d: %s\n", index, guidBans[ index ].guid );
+	}
+	G_Printf( "Total %d GUID bans.\n", index );
+}
+
+
+/*
+	Adds a guid to the ban list
+*/
+static void BE_Svcmd_BanGUID_f( void ) {
+	char		arg[MAX_STRING_CHARS];
+	int			clientNum;
+	guidBan_t	ban;
+
+	if ( trap_Argc() != 2 ) {
+		G_Printf( "Usage: banguid <cid|guid>\n" );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+
+	if ( strlen( arg ) == ( GUIDSTRMAXLEN - 1 ) ) {
+		if ( !validGUID( arg ) ) {
+			G_Printf( "Not a valid GUID!\n" );
+			return;
+		}
+
+		Q_strncpyz( ban.guid, arg, sizeof( ban.guid ) );
+	}
+	else {
+		gentity_t *ent;
+
+		if ( !Q_isanumber( arg ) ) {
+			G_Printf( "You must supply a client number!\n" );
+			return;
+		}
+
+		clientNum = atoi( arg );
+
+		if ( !ValidClientID( clientNum, qfalse ) ) {
+			G_Printf( "No a valid client number!\n" );
+			return;
+		}
+
+		if ( level.clients[ clientNum ].pers.connected == CON_DISCONNECTED ) {
+			G_Printf( "Client not connected!\n" );
+			return;
+		}
+
+		ent = &( g_entities[ clientNum ] );
+		if ( ent->r.svFlags & SVF_BOT ) {
+			G_Printf( "Can not ban bots!\n" );
+			return;
+		}
+
+		Q_strncpyz( ban.guid, level.clients[ clientNum ].pers.guid, sizeof( ban.guid ) );
+	}
+
+	if ( !AddBan( ban ) ) {
+		G_Printf( "Error adding guid ban!\n" );
+		return;
+	}
+
+	// TODO: Print info if already present?
+	G_Printf( "Added guid ban.\n" );
+
+	// TODO: Kick client(s) if connected?
+
+	BE_WriteBans();
+}
+
+
+/*
+	Deletes a guid from the ban list
+*/
+static void BE_Svcmd_DelGUID_f( void ) {
+	char arg[MAX_STRING_CHARS];
+	int banNum;
+	int index;
+
+	if ( trap_Argc() != 2 ) {
+		G_Printf( "Usage: delguid <id|guid>\n" );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+
+	if ( strlen( arg ) == ( GUIDSTRMAXLEN - 1 ) ) {
+		index = 0;
+		banNum = 0;
+		while ( index < numGUIDBans ) {
+			if ( Q_stricmp( guidBans[ index ].guid, arg ) == 0 ) {
+				if ( !DeleteBan( index ) ) {
+					G_Printf( "Could not delete guid ban %d!\n", banNum );
+					// FIXME: G_Error()?
+					return;
+				}
+				else {
+					banNum++;
+				}
+			}
+			else {
+				index++;
+			}
+		}
+		if ( banNum > 0 ) {
+			G_Printf( "Deleted guid ban.\n" );
+		}
+		else {
+			G_Printf( "GUID not in list.\n" );
+			return;
+		}
+	}
+	else {
+		if ( !Q_isanumber( arg ) ) {
+			G_Printf( "You must supply a guid ban number!\n" );
+			return;
+		}
+
+		banNum = atoi( arg );
+
+		if ( ( banNum < 0 ) || ( banNum >= numGUIDBans ) ) {
+			G_Printf( "Invalid guid ban id %d!\n", banNum );
+			return;
+		}
+
+		if ( !DeleteBan( banNum ) ) {
+			G_Printf( "Could not delete guid ban %d!\n", banNum );
+			// FIXME: Continue, G_Error(), ..?
+			return;
+		}
+		
+		G_Printf( "Deleted guid ban %d.\n", banNum );
+	}
+
+	BE_WriteBans();
+}
+
+
+/*
+	Deletes all guid bans, also on disk
+*/
+static void BE_Svcmd_FlushGUIDs_f( void ) {
+	numGUIDBans = 0;
+	BE_WriteBans();
+
+	G_Printf( "All GUID bans have been deleted.\n" );
 }
 

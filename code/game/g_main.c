@@ -117,6 +117,8 @@ vmCvar_t	be_debugSecrets;
 
 vmCvar_t	be_hideChat;
 
+vmCvar_t	be_banFile;
+
 /* end beryllium */
 
 
@@ -248,7 +250,9 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_noSecrets, "be_noSecrets", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qtrue },
 	{ &be_debugSecrets, "be_debugSecrets", "0", CVAR_CHEAT, 0, qfalse },
 
-	{ &be_hideChat, "be_hideChat", "", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_hideChat, "be_hideChat", "", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 };
@@ -443,8 +447,20 @@ void G_UpdateCvars( void ) {
 				cv->modificationCount = cv->vmCvar->modificationCount;
 
 				if ( cv->trackChange ) {
+					/* changed beryllium */
+					/*
 					trap_SendServerCommand( -1, va("print \"Server: %s changed to %s\n\"", 
 						cv->cvarName, cv->vmCvar->string ) );
+					*/
+					if ( cv->cvarFlags & CVAR_LATCH ) {
+						// game is unaware of the new latched value, so just don't print it
+						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed.\n", cv->cvarName ) );
+					}
+					else {
+						// FIXME: Don't print the new value at all?
+						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed to "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT".\n", cv->cvarName, cv->vmCvar->string ) );
+					}
+					/* end beryllium */
 					G_LogPrintf( "CvarChange: %s %s\n", cv->cvarName, cv->vmCvar->string );
 				}
 

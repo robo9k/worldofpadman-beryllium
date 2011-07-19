@@ -91,5 +91,7 @@ void Q_ExtraCleanStr( char *in, char *out, size_t outsize );
 
 void ExecuteClientCommand( clientNum_t clientNum, const char *cmd );
 
+qboolean validGUID( const char *guid );
+
 #endif
 

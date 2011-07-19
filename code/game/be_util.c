@@ -535,3 +535,31 @@ void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
 	trap_EA_Command( clientNum, (char*)cmd );
 }
 
+
+/*
+	Returns whether the given string is a valid GUID for cl_guid
+*/
+qboolean validGUID( const char *guid ) {
+	int count = 0;
+	qboolean valid = qtrue;
+
+
+	G_assert( guid );
+
+	/* "Its value is a 32 character string made up of [a-f] and [0-9] characters." */
+	while ( guid[count] != '\0' && valid ) {
+		if( ( ( guid[count] < '0' ) || ( guid[count] > '9' ) ) &&
+		    ( ( guid[count] < 'A' ) || ( guid[count] > 'F' ) ) ) {
+			valid = qfalse;
+			break;
+		}
+		count++;
+    }
+
+	if ( count != ( GUIDSTRMAXLEN - 1 ) ) {
+		valid = qfalse;
+	}
+
+	return valid;
+}
+
