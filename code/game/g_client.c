@@ -495,7 +495,13 @@ void CopyToBodyQue( gentity_t *ent ) {
 		return; // maybe this was the reason for deadbodys in the lps-intermission-view
 
 	// grab a body que and cycle to the next one
+	/* changed beryllium */
+	/*
 	body = level.bodyQue[ ent->s.number ];//noch zu �ndern falls BODY_QUEUE_SIZE ge�ndert wird
+	*/
+	body = level.bodyQue[ level.bodyQueIndex ];
+	level.bodyQueIndex = ( ( level.bodyQueIndex + 1 ) % BODY_QUEUE_SIZE );
+	/* end beryllium */
 
 	trap_UnlinkEntity (body);
 
@@ -867,6 +873,9 @@ void ClientUserinfoChanged( int clientNum ) {
 		strcpy (userinfo, "\\name\\badinfo");
 		// Why keep those clients and userinfo? Get out!
 		trap_DropClient( clientNum, "Invalid userinfo" );
+		/* added beryllium */
+		return;
+		/* end beryllium */
 	}
 
 	// check for local client

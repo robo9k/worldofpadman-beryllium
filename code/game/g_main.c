@@ -602,6 +602,9 @@ void G_ShutdownGame( int restart ) {
 		G_LogPrintf("ShutdownGame:\n" );
 		G_LogPrintf("------------------------------------------------------------\n" );
 		trap_FS_FCloseFile( level.logFile );
+		/* added beryllium */
+		level.logFile = 0;
+		/* end added */
 	}
 
 	// write all the client session data so we can get it back
@@ -1301,7 +1304,13 @@ void QDECL G_LogPrintf( const char *fmt, ... ) {
 	char		string[1024];
 	int			min, tens, sec;
 
+
+	/* changed beryllium */
+	/*
 	sec = level.time / 1000;
+	*/
+	sec = ( ( level.time - level.startTime ) / 1000 );
+	/* end beryllium */
 
 	min = sec / 60;
 	sec -= min * 60;

@@ -693,6 +693,8 @@ void StopFollowing( gentity_t *ent ) {
 
 	/* added beryllium */
 	/* Maybe this fixes wrong view? */
+	ent->client->ps.groundEntityNum = ENTITYNUM_NONE;
+
 	if ( ent->client->sess.spectatorClient >= 0 ) {
 		gclient_t *cl;
 

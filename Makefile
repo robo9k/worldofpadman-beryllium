@@ -243,7 +243,7 @@ endif
 
 ## FIXME: BASEGAME
 BERYLLIUM_OBJ_SVN = \
-	$(B)/baseq3/game/g_main.p \
+	$(B)/baseq3/game/g_main.o \
 	$(B)/baseq3/game/g_main.asm
 
 
