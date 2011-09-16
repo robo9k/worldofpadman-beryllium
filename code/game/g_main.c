@@ -121,6 +121,8 @@ vmCvar_t	be_banFile;
 
 vmCvar_t	g_truePing;
 
+vmCvar_t	be_selfDamage;
+
 /* end beryllium */
 
 
@@ -256,7 +258,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue }
+	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue },
+
+	{ &be_selfDamage, "be_selfDamage", "1.0", CVAR_ARCHIVE, 0, qtrue }
 
 	/* end beryllium */
 };

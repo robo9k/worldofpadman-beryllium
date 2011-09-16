@@ -102,6 +102,8 @@ extern vmCvar_t	be_banFile;
 /* Parts of unlagged gamecode here as not to pollute the vanilla code */
 extern vmCvar_t g_truePing;
 
+extern vmCvar_t	be_selfDamage;
+
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );

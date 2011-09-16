@@ -881,15 +881,19 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		/* changed beryllium */
 		/*
 		if ( targ != attacker && OnSameTeam (targ, attacker)  ) {
+			if ( !g_friendlyFire.integer ) {
+				return;
+			}
 		*/
 		// NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage
 		if ( ( ( targ != attacker ) && ( OnSameTeam( targ, attacker ) || IsItemSameTeam( attacker, targ ) ) )
 	         || ( ( targ == attacker ) && ( mod == MOD_BOOMIES ) ) ) {
-		/* end changed */
-			if ( !g_friendlyFire.integer ) {
+			if ( g_friendlyFire.integer <= 0 ) {
 				return;
 			}
 		}
+
+		/* end beryllium */
 
 		// check for godmode
 		if ( targ->flags & FL_GODMODE ) {
