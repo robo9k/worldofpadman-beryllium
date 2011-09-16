@@ -119,6 +119,8 @@ vmCvar_t	be_hideChat;
 
 vmCvar_t	be_banFile;
 
+vmCvar_t	g_truePing;
+
 /* end beryllium */
 
 
@@ -252,7 +254,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_hideChat, "be_hideChat", "", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse }
+	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue }
 
 	/* end beryllium */
 };
@@ -2391,4 +2395,15 @@ end = trap_Milliseconds();
 
 	if(!level.intermissiontime)
 		WoP_RunFrame();
+
+	/* added beryllium */
+
+	/* unlagged - backward reconciliation #4 */
+	/* Record the time at the end of this frame - it should be about
+	   the time the next frame begins - when the server starts
+	   accepting commands from connected clients
+	*/
+	level.frameStartTime = trap_Milliseconds();
+
+	/* end beryllium */
 }

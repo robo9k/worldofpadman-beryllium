@@ -33,7 +33,14 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 		if ( cl->pers.connected == CON_CONNECTING ) {
 			ping = -1;
 		} else {
+			/* changed beryllium */
+			/*
 			ping = cl->ps.ping < 999 ? cl->ps.ping : 999;
+			*/
+
+			/* unlagged - true ping */
+			ping = ( ( cl->pers.realPing < 999 ) ? cl->pers.realPing : 999 );
+			/* end beryllium */
 		}
 
 		if( cl->accuracy_shots ) {

@@ -714,6 +714,46 @@ void ClientThink_real( gentity_t *ent ) {
 //		G_Printf("serverTime >>>>>\n" );
 	} 
 
+	/* added beryllium */
+	/* unlagged - backward reconciliation #4 */
+	/* frameOffset should be about the number of milliseconds into a frame 
+	   this command packet was received, depending on how fast the server
+	   does a G_RunFrame()
+	*/
+	client->frameOffset = ( trap_Milliseconds() - level.frameStartTime );
+
+
+	/* unlagged - true ping */
+	/* Save the estimated ping in a queue for averaging later */
+
+	/* We use level.previousTime to account for 50ms lag correction.
+	   Besides, this will turn out numbers more like what players are used to.
+	*/
+	client->pers.pingsamples[client->pers.samplehead] = ( level.previousTime + client->frameOffset - ucmd->serverTime );
+	client->pers.samplehead++;
+	if ( client->pers.samplehead >= NUM_PING_SAMPLES ) {
+		client->pers.samplehead -= NUM_PING_SAMPLES;
+	}
+
+	if ( g_truePing.integer ) {
+		int i, sum = 0;
+
+		for ( i = 0; i < NUM_PING_SAMPLES; i++ ) {
+			sum += client->pers.pingsamples[i];
+		}
+
+		client->pers.realPing = sum / NUM_PING_SAMPLES;
+	}
+	else {
+		client->pers.realPing = client->ps.ping;
+	}
+
+	/* Make sure the true ping is over 0 - with negative cl_timenudge it can be less */
+	if ( client->pers.realPing < 0 ) {
+		client->pers.realPing = 0;
+	}
+	/* end beryllium */
+
 	msec = ucmd->serverTime - client->ps.commandTime;
 	// following others may result in bad times, but we still want
 	// to check for follow toggles

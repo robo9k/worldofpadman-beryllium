@@ -160,6 +160,11 @@
 
     :: be_banFile
     Path where to save bans from beryllium's GUID ban system.
+
+
+    :: g_truePing
+    Taken from the unlagged code, will do exactly the same.
+    Read their README if you wish to known more.
   
   
   :: Commands

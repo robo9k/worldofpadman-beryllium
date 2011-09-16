@@ -288,6 +288,9 @@ typedef enum {
 /* FIXME: These should go into berylliums headers, which are included too late */
 #define NET_ADDRSTRMAXLEN		48 			/* NOTE: Must match NET_ADDRSTRMAXLEN in qcommon.h */
 #define GUIDSTRMAXLEN			33			/* NOTE: Length must match max result of Com_MD5File() / cl_guid */
+
+/* unlagged - true ping */
+#define NUM_PING_SAMPLES 64
 /* end beryllium */
 
 
@@ -326,6 +329,11 @@ typedef struct {
 	int			connectionCounter;
 
 	int 		lifeShards;
+
+	/* unlagged - true ping */
+	int			realPing;
+	int			pingsamples[NUM_PING_SAMPLES];
+	int			samplehead;
 	/* end beryllium */
 } clientPersistant_t;
 
@@ -427,10 +435,12 @@ struct gclient_s {
 
 	/* added beryllium */
 	clientStorage_t	storage;
-	/* end beryllium */
 
-	/* added beryllium */
 	int			dropTime;
+
+	/* unlagged - backward reconciliation #1 */
+	/* NOTE: We don't do any backward reconciliation, this is needed for g_truePing */
+	int			frameOffset;
 	/* end beryllium */
 };
 
@@ -542,6 +552,10 @@ typedef struct {
 
 	/* FIXME: len is a bit too much */
 	char		mapname[MAX_INFO_VALUE];
+
+	/* unlagged - backward reconciliation #4 */
+	/* actual time this server frame started */
+	int			frameStartTime;
 	/* end beryllium */
 } level_locals_t;
 

@@ -949,7 +949,7 @@ qboolean	ConsoleCommand( void ) {
 			return qtrue;
 		}
 
-		/* changed beryllium
+		/* changed beryllium */
 		/* This "feature" is annoying, disable say text, but still print a message */
 		/*
 		// everything else will also be printed as a say command
