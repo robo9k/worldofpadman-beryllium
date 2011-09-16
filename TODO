@@ -69,4 +69,5 @@ use svnversion --committed ?
 		--> beryllium.py, plugin_beryllium.xml, README
 
 Com_Parse* is nice, but error messages include wrong line numbers.
+Remove guid format check for banlist?
 

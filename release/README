@@ -11,8 +11,15 @@
   The full path depends on your fs_homepath (and fs_basepath)
   and fs_game (and fs_basegame ) setting.
   One example is "/home/wopded/.padman/beryllium/vm/qagame.qvm".
+
+  Note that you do not need really to use a separate mod folder,
+  since beryllium is a serverside mod. You could use the default
+  fs_game folder as well, i.e. "wop".
+  This is a good idea, since beryllium does not change gameplay,
+  and thus there is no real need to indicate the use of a mod
+  to the clients.
   
-  Since this is a serverside mod, you do not need to serve
+  Plus since this is a serverside mod, you do not need to serve
   beryllium's files via autodownload.
   
   If you do not change any of the default settings, beryllium
