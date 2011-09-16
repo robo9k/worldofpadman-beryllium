@@ -892,3 +892,21 @@ qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, co
 	return qfalse;
 }
 
+
+/*
+	TODO: Should go into g_utils.c?
+	Returns the number of msecs of one server frame, see SV_FrameMsec()
+*/
+int G_FrameMsec( void ) {
+	int fps = trap_Cvar_VariableIntegerValue( "sv_fps" );
+
+	if ( fps ) {
+		int frameMsec = ( 1000.0 / fps );
+
+		return frameMsec;
+	}
+	else {
+		return 1;
+	}
+}
+

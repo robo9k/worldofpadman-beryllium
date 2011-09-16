@@ -4,6 +4,15 @@
 
 #define	MISSILE_PRESTEP_TIME	50
 
+/* added beryllium */
+/* In order to fix bugs with hardcoded MISSILE_PRESTEP_TIME ( 1000 / sv_fps )
+   we introduced a new function. Hopefully this covers all sv_fps dependant
+   behaviour (or at least related bugs).
+*/
+#undef MISSILE_PRESTEP_TIME
+#define MISSILE_PRESTEP_TIME G_FrameMsec()
+/* end beryllium */
+
 /*
 ================
 G_BounceMissile
@@ -608,7 +617,12 @@ void G_RunMissile( gentity_t *ent ) {
 		passent = ent->r.ownerNum;
 	}
 	// trace a line from the previous position to the current position
+	/* changed beryllium */
+	/*
 	if ( level.time - ent->s.pos.trTime > 50 )
+	*/
+	if ( ( level.time - ent->s.pos.trTime ) > MISSILE_PRESTEP_TIME )
+	/* end beryllium */
 		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask );
 	else
 		trap_Trace( &tr, ent->r.currentOrigin, vec3_origin, vec3_origin, origin, passent, ent->clipmask );

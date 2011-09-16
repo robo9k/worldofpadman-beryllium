@@ -149,5 +149,7 @@ void BE_WriteBans( void );
 qboolean AddBan( guidBan_t ban );
 qboolean DeleteBan( unsigned int index );
 
+int G_FrameMsec( void );
+
 #endif
 

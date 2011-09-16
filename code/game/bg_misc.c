@@ -1337,7 +1337,13 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	// set the time for linear prediction
 	s->pos.trTime = time;
 	// set maximum extra polation time
+	/* changed beryllium */
+	/*
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+	*/
+
+	s->pos.trDuration = G_FrameMsec();
+	/* end beryllium */
 
 	s->apos.trType = TR_INTERPOLATE;
 	VectorCopy( ps->viewangles, s->apos.trBase );

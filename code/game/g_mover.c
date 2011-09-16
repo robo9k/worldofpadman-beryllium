@@ -680,7 +680,14 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	if ( ent->moverState == MOVER_POS1 ) {
 		// start moving 50 msec later, becase if this was player
 		// triggered, level.time hasn't been advanced yet
+		/* changed beryllium */
+		/* Respect the variable nature of sv_fps */
+		/*
 		MatchTeam( ent, MOVER_1TO2, level.time + 50 );
+		*/
+
+		MatchTeam( ent, MOVER_1TO2, ( level.time + G_FrameMsec() ) );
+		/* end beryllium */
 
 		// starting sound
 		if ( ent->sound1to2 ) {
