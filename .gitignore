@@ -1,0 +1,9 @@
+# I use it quite often
+changes.diff
+
+#
+build/**/*
+
+#
+*~
+
