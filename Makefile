@@ -221,7 +221,7 @@ endif
 
 # version info
 VERSION=1.5
-BERYLLIUM_VERSION=0.16a
+BERYLLIUM_VERSION=$(shell cat VERSION)
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)
@@ -232,17 +232,17 @@ ifeq ($(wildcard .svn),.svn)
     USE_SVN=1
   endif
 else
-ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
-  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
+ifeq ($(wildcard .git),.git)
+  SVN_REV=$(shell LANG=C git rev-parse --short HEAD)
   ifneq ($(SVN_REV),)
     VERSION:=$(VERSION)_SVN$(SVN_REV)
-	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-r$(SVN_REV)
+	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-$(SVN_REV)
   endif
 endif
 endif
 
 ## FIXME: BASEGAME
-BERYLLIUM_OBJ_SVN = \
+BERYLLIUM_OBJ_CVS = \
 	$(B)/baseq3/game/g_main.o \
 	$(B)/baseq3/game/g_main.asm
 
@@ -2257,8 +2257,8 @@ ifeq ($(USE_SVN),1)
   $(B)/client/common.o : .svn/entries
   $(B)/ded/common.o : .svn/entries
 
-  ifdef BERYLLIUM_OBJ_SVN
-    $(BERYLLIUM_OBJ_SVN): .svn/entries
+  ifdef BERYLLIUM_OBJ_CVS
+    $(BERYLLIUM_OBJ_SVN): .git/index
   endif
 endif
 

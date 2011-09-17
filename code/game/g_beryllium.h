@@ -149,8 +149,5 @@ void BE_WriteBans( void );
 qboolean AddBan( guidBan_t ban );
 qboolean DeleteBan( unsigned int index );
 
-/* FIXME: Should go into bg to fix warnings */
-int G_FrameMsec( void );
-
 #endif
 

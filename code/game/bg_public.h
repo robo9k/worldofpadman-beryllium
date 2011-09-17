@@ -837,3 +837,10 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 #define MAX_SPRAYLOGOS_LOADED	64
 #define MAX_SPRAYLOGO_NAME		32
 
+
+/* added beryllium */
+
+int G_FrameMsec( void );
+
+/* end beryllium */
+
