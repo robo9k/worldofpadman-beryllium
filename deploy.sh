@@ -5,6 +5,8 @@ SRC="release"
 ## destination could include VERSION
 DST=$MODNAME
 
+## TODO: Fix Makefile git dependencies so we can remove make clean
+make clean
 make -j3
 
 ## export versioned content
