@@ -221,14 +221,13 @@ endif
 
 # version info
 VERSION=1.5
-BERYLLIUM_VERSION=$(shell cat VERSION)
+BERYLLIUM_VERSION=$(shell ./version.sh)
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)
   SVN_REV=$(shell LANG=C svnversion .)
   ifneq ($(SVN_REV),)
     VERSION:=$(VERSION)_SVN$(SVN_REV)
-	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-r$(SVN_REV)
     USE_SVN=1
   endif
 else
@@ -236,7 +235,6 @@ ifeq ($(wildcard .git),.git)
   SVN_REV=$(shell LANG=C git rev-parse --short HEAD)
   ifneq ($(SVN_REV),)
     VERSION:=$(VERSION)_SVN$(SVN_REV)
-	BERYLLIUM_VERSION:=$(BERYLLIUM_VERSION)-$(SVN_REV)
   endif
 endif
 endif
