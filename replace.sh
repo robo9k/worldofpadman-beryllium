@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#PATTERN="__VERSION__"
+#VERSION=`./version.sh`
+#INPUT=README
+
+PATTERN=$1
+VERSION=$2
+INPUT=$3
+
+sed 's/'$PATTERN'/'$VERSION'/g' $INPUT
+

@@ -15,6 +15,10 @@ cp -R $SRC $DST
 ## now copy unversioned content
 cp build/release-linux-x86_64/baseq3/vm/qagame.qvm $DST/vm/
 
+## next prepare and copy template files
+VERSION=`./version.sh`
+./replace.sh "__VERSION__" $VERSION $SRC/README > $DST/README
+
 ## zip all together
 rm $MODNAME.zip
 zip -r -9 $MODNAME $DST/*
