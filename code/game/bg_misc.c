@@ -308,7 +308,12 @@ gitem_t	bg_itemlist[] =
 		0, 0, 0},
 /* icon */		"icons/icona_balloony",
 /* pickup */	"BALLOONY AMMO",
+		/* changed beryllium */
+		/*
 		15,
+		*/
+		10,
+		/* end beryllium */
 		IT_AMMO,
 		WP_BALLOONY,
 /* precache */ "",
@@ -340,7 +345,12 @@ gitem_t	bg_itemlist[] =
 		0, 0, 0},
 /* icon */		"icons/icona_boaster",
 /* pickup */	"BOASTER AMMO",
+		/* changed beryllium */
+		/*
 		100,
+		*/
+		60,
+		/* end beryllium */
 		IT_AMMO,
 		WP_BOASTER,
 /* precache */ "",
