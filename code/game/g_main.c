@@ -1573,9 +1573,14 @@ void CheckExitRules( void ) {
 		}
 	}
 
+	/* changed beryllium */
+	/* "Is this a feature? At least causes a bug in BigBalloon" */
+	/*
 	if ( level.numPlayingClients < 2 ) {
 		return;
 	}
+	*/
+	/* end beryllium */
 
 	if ( ( g_gametype.integer == GT_LPS ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
 		int	playersWithLivesLeft = 0;
