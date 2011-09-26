@@ -33,6 +33,7 @@ static void BE_Svcmd_ListGUIDs_f( void );
 static void BE_Svcmd_BanGUID_f( void );
 static void BE_Svcmd_DelGUID_f( void );
 static void BE_Svcmd_FlushGUIDs_f( void );
+static void BE_Svcmd_SetHandicap_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -55,7 +56,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "listguids",		BE_Svcmd_ListGUIDs_f		},
 	{ "banguid",		BE_Svcmd_BanGUID_f			},
 	{ "delguid",		BE_Svcmd_DelGUID_f			},
-	{ "flushguids",		BE_Svcmd_FlushGUIDs_f		}
+	{ "flushguids",		BE_Svcmd_FlushGUIDs_f		},
+	{ "handicap",		BE_Svcmd_SetHandicap_f		}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -608,5 +610,66 @@ static void BE_Svcmd_FlushGUIDs_f( void ) {
 	BE_WriteBans();
 
 	G_Printf( "All GUID bans have been deleted.\n" );
+}
+
+
+/*
+	Sets the handicap value of a player.
+	TODO: Once forced by admin, disallow changes by player.
+*/
+static void BE_Svcmd_SetHandicap_f( void ) {
+	char	clientStr[3], userinfo[MAX_INFO_STRING];
+	int		clientNum, handicap;
+
+
+	if ( trap_Argc() < 2 ) {
+		G_Printf( "Usage: handicap <cid> <handicap>\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Not a valid client number.\n" );
+		return;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		G_Printf( "Client not connected.\n" );
+		return;
+	}
+
+
+	/* reuse temp array */
+	trap_Argv( 2, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a handicap number.\n" );
+		return;
+	}
+
+	handicap = atoi( clientStr );
+	if ( ( handicap < 1 ) || ( handicap > 100 ) ) {
+		G_Printf( "Handicap must be in range 1-100.\n");
+		return;
+	}
+
+	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+	Info_SetValueForKey( userinfo, "handicap", va( "%d", handicap ) );
+	trap_SetUserinfo( clientNum, userinfo );
+
+	/* NOTE: We could delay calling UserinfoChanged() and set maxHealth and
+	         STAT_MAX_HEALTH ourselves, but we want the clients to display correct
+	         handicap in scoreboard.
+	*/
+	ClientUserinfoChanged( clientNum );
+
+	/* TODO: Print message to player! */
 }
 

@@ -293,6 +293,10 @@
     :: delguid id|guid
     Delete a GUID from the list, either by using an id from listguids or by
     supplying the GUID directly.
+
+    :: handicap cid handicap
+    Sets a players handicap value. Will take effect immediately.
+    The player can still decide to override his setting again.
     
 
 
