@@ -2,7 +2,8 @@ Restructure this file; using proper layout and sort by priority!
 
 Add g_nextmap, which is not executed immediatelly, but at map end. Maybe use already existing cvar nextmapBackUp
 
-Use way more helper functions
+Use way more helper functions.
+Do more sanity checks and calls to G_Error plus some debug output.
 
 Improve vote pass. Print amount of yes-no-dontcare-required at vote end?
 Allow players to change their mind? Enforce delay/maximum count
@@ -13,9 +14,9 @@ Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
 
 Mute players' chat, vote, voip etc.
-Lock a players name, team. Also globally lock teams. This will most likely cause problems with other code
 
 Implement a ccmd /players, which lists players with their cid, name, (time, score), team, etc. to allow identifying players by cid
+Maybe include netsettings
 
 Is a command to pause the entire game usefull? Certainly quite some dirty code all around involved
 
@@ -23,11 +24,9 @@ There are quite a bunch of commands which are fun, but not actually usefull: sla
 
 Read custom votes from a file. Allow scallvote to have voteString, voteDisplayString, voteDuration as parameters?
 
-Do more sanity checks and calls to G_Error plus some debug output.
-
 Either use less colors/more equal to game's default output or add option to disable/reduce colors
 
-Save scores on teamchange between real teams? Personal scores are not shown in scoreboard
+Save scores on teamchange between real teams? Personal scores are not shown in scoreboard. Does team lose score on player change?
 Make client time (and points) persistant across maps.
 This will cause some problems (current map kill/death ratio) and irritation. Needs at least new var for totalTime, spectatorTime, (currentScore) etc.
 
@@ -39,12 +38,11 @@ Take care of special vote situations:
 Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
 
 splitChat, teamchatOnly, spectatedTeamChat etc.
+	Maybe it's a good idea to swap chat and teamchat, so "default" is teamchat but normal chat still works
 
-default team spectator, "unlock" only via rcon command
+force spectators to only see scoreboard, only follow mode, steal zcam code
 
-Implement a guid filter like sv_banFile
-
-Properly sync the versionstring in README with the actual current version (in code/game/Makefile plus svn rev).
+default team spectator
 
 Maybe record some stats? Those stimulate players and could be used to detect noobs or cheaters.
 
@@ -58,19 +56,6 @@ Reenable botcode to use bambams and boomies or make them ingore those items
 
 Merge b3 plugin into release? Or Move to its own repo, so revision numbers are separated?
 
-Make versioning more convenient. Makefile could write entire version string into a VERSION file. code can use it via -D define from make, readme could be split
-into a README.tpl, which is being run through deploy with final README and version as output. Similar for b3 plugin. Maybe save svnversion into a global file, since mod and plugin version differ?
-Merge deploy into "make deploy" and maybe include do_stuff (like versioning) for plugin there as well?
-use svnversion --committed ?
-
-/
-	/mod
-		VERSION
-		--> g_main.c, README
-	/plugin
-		VERSION
-		--> beryllium.py, plugin_beryllium.xml, README
-
 Com_Parse* is nice, but error messages include wrong line numbers.
 Remove guid format check for banlist?
 
@@ -80,4 +65,6 @@ Add new vote for map+gametype using beta framework?
 Looks like bots are broken with locked teams.
 
 Create a changelog.
+
+Team scoreboard?
 
