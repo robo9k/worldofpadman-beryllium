@@ -82,8 +82,13 @@ static void Touch_ReloadStation( gentity_t *ent, gentity_t *other, trace_t *trac
 
 	ent->pos2[2]=1.0f;
 
+	/* changed beryllium */
+	/*
 	if(other->health>=100)
 	{
+	*/
+	if ( other->health >= other->client->ps.stats[STAT_MAX_HEALTH] ) {
+	/* end beryllium */
 		gentity_t *te;
 
 		if(ent->pos1[0]+2000<level.time)
@@ -108,8 +113,16 @@ static void Touch_ReloadStation( gentity_t *ent, gentity_t *other, trace_t *trac
 	if(((float)level.time-ent->pos2[1])<100.0f)	return;//touch-event only every 0.1 sek
 
 	other->health += ent->count;
-	ent->health -= ent->count;
+	/* changed beryllium */
+	/*
 	if(other->health>100) other->health=100;
+	*/
+	if ( other->health > other->client->ps.stats[STAT_MAX_HEALTH] ) {
+		other->health = other->client->ps.stats[STAT_MAX_HEALTH];
+	}
+	/* end beryllium */
+
+	ent->health -= ent->count;
 	other->client->ps.stats[STAT_HEALTH] = other->health;
 
 	ent->pos2[1]=(float)level.time;
