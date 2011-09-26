@@ -563,3 +563,36 @@ qboolean validGUID( const char *guid ) {
 	return valid;
 }
 
+
+/*
+	Returns a colored team name without " team" suffix
+*/
+char *Teamname( team_t team ) {
+	char *teamname;
+
+
+	switch ( team ) {
+		case TEAM_RED:
+			teamname = S_COLOR_RED"red";
+			break;
+
+		case TEAM_BLUE:
+			teamname = S_COLOR_BLUE"blue";
+			break;
+
+		case TEAM_FREE:
+			teamname = S_COLOR_GREEN"free";
+			break;
+
+		case TEAM_SPECTATOR:
+			teamname = S_COLOR_WHITE"spectators";
+			break;
+
+		default:
+			teamname = S_COLOR_YELLOW"unknown";
+			break;
+	}
+
+	return teamname;
+}
+

@@ -1224,8 +1224,14 @@ void ClientBegin( int clientNum ) {
 		tent->s.clientNum = ent->s.clientNum;
 
 		if ( g_gametype.integer != GT_TOURNAMENT  ) {
-			/* beryllium TODO: Don't print this with players which were already connected */
+			/* changed beryllium */
+			/*
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
+			*/
+			if ( ent->client->storage.firstTime ) {
+				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_NEGATIVE"%s entered the game.\n", client->pers.netname ) );
+			}
+			/* end beryllium */
 		}
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );

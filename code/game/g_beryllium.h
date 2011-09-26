@@ -149,5 +149,8 @@ void BE_WriteBans( void );
 qboolean AddBan( guidBan_t ban );
 qboolean DeleteBan( unsigned int index );
 
+/* See NOTE in implementation */
+qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force );
+
 #endif
 

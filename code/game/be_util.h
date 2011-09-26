@@ -93,5 +93,7 @@ void ExecuteClientCommand( clientNum_t clientNum, const char *cmd );
 
 qboolean validGUID( const char *guid );
 
+char *Teamname( team_t team );
+
 #endif
 

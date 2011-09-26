@@ -346,6 +346,7 @@ typedef struct {
 */
 typedef struct {
 	qboolean	ignoreList[MAX_CLIENTS];
+	qboolean	firstTime;
 } clientStorage_t;
 
 /* end beryllium */
@@ -552,6 +553,8 @@ typedef struct {
 
 	/* FIXME: len is a bit too much */
 	char		mapname[MAX_INFO_VALUE];
+
+	qboolean	teamLocked[TEAM_NUM_TEAMS];
 
 	/* unlagged - backward reconciliation #4 */
 	/* actual time this server frame started */

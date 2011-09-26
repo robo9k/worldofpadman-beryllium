@@ -4,7 +4,8 @@ Add g_nextmap, which is not executed immediatelly, but at map end. Maybe use alr
 
 Use way more helper functions
 
-Improve vote pass. Print amount of yes-no-dontcare at vote end?
+Improve vote pass. Print amount of yes-no-dontcare-required at vote end?
+Allow players to change their mind? Enforce delay/maximum count
 
 Unlagged?
 
@@ -26,7 +27,7 @@ Do more sanity checks and calls to G_Error plus some debug output.
 
 Either use less colors/more equal to game's default output or add option to disable/reduce colors
 
-Save scores on teamchange between real teams?
+Save scores on teamchange between real teams? Personal scores are not shown in scoreboard
 Make client time (and points) persistant across maps.
 This will cause some problems (current map kill/death ratio) and irritation. Needs at least new var for totalTime, spectatorTime, (currentScore) etc.
 
@@ -37,7 +38,9 @@ Take care of special vote situations:
 
 Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
 
-splitChat
+splitChat, teamchatOnly, spectatedTeamChat etc.
+
+default team spectator, "unlock" only via rcon command
 
 Implement a guid filter like sv_banFile
 
@@ -70,4 +73,11 @@ use svnversion --committed ?
 
 Com_Parse* is nice, but error messages include wrong line numbers.
 Remove guid format check for banlist?
+
+Enforce usage of reason argument for kick votes?
+Add new vote for map+gametype using beta framework?
+
+Looks like bots are broken with locked teams.
+
+Create a changelog.
 

@@ -269,6 +269,8 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		return "Invalid userinfo.";
 	}
 
+	level.clients[clientNum].storage.firstTime = firstTime;
+
 	/* All other checks are only reasonable against "humans" */	
 	if ( isBot ) {
 		return NULL;
