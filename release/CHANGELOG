@@ -1,0 +1,117 @@
+21.07.2010 - v0.00a
+	* Add cvar "be_version"
+	* Add hardcoded vote limit
+	* Fix vote exploit via ";"
+	* Add sanity checks to votes
+	* Upstream: Fix botcode referencing all pk3s
+	* Add server command "tell"
+	* Add server command "cancelvote"
+	* Add cvar "be_voteDuration"
+	* Add README
+	* Add cvar "be_allowedVotes"
+	* Add cvar "be_votePause"
+	* Add cvar "be_voteRate"
+	* Add cvar "be_votePass"
+	* Add cvar "be_respawnProtect"
+	* Add filtering player names
+
+
+16.08.2010 - v0.01a
+	* Add server command "shuffleteams"
+	* Add vote "shuffleteams"
+	* Fix accidentally chatting from server console
+
+
+29.08.2010 - v0.02a
+	* Fix multiple players with same name
+	* Fix wrong player skins
+	* Add cvar "be_maxVotes"
+	* Add cvar "be_switchTeamTime"
+	* Add cvar "be_maxNameChanges"
+	* Add serer command "rename"
+
+
+31.08.2010 - v0.03a
+	* Add cvar "be_checkGUIDs"
+	* Add cvar "be_maxConnections"
+
+
+13.09.2010 - v0.04a
+	* Add server command "stell"
+	* Add server command "ssay"
+	* Add server command "ssay_team"
+	* Add server command "scp"
+	* Add server command "smp"
+	* Add server command "sprint"
+	* Add server command "dropclient"
+
+
+14.09.2010 - v0.05a
+	* Add server command "scallvote"
+	* Upstream: Fix automatic kicking of bots with spaces in name
+	* Add cvar "g_version"
+	* Fix beryllium to work with IPv6
+	* Add cvar "be_campDistance"
+
+
+16.01.2011 - v0.07a
+	* Port beryllium to WoP v1.5
+
+
+30.01.2011 - v0.08a
+	* Upstream: Fix logfile entries with broken formatstring
+
+
+11.02.2011 - v0.09a
+	* Add cvar "be_checkPings"
+
+
+14.02.2011 - v0.10a
+	* Add cvar "be_oneUp"
+	* Add client command "ignore"
+
+
+16.04.2011 - v0.12a
+	* Add cvar "be_noSecrets"
+	* Add cvar "be_debugSecrets"
+	* Add beryllium.cfg
+
+
+19.04.2011 - v0.12b
+	* Add cvar "be_hideChat"
+
+
+19.05.2011 - v0.12d
+	* Upstream: Add Lolly drop delay
+	* Upstream: Fix Bambam owners
+	* Upstream: Add removing of owned items
+	* Upstream: Add weakness for Visionless to Bambams
+	* Upstream: Fix Bambam placement
+	* Upstream: Fix Boomies placement
+	* Upstream: Fix friendly fire for team items
+	* Upstream: Fix bots standing still in CTL
+
+
+09.06.2011 - v0.12f
+	* Add server command "logprint"
+	* Add b3 plugin
+
+
+19.07.2011 - v0.13a
+	* Add GUID banning system
+	* Add cvar "g_truePing"
+	* Add cvar "be_selfDamage"
+	* Modify cvar "g_friendlyFire"
+
+
+18.09.2011 - v0.16c
+	* Add server command "handicap"
+	* Upstream: Change default ammo for Boaster and Betty
+	* Upstream: Fix pointlimit being ignored on empty servers
+	* Upstream: Fix healthstations ignoring handicap
+
+
+27.09.2011 - v0.18a
+	* Add server command "lockteam"
+
+
