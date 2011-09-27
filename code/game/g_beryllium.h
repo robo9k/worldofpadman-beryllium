@@ -63,7 +63,8 @@ enum {
 };
 
 enum {
-	CHAT_SWAP			= 1
+	CHAT_SWAP			= 1,
+	CHAT_SPECTATOR_TEAM	= 2
 };
 
 extern int			numGUIDBans;

@@ -1146,8 +1146,6 @@ void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char 
 /* changed beryllium */
 /*
 #define EC		"\x19"
-*/
-/* end beryllium */
 
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
 	int			j, cid;
@@ -1165,12 +1163,7 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 
 	// server calls don't have a valid entity
 	if ( !ent ) {
-		/* changed beryllium */
-		/*
 		namesrc = "server";
-		*/
-		namesrc = CHAT_SERVER_NAME;
-		/* end beryllium */
 		realEnt = qfalse;
 		cid = -1;
 	}
@@ -1186,8 +1179,6 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		target = NULL;
 	}
 
-	/* changed beryllium */
-	/*
 	switch ( mode ) {
 		default: // fall through
 
@@ -1224,54 +1215,8 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 			color = COLOR_YELLOW;
 			break;
 	}
-	*/
-	{
-	char *locationStr = NULL;
-	team_t team = ( realEnt ? ent->client->sess.sessionTeam : TEAM_NUM_TEAMS );
-
-	switch ( mode ) {
-		default: /* fall through */
-		case SAY_ALL:
-			G_LogPrintf( "Say: %i %s\n", cid, chatText );
-			FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
-			color = COLOR_YELLOW;
-			break;
-
-		case SAY_TEAM:
-			G_LogPrintf( "SayTeam: %i %s\n", cid, chatText );
-			if ( realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
-				locationStr = location;
-			}
-			else {
-				FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
-			}
-			color = COLOR_CYAN;
-			break;
-
-		case SAY_TELL:
-			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
-			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
-				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
-				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
-				locationStr = location;
-			}
-			else {
-				FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
-			}	
-			color = COLOR_YELLOW;
-			break;
-	}
-
-	}
-	/* end beryllium */
 
 	Q_strncpyz( text, chatText, sizeof(text) );
-
-	/* added beryllium */
-	if ( BE_HideChat( ent, target, mode, color, name, text ) ) {
-		return;
-	}
-	/* end beryllium */
 
 	if ( target ) {
 		G_SayTo( ent, target, mode, color, name, text );
@@ -1289,6 +1234,106 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		G_SayTo( ent, other, mode, color, name, text );
 	}
 }
+*/
+void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
+	int			j, cid;
+	gentity_t	*other;
+	int			color;
+	char		name[64], *namesrc;
+	char		text[MAX_SAY_TEXT];
+	char		location[64];
+	qboolean 	realEnt;
+	char		*locationStr = NULL;
+	team_t		team;
+
+	if ( ( g_gametype.integer < GT_TEAM ) && ( SAY_TEAM == mode ) ) {
+		mode = SAY_ALL;
+	}
+
+	/* Server calls don't have a valid entity */
+	if ( !ent ) {
+		namesrc = CHAT_SERVER_NAME;
+		realEnt = qfalse;
+		cid = -1;
+	}
+	else {
+		namesrc = ent->client->pers.netname;
+		realEnt = qtrue;
+		cid = ent - g_entities;
+	}
+
+	/* NOTE: "target" is used to gather team info */
+	if ( !realEnt && ( SAY_TEAM == mode ) ) {
+		ent = target;
+		target = NULL;
+	}
+
+	team = ( realEnt ? ent->client->sess.sessionTeam : TEAM_NUM_TEAMS );
+
+	/* If CHAT_SPECTATOR_TEAM is enabled, spectators may only talk to their team,
+	   so all other players won't see their conversation.
+	   Still allow talking to others directly.
+	*/
+	if ( be_chatFlags.integer & CHAT_SPECTATOR_TEAM ) {
+		if ( ( TEAM_SPECTATOR == team ) && ( SAY_TELL != mode ) ) {
+			mode = SAY_TEAM;
+		}
+	}
+
+	/* NOTE: Do NOT change log format! */
+	switch ( mode ) {
+		default: /* fall through */
+		case SAY_ALL:
+			G_LogPrintf( "Say: %i %s\n", cid, chatText );
+			FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			color = COLOR_YELLOW;
+			break;
+
+		case SAY_TEAM:
+			G_LogPrintf( "SayTeam: %i %s\n", cid, chatText );
+			if ( realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+				locationStr = location;
+			}
+			FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			color = COLOR_CYAN;
+			break;
+
+		case SAY_TELL:
+			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
+			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
+				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
+				 realEnt && ( target != ent ) && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+				locationStr = location;
+			}
+			FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			color = COLOR_YELLOW;
+			break;
+	}
+
+	Q_strncpyz( text, chatText, sizeof( text ) );
+
+	if ( BE_HideChat( ent, target, mode, color, name, text ) ) {
+		return;
+	}
+
+	if ( target ) {
+		/* Current tell implementation calls G_Say() twice if ent != target */
+		G_SayTo( ent, target, mode, color, name, text );
+		return;
+	}
+
+	/* TODO: Strip EC */
+	if ( g_dedicated.integer ) {
+		G_Printf( "%s%s\n", name, text);
+	}
+
+	/* Send it to all the apropriate clients */
+	for (j = 0; j < level.maxclients; j++) {
+		other = &g_entities[j];
+		G_SayTo( ent, other, mode, color, name, text );
+	}
+}
+/* end beryllium */
 
 
 /*

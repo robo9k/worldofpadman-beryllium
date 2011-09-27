@@ -180,6 +180,7 @@
     :: be_chatFlags
     This is a bitmask, supporting the following flags:
       1 - Swap say and say_team
+      2 - Spectators can only use say_team (and tell)
   
   
   :: Commands

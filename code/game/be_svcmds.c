@@ -323,6 +323,14 @@ static void BE_Svcmd_Say_f( void ) {
 			return;
 		}
 
+		if ( ( g_gametype.integer < GT_TEAM ) && ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) ) {
+			G_Printf( "Not a valid team in non-team gametype.\n" );
+			return;		
+		}
+		else if ( TEAM_FREE == team ) {
+			G_Printf( "Not a valid team in team gametype.\n" );
+			return;
+		}
 
 		/* NOTE: G_Say expects two gentity_t, so we just pick one
 		         which has the desired team.
