@@ -51,6 +51,8 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #define MAX_GUIDBANS		128
 
+#define EC					"\x19"
+
 typedef struct {
 	char guid[GUIDSTRMAXLEN];
 } guidBan_t;
@@ -58,6 +60,10 @@ typedef struct {
 enum {
 	GUIDCHECK_EMPTY		= 1,
 	GUIDCHECK_FORMAT	= 2
+};
+
+enum {
+	CHAT_SWAP			= 1
 };
 
 extern int			numGUIDBans;
@@ -103,6 +109,8 @@ extern vmCvar_t	be_banFile;
 extern vmCvar_t g_truePing;
 
 extern vmCvar_t	be_selfDamage;
+
+extern vmCvar_t	be_chatFlags;
 
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */

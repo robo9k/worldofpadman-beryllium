@@ -123,6 +123,8 @@ vmCvar_t	g_truePing;
 
 vmCvar_t	be_selfDamage;
 
+vmCvar_t	be_chatFlags;
+
 /* end beryllium */
 
 
@@ -260,7 +262,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue },
 
-	{ &be_selfDamage, "be_selfDamage", "1.0", CVAR_ARCHIVE, 0, qtrue }
+	{ &be_selfDamage, "be_selfDamage", "1.0", CVAR_ARCHIVE, 0, qtrue },
+
+	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue }
 
 	/* end beryllium */
 };

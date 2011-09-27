@@ -568,31 +568,112 @@ qboolean validGUID( const char *guid ) {
 	Returns a colored team name without " team" suffix
 */
 char *Teamname( team_t team ) {
-	char *teamname;
+	char		*teamname;
+	static char	coloredTeamname[32];
 
 
 	switch ( team ) {
 		case TEAM_RED:
-			teamname = S_COLOR_RED"red";
+			teamname = "red";
 			break;
 
 		case TEAM_BLUE:
-			teamname = S_COLOR_BLUE"blue";
+			teamname = "blue";
 			break;
 
 		case TEAM_FREE:
-			teamname = S_COLOR_GREEN"free";
+			teamname = "free";
 			break;
 
 		case TEAM_SPECTATOR:
-			teamname = S_COLOR_WHITE"spectators";
+			teamname = "spectators";
 			break;
 
 		default:
-			teamname = S_COLOR_YELLOW"unknown";
+			teamname = "unknown";
 			break;
 	}
 
-	return teamname;
+	Com_sprintf( coloredTeamname, sizeof( coloredTeamname ), "%s%s", TeamColorStr( team ), teamname );
+
+	return coloredTeamname;
 }
+
+
+/*
+	Returns a color string for the team
+*/
+char *TeamColorStr( team_t team ) {
+	char *teamColor;
+
+
+	switch ( team ) {
+		case TEAM_RED:
+			teamColor = S_COLOR_RED;
+			break;
+
+		case TEAM_BLUE:
+			teamColor = S_COLOR_BLUE;
+			break;
+
+		case TEAM_FREE:
+			teamColor = S_COLOR_GREEN;
+			break;
+
+		case TEAM_SPECTATOR:
+			teamColor = S_COLOR_WHITE;
+			break;
+
+		default:
+			teamColor = S_COLOR_YELLOW;
+			break;
+	}
+
+	return teamColor;
+}
+
+
+/*
+	Returns a colored name for use in G_Say()
+*/
+void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *location, team_t team ) {
+	char *teamColor;
+
+
+	G_assert( buff );
+	G_assert( size > 0 );
+	G_assert( namesrc );
+
+
+	teamColor = TeamColorStr( team );
+
+	/* NOTE: This does nothing special. It uses the same format as the vanilla chat, but colors the
+	         final ": " depending on the team.
+	*/
+	switch ( mode ) {
+		default: /* fall through */
+		case SAY_ALL:
+			Com_sprintf( buff, size, "%s"S_COLOR_DEFAULT""EC"%s: ", namesrc, teamColor );
+			break;
+
+		case SAY_TEAM:
+			if ( location ) {
+				Com_sprintf( buff, size, EC"(%s"S_COLOR_DEFAULT EC") (%s)"EC"%s: ", namesrc, location, teamColor );
+			}
+			else {
+				Com_sprintf( buff, size, EC"(%s"S_COLOR_DEFAULT EC")"EC"%s: ", namesrc, teamColor );
+			}
+			break;
+
+		case SAY_TELL:
+			if ( location ) {
+				Com_sprintf( buff, size, EC"[%s"S_COLOR_DEFAULT EC"] (%s)"EC"%s: ", namesrc, location, teamColor );
+			}
+			else {
+				Com_sprintf( buff, size, EC"[%s"S_COLOR_DEFAULT EC"]"EC"%s: ", namesrc, teamColor );
+			}
+			break;
+	}
+}
+
 

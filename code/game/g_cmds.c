@@ -546,7 +546,7 @@ void BroadcastTeamChange( gclient_t *client, int oldTeam ) {
 			break;
 	}
 
-	SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_NEGATIVE"%s joined the %s"S_COLOR_DEFAULT".\n", client->pers.netname, teamname ) );
+	SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_DEFAULT" joined the %s"S_COLOR_DEFAULT".\n", client->pers.netname, teamname ) );
 }
 
 /* end beryllium */
@@ -1143,7 +1143,11 @@ void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char 
                             name, Q_COLOR_ESCAPE, color, message ) );
 }
 
+/* changed beryllium */
+/*
 #define EC		"\x19"
+*/
+/* end beryllium */
 
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) {
 	int			j, cid;
@@ -1182,6 +1186,8 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 		target = NULL;
 	}
 
+	/* changed beryllium */
+	/*
 	switch ( mode ) {
 		default: // fall through
 
@@ -1218,6 +1224,46 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 			color = COLOR_YELLOW;
 			break;
 	}
+	*/
+	{
+	char *locationStr = NULL;
+	team_t team = ( realEnt ? ent->client->sess.sessionTeam : TEAM_NUM_TEAMS );
+
+	switch ( mode ) {
+		default: /* fall through */
+		case SAY_ALL:
+			G_LogPrintf( "Say: %i %s\n", cid, chatText );
+			FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			color = COLOR_YELLOW;
+			break;
+
+		case SAY_TEAM:
+			G_LogPrintf( "SayTeam: %i %s\n", cid, chatText );
+			if ( realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+				locationStr = location;
+			}
+			else {
+				FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			}
+			color = COLOR_CYAN;
+			break;
+
+		case SAY_TELL:
+			G_LogPrintf( "Tell: %d %ld %s\n", cid, ( target - g_entities ), chatText );
+			if ( target && ( g_gametype.integer >= GT_TEAM ) &&
+				 ( target->client->sess.sessionTeam == ent->client->sess.sessionTeam ) &&
+				 realEnt && Team_GetLocationMsg( ent, location, sizeof( location ) ) ) {
+				locationStr = location;
+			}
+			else {
+				FormatChatName( name, sizeof( name ), namesrc, mode, locationStr, team );
+			}	
+			color = COLOR_YELLOW;
+			break;
+	}
+
+	}
+	/* end beryllium */
 
 	Q_strncpyz( text, chatText, sizeof(text) );
 
@@ -1265,6 +1311,13 @@ static void Cmd_Say_f( gentity_t *ent, int mode, qboolean arg0 ) {
 	{
 		p = ConcatArgs( 1 );
 	}
+
+	/* added beryllium */
+	/* If CHAT_SWAP, make say become say_team etc. */
+	if ( be_chatFlags.integer & CHAT_SWAP ) {
+		mode = ( ( SAY_ALL == mode ) ? SAY_TEAM : SAY_ALL );
+	}
+	/* end beryllium */
 
 	G_Say( ent, NULL, mode, p );
 }

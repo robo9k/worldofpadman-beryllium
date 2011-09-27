@@ -175,6 +175,11 @@
     :: be_selfDamage
     Like the modified g_friendlyFire. The fraction of damage you
     will do to yourself.
+
+
+    :: be_chatFlags
+    This is a bitmask, supporting the following flags:
+      1 - Swap say and say_team
   
   
   :: Commands

@@ -13,6 +13,7 @@
   :: Current Version
 
   v0.18a - 27.09.11
+  * Add cvar "be_chatFlags"
   * Add server command "lockteam"
 
 
