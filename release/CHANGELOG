@@ -13,7 +13,9 @@
   :: Current Version
 
   v0.18a - 27.09.11
+  * Fix g_q3Items for "gametype", "notGametype"
   * Add cvar "be_chatFlags"
+  * Add subtle team colors to chat
   * Add server command "lockteam"
 
 
