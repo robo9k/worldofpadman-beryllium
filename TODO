@@ -37,8 +37,7 @@ Take care of special vote situations:
 
 Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
 
-splitChat, teamchatOnly, spectatedTeamChat etc.
-	Maybe it's a good idea to swap chat and teamchat, so "default" is teamchat but normal chat still works
+spectatedTeamChat etc.
 
 force spectators to only see scoreboard, only follow mode, steal zcam code
 
@@ -67,4 +66,6 @@ Looks like bots are broken with locked teams.
 Create a changelog.
 
 Team scoreboard?
+
+Modify upload.sh not to include login credentials, then git add
 
