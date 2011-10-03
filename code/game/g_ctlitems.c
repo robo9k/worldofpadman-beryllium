@@ -326,10 +326,18 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 		if ( pEnt->client->sess.sessionTeam == TEAM_BLUE ) {
 			entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_blue.md3" );
 			entBam->team = "b";
+			/* added beryllium */
+			/* modkuh compat */
+			entBam->s.time2 = TEAM_BLUE;
+			/* end beryllium */
 		}
 		else {
 			entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_red.md3" );
 			entBam->team = "r";
+			/* added beryllium */
+			/* modkuh compat */
+			entBam->s.time2 = TEAM_RED;
+			/* end beryllium */
 		}
 
 		entBam->s.angles[1] = pEnt->s.apos.trBase[1];
