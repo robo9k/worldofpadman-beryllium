@@ -291,8 +291,16 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 
 	// check item spawn functions
 	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
-		/* beryllium TODO: g_q3Items and newly added health_* to preserve vanilla behaviour */
 		if ( !strcmp(item->classname, ent->classname) ) {
+			/* added beryllium */
+			/* FIXME: Magical constant */
+			if ( g_q3Items.integer != 2 ) {
+				if ( !Q_strncmp( "item_health", ent->classname, 11 ) ) {
+					/* Pretend we don't know item_health* at all */
+					continue;
+				}
+			}
+			/* end beryllium */
 			G_SpawnItem( ent, item );
 			return qtrue;
 		}
