@@ -63,9 +63,9 @@ Add new vote for map+gametype using beta framework?
 
 Looks like bots are broken with locked teams.
 
-Create a changelog.
-
 Team scoreboard?
 
 Modify upload.sh not to include login credentials, then git add
+
+Add g_q3Items == 2 to disable newly added item_health* behavior (as to remain pure serverside)
 

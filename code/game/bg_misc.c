@@ -741,6 +741,78 @@ Only in CTL games
 /* sounds */ ""
 	},
 
+/* added beryllium */
+
+/*QUAKED item_health_small (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"item_health_small",
+		"sounds/items/health/health_small",
+        { "models/powerups/health/cross_small.md3", 
+		"models/powerups/health/sphere_small.md3", 
+		NULL, NULL },
+/* icon */		"icons/iconh_green",
+/* pickup */	"Small Health",
+		5,
+		IT_HEALTH,
+		0,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED item_health (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"item_health",
+		"sounds/items/health/health",
+        { "models/powerups/health/cross_medium.md3", 
+		"models/powerups/health/sphere_medium.md3", 
+		NULL, NULL },
+/* icon */		"icons/iconh_yellow",
+/* pickup */	"Health",
+		25,
+		IT_HEALTH,
+		0,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED item_health_large (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"item_health_large",
+		"sounds/items/health/health_large",
+        { "models/powerups/health/cross_large.md3", 
+		"models/powerups/health/sphere_large.md3", 
+		NULL, NULL },
+/* icon */		"icons/iconh_red",
+/* pickup */	"Large Health",
+		50,
+		IT_HEALTH,
+		0,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED item_health_mega (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"item_health_mega",
+		"sounds/items/health/health_mega",
+        { "models/powerups/health/cross_mega.md3", 
+		"models/powerups/health/sphere_mega.md3", 
+		NULL, NULL },
+/* icon */		"icons/iconh_mega",
+/* pickup */	"Mega Health",
+		100,
+		IT_HEALTH,
+		0,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/* end beryllium */
+
 	// end of list marker
 	{NULL}
 };

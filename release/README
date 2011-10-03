@@ -331,6 +331,13 @@
    * Some bugs in the original code have been fixed
    * Most bugfixes from WoP's bleeding edge code have been 
      backported, even those changing gameplay
+   * item_health* from Quake3 have been added. The client needs an accordingly
+     modded cgame if you load a map which uses these items.
+     Otherwise the client will crash with
+       ********************
+       ERROR: Bad item index 41 on entity
+       ********************
+     Try using mod-item_health :)
   
   
   :: Versions

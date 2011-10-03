@@ -291,6 +291,7 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 
 	// check item spawn functions
 	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
+		/* beryllium TODO: g_q3Items and newly added health_* to preserve vanilla behaviour */
 		if ( !strcmp(item->classname, ent->classname) ) {
 			G_SpawnItem( ent, item );
 			return qtrue;
@@ -424,7 +425,11 @@ replacePair_t q3ToWopItems[] = {
 	{ "ammo_bfg",		"ammo_imperius"	},
 			
 	{ "item_quad",		"item_padpower"			},
+	/* changed beryllium */
+	/*
 	{ "item_enviro",	"item_climber"			},
+	*/
+	/* end beryllium */
 	{ "item_hast",		"item_speedy"			},
 	{ "item_flight",	"item_jump"				},
 	{ "item_invis",		"item_visionless"		},
@@ -459,6 +464,7 @@ replacePair_t spawnpointReplacements[] = {
 
 
 /* added beryllium */
+
 /*
 	Returns whether value includes gametype.
 	If g_q3Items is enabled, will also check against Q3 gametype names.
