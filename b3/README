@@ -9,7 +9,7 @@
   This is a plugin for b3 (bigbrotherbot.net), which adds functionality of
   the beryllium mod (http://brain.utopia4.de/projects/beryllium).
 
-  IT WILL ONLY WORK WITH THE BERYLLIUM MOD INSTALLED.
+  IT WILL ONLY WORK WITH THE CURRENT BERYLLIUM MOD INSTALLED.
 
   Its main purpose is to add "VIP-votes", i.e. ingame votes which can only
   be called by certain b3 groups. To do so, disable votes for usual clients in
@@ -47,5 +47,9 @@
   * shuffleteams
   * rename
   * rcon
+  * playsound
+  * runas
+  * lockteam
+  * handicap
 
 

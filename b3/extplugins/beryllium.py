@@ -65,6 +65,12 @@
 ##  * Rewrote printLines() loop logic
 ##  * Reported bug in q3::abstractParser.getCvar()
 ##
+## 22:50 07.10.2011 by thbrn
+##  * Added command playsound
+##  * Added command runas
+##  * Added command lockteam
+##  * Added command handicap
+##
 ##
 ## TODO:
 ##
@@ -100,7 +106,7 @@
 
 
 ## major.minor.(svn)revision
-__version__ = '0.7.104'
+__version__ = '0.8.0'
 __author__  = 'thbrn'
 
 import b3
@@ -138,7 +144,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         ##       either bail out or disable beryllium specific commands.
         ##       This would even allow syncing mod<->plugin versions.
 
-		## Current target mod version: 0.12g-r104
+        ## Current target mod version: 0.20a-bfc9d71
 
         ## see whether beryllium mod in installed
         try:
@@ -291,6 +297,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         result = self.console.write('scallvote %s' % data)
         self.printLines(client, result.split('\n'))
+        ## TODO: on success "runas client vote yes"
         return True
 
 
@@ -329,7 +336,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         result = self.console.write(data)
         self.printLines(client, result.split('\n'))
 
-        return None
+        return True
 
 
     def cmd_centerprint(self, data, client, cmd=None):
@@ -384,7 +391,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         input = self._adminPlugin.parseUserCmd(data)
         if not input:
-            client.message('^7Missing data, try !help rename')
+            client.message('^7Missing data, try !help forceteam')
             return False
 
         if not input[0]:
@@ -406,7 +413,113 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         self.console.write('forceteam %s %s' % (sclient.cid, input[1]))
         ## TODO: Don't use a hardcoded message and command
+        ## TODO: Print result to user to see failure messages
         self.console.write('scp %s "^3You were moved to\\n^3another team by an admin"' % sclient.cid)
+        return True
+
+
+    def cmd_playsound(self, data, client, cmd=None):
+        """\
+        <filename> - plays a global sound on the server
+        """
+
+        input = self._adminPlugin.parseUserCmd(data)
+        if not input:
+            client.message('^7Missing data, try !help playsound')
+            return False
+
+        if not input[0]:
+            client.message('^7Missing filename, try !help playsound')
+            return False
+
+        self.console.write('sound %s' % input[0])
+        ## TODO: Print result to user to see failure messages
+        return True
+
+
+    def cmd_runas(self, data, client, cmd=None):
+        """\
+        <player> <command> - runs a command as another player
+        """
+
+        input = self._adminPlugin.parseUserCmd(data)
+        if not input:
+            client.message('^7Missing data, try !help runas')
+            return False
+
+        if not input[0]:
+            client.message('^7Missing player, try !help runas')
+            return False
+
+        sclient = self._adminPlugin.findClientPrompt(input[0], client)
+        if not sclient:
+            ## findClientPrompt() already displayed a message to client, just return
+            return False
+
+        if not input[1]:
+            client.message('^7Missing command, try !help runas')
+            return False
+
+        ## TODO: Concat all remaining input
+        self.console.write('runas %s %s' % (sclient.cid, input[1]))
+        return True
+
+
+    def cmd_lockteam(self, data, client, cmd=None):
+        """\
+        <team> - locks or unlocks the team, preventing players from joining it
+        """
+
+        input = self._adminPlugin.parseUserCmd(data)
+        if not input:
+            client.message('^7Missing data, try !help lockteam')
+            return False
+
+        if not input[0]:
+            client.message('^7Missing team, try !help lockteam')
+            return False
+
+        if not input[0] in ['red', 'r', 'blue', 'b', 'spectator', 's', 'free', 'f' ]:
+            client.message('^7Invalid team, try !help lockteam')
+            return False
+
+        self.console.write('lockteam %s' % input[0])
+        ## TODO: Don't use a hardcoded message and command
+        self.console.write('scp -1 "^3Admin (un-)locked\\n^3team %s"' % input[0])
+        ## TODO: Print result to user to see failure messages
+        return True
+
+
+    def cmd_handicap(self, data, client, cmd=None):
+        """\
+        <player> <handicap> - sets the player's handicap
+        """
+
+        input = self._adminPlugin.parseUserCmd(data)
+        if not input:
+            client.message('^7Missing data, try !help handicap')
+            return False
+
+        if not input[0]:
+            client.message('^7Missing player, try !help handicap')
+            return False
+
+        sclient = self._adminPlugin.findClientPrompt(input[0], client)
+        if not sclient:
+            ## findClientPrompt() already displayed a message to client, just return
+            return False
+
+        if not input[1]:
+            client.message('^7Missing handicap, try !help handicap')
+            return False
+
+        #if not input[1] in range(101):
+        #    client.message('^7Handicap not in range 0-100')
+        #    return False
+
+        self.console.write('handicap %s %s' % (sclient.cid, input[1]))
+        ## TODO: Print result to user to see failure messages
+        self.console.write('scp %s "^3An admin set\\n^3handicap for you"' % sclient.cid)
         return True
 
 
