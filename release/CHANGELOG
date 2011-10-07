@@ -12,12 +12,17 @@
 
   :: Current Version
 
-  v0.19a - 03.10.11
-  * Add modkuh compatibility
-  * Upstream: Fix team overlay for spectators
+  v0.20a - 07.10.11
+  * Fix bug in server command "handicap"
+  * Add server command "sound"
+  * Add server command "runas"
 
 
   :: History
+
+  :: v0.19a - 03.10.11
+  * Add modkuh compatibility
+  * Upstream: Fix team overlay for spectators
 
   :: v0.18a - 27.09.11
   * Add item_health* from Quake3 maps, needs clientside mod

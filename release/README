@@ -324,6 +324,15 @@
     :: lockteam team
     Locks or unlocks the given team. Teams will remain locked until nextmap.
 
+
+    :: runas cid command
+    Runs a command as another player.
+
+
+    :: sound filename
+    Plays the sound globally on the server. Be aware that there is a limit
+    of the maximum number of sounds. If you reach it, the server will crash.
+
     
 
 

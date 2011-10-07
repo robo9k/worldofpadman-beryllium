@@ -67,5 +67,5 @@ Team scoreboard?
 
 Modify upload.sh not to include login credentials, then git add
 
-Add g_q3Items == 2 to disable newly added item_health* behavior (as to remain pure serverside)
+Add "vote yes" to b3 cv. beware of console client
 

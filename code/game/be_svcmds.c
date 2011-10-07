@@ -36,6 +36,8 @@ static void BE_Svcmd_FlushGUIDs_f( void );
 static void BE_Svcmd_SetHandicap_f( void );
 static void BE_Svcmd_SetTeam_f( void );
 static void BE_Svcmd_LockTeam_f( void );
+static void BE_Svcmd_RunAs_f( void );
+static void BE_Svcmd_PlaySound_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -61,7 +63,9 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "flushguids",		BE_Svcmd_FlushGUIDs_f		},
 	{ "handicap",		BE_Svcmd_SetHandicap_f		},
 	{ "forceteam",		BE_Svcmd_SetTeam_f			},	/* NOTE: Override existing implementation */
-	{ "lockteam",		BE_Svcmd_LockTeam_f			}
+	{ "lockteam",		BE_Svcmd_LockTeam_f			},
+	{ "runas",			BE_Svcmd_RunAs_f			},
+	{ "sound",			BE_Svcmd_PlaySound_f		}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -658,15 +662,15 @@ static void BE_Svcmd_SetHandicap_f( void ) {
 	}
 
 
-	/* reuse temp array */
-	trap_Argv( 2, clientStr, sizeof( clientStr ) );
+	/* Abuse so far unused array */
+	trap_Argv( 2, userinfo, sizeof( userinfo ) );
 
-	if ( !Q_isanumber( clientStr ) ) {
+	if ( !Q_isanumber( userinfo ) ) {
 		G_Printf( "You must supply a handicap number.\n" );
 		return;
 	}
 
-	handicap = atoi( clientStr );
+	handicap = atoi( userinfo );
 	if ( ( handicap < 1 ) || ( handicap > 100 ) ) {
 		G_Printf( "Handicap must be in range 1-100.\n");
 		return;
@@ -778,6 +782,71 @@ static void BE_Svcmd_LockTeam_f( void ) {
 	}
 
 	level.teamLocked[team] = lock;
+}
+
+
+/*
+	Creates a command to be run by the specified client.
+*/
+static void BE_Svcmd_RunAs_f( void ) {
+	char	clientStr[3], arg[MAX_STRING_CHARS];
+	int		clientNum;
+
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf( "Usage: runas <cid> <command>\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Not a valid client number.\n" );
+		return;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		G_Printf( "Client not connected.\n" );
+		return;
+	}
+
+	/* NOTE: We can not validate the command in any way.
+	         It'd be possible to filter /disconnect and such, but well..
+	*/
+	/* Create a local copy */
+	Com_sprintf( arg, sizeof( arg ), "%s", ConcatArgs( 2 ) );
+
+	ExecuteClientCommand( clientNum, arg );	
+}
+
+
+/*
+	Plays a sound to all players
+*/
+static void BE_Svcmd_PlaySound_f( void ) {
+	char arg[MAX_STRING_CHARS];
+	int soundIndex;
+
+	if ( trap_Argc() < 2 ) {
+		G_Printf( "Usage: sound <filename>\n" );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+
+	if ( !fileExists( arg ) ) {
+		G_Printf( "File not found.\n" );
+		return;
+	}
+
+	soundIndex = G_SoundIndex( arg );
+	PlayGlobalSound( soundIndex );
 }
 
 

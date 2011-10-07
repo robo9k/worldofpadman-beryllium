@@ -677,3 +677,18 @@ void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *loc
 }
 
 
+/*
+	Plays the given sound globally on the server to all players.
+*/
+void PlayGlobalSound( int soundIndex ) {
+    gentity_t  *te;
+
+	
+	G_assert( soundIndex != 0 );
+   
+
+	te = G_TempEntity( level.intermission_origin, EV_GLOBAL_SOUND );
+	te->s.eventParm = soundIndex;
+	te->r.svFlags |= SVF_BROADCAST;
+}
+

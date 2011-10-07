@@ -98,5 +98,7 @@ char *TeamColorStr( team_t team );
 
 void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *location, team_t team );
 
+void PlayGlobalSound( int soundIndex );
+
 #endif
 
