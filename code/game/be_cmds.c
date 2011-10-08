@@ -40,9 +40,9 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 	unsigned int i;
 
 
-	G_assert( ent );
-	G_assert( ent->client );
-	G_assert( cmd );
+	G_assert( ent != NULL );
+	G_assert( ent->client != NULL );
+	G_assert( cmd != NULL );
 
 
 	for ( i = 0; i < NUM_CCMDS; i++ ) {
@@ -64,7 +64,7 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd ) {
 
 			/* TODO: Test for CMD_MESSAGE. This is only useful with muting implemented */
 
-			/* FIXME: assert( cmdHandler ) */
+			G_assert( BE_CCMDS[i].cmdHandler != NULL );
 
 			/* Conditions are met, execute! */
 			BE_CCMDS[i].cmdHandler( ent );
@@ -86,6 +86,9 @@ void BE_Cmd_Ignore_f( gentity_t *ent ) {
 	char			message[MAX_STRING_TOKENS];
 	int				clientNum;
 	const gentity_t	*other;
+
+
+	G_assert( ent != NULL );
 
 
 	/* Print current list */

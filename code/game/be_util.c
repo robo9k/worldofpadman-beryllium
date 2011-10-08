@@ -49,7 +49,7 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 	char buffer[MAX_STRING_CHARS];
 
 
-	G_assert( str );
+	G_assert( str != NULL );
 
 
 	if ( !ValidClientID( clientNum, qtrue ) ) {
@@ -126,7 +126,7 @@ gametype_t StringToGametype( const char *str ) {
 	int i;
 
 
-	G_assert( str );
+	G_assert( str != NULL );
 
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
@@ -167,8 +167,8 @@ char* TimeToString( int time, char *str, size_t size ) {
 	int min, tens, sec;
 
 	
-	G_assert( str );
-	G_assert( size );
+	G_assert( str != NULL );
+	G_assert( size > 0 );
 
 
 	sec = ( time / 1000 );
@@ -219,7 +219,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 	int			id = CID_NONE, matches = 0, i;
 
 
-	G_assert( name );
+	G_assert( name != NULL );
 
 
 	/* FIXME: Const correctness */
@@ -269,7 +269,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 	Helper function to check whether a file exists serverside
 */
 qboolean fileExists( const char *path ) {
-	G_assert( path );
+	G_assert( path != NULL );
 
 
 	return ( trap_FS_FOpenFile( path, NULL, FS_READ ) );
@@ -285,8 +285,8 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 	char *skin;
 
 
-	G_assert( model );
-	G_assert( headModel );
+	G_assert( model != NULL );
+	G_assert( headModel != NULL );
 	
 
 	Q_strncpyz( base, model, sizeof( base ) );
@@ -332,7 +332,7 @@ team_t TeamFromString( const char *s ) {
 	team_t team;
 
 
-	G_assert( s );
+	G_assert( s != NULL );
 
 
 	/* TODO: Restore old verbose, case insensitive "spectator", "red", "blue", "free" logic? */
@@ -368,10 +368,7 @@ team_t TeamFromString( const char *s ) {
 	TODO: Use fmt and .. once va functions are buffer safe?
 */
 void PrintMessage( const gentity_t *ent, const char *msg ) {
-	/* FIXME: Replace check below with G_assert()? */
-	if ( !msg ) {
-		return;
-	}
+	G_assert( msg != NULL );
 
 
 	if ( NULL == ent ) {
@@ -392,8 +389,8 @@ qboolean InList( const char *haystack, const char *needle ) {
 	char pattern[MAX_STRING_TOKENS];
 
 
-	G_assert( haystack );
-	G_assert( needle );
+	G_assert( haystack != NULL );
+	G_assert( needle != NULL );
 
 
 	Com_sprintf( pattern, sizeof( pattern ), "/%s/", needle );
@@ -411,7 +408,7 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 	char		text[1024];
 
 
-	G_assert( fmt );
+	G_assert( fmt != NULL );
 
 
 	/* FIXME: Rather add a new g_debug/g_developer cvar and loglevels for it? */
@@ -436,9 +433,9 @@ void Q_DecolorStr( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
 
 
-	G_assert( in );
-	G_assert( out );
-	G_assert( outsize );
+	G_assert( in != NULL );
+	G_assert( out != NULL );
+	G_assert( outsize > 0 );
 
 
 	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
@@ -465,9 +462,9 @@ void Q_StripWhitespace( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
 
 
-	G_assert( in );
-	G_assert( out );
-	G_assert( outsize );
+	G_assert( in != NULL );
+	G_assert( out != NULL );
+	G_assert( outsize > 0 );
 
 
 	for ( ; ( *in && ( outpos < ( outsize - 1 ) ) ); in++ ) {
@@ -491,9 +488,9 @@ void Q_ExtraCleanStr( char *in, char *out, size_t outsize ) {
 	int outpos = 0;
 
 
-	G_assert( in );
-	G_assert( out );
-	G_assert( outsize );
+	G_assert( in != NULL );
+	G_assert( out != NULL );
+	G_assert( outsize > 0 );
 
 
 	Q_DecolorStr( in, out, outsize );
@@ -521,7 +518,7 @@ void Q_ExtraCleanStr( char *in, char *out, size_t outsize ) {
 	trap_EA_Command() -> EA_Command() -> BotClientCommand() -> SV_ExecuteClientCommand()
 */
 void ExecuteClientCommand( clientNum_t clientNum, const char *cmd ) {
-	G_assert( cmd );
+	G_assert( cmd != NULL );
 
 
 	if ( !ValidClientID( clientNum, qfalse ) ) {
@@ -544,7 +541,7 @@ qboolean validGUID( const char *guid ) {
 	qboolean valid = qtrue;
 
 
-	G_assert( guid );
+	G_assert( guid != NULL );
 
 	/* "Its value is a 32 character string made up of [a-f] and [0-9] characters." */
 	while ( guid[count] != '\0' && valid ) {
@@ -640,9 +637,9 @@ void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *loc
 	char *teamColor;
 
 
-	G_assert( buff );
+	G_assert( buff != NULL );
 	G_assert( size > 0 );
-	G_assert( namesrc );
+	G_assert( namesrc != NULL );
 
 
 	teamColor = TeamColorStr( team );

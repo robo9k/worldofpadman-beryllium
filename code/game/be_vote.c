@@ -60,7 +60,7 @@ static voteID_t GetVoteID( const char *str ) {
 	int i;
 
 
-	G_assert( str );
+	G_assert( str != NULL );
 
 
 	for ( i = 0; i < NUM_VOTES; i++ ) {
@@ -115,7 +115,7 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 	char msg[8];
 
 
-	G_assert( ent );
+	G_assert( ent != NULL );
 
 
 	if ( !level.voteTime ) {

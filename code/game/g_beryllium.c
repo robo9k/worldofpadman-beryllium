@@ -58,10 +58,10 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 */
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
-	G_assert( targ );
-	G_assert( attacker );
-	G_assert( mod );
-	G_assert( damage );
+	G_assert( targ != NULL );
+	G_assert( attacker != NULL );
+	G_assert( mod  != NULL );
+	G_assert( damage != NULL );
 
 
 	/* We are only interested in clients' damage */
@@ -70,8 +70,8 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	}
 
 	
-	G_assert( mod );
-	G_assert( damage );
+	G_assert( mod != NULL );
+	G_assert( damage != NULL );
 
 
 	/* Respawn protection */
@@ -362,7 +362,7 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	int counter, remaining;
 
 
-	G_assert( ent );
+	G_assert( ent != NULL );
 
 
 	if ( CON_CONNECTED != ent->client->pers.connected ) {
@@ -444,7 +444,7 @@ void BE_ClientBegan( int clientNum ) {
 	Called after client has been killed but before tossing items
 */
 void BE_ClientKilled( gentity_t *self ) {
-	G_assert( self );
+	G_assert( self != NULL );
 
 
 	if ( ( GT_LPS == g_gametype.integer ) &&
@@ -510,8 +510,8 @@ void IgnoreChat( gentity_t *ent, const gentity_t *other, qboolean mode ) {
 	char cmd[MAX_STRING_TOKENS];
 
 
-	G_assert( ent );
-	G_assert( other );
+	G_assert( ent != NULL );
+	G_assert( other != NULL );
 
 
 	clientNum = ( other - g_entities );
@@ -543,8 +543,8 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 	int clientNum;
 
 
-	G_assert( ent );
-	G_assert( other );
+	G_assert( ent != NULL );
+	G_assert( other != NULL );
 
 
 	clientNum = ( other - g_entities );
@@ -559,7 +559,7 @@ qboolean ChatIgnored( const gentity_t *ent, const gentity_t *other ) {
 */
 qboolean BE_CanSayTo( const gentity_t *ent, const gentity_t *other ) {
 	/* NOTE: ent can be NULL for server messages */
-	G_assert( other );
+	G_assert( other != NULL );
 
 
 	if ( ent ) {
@@ -821,7 +821,7 @@ qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
 		qboolean allowed = qtrue;
 
 
-		G_assert( ent );
+		G_assert( ent != NULL);
 
 
 		for ( i = 0; i < numSecrets; i++ ) {
@@ -832,7 +832,7 @@ qboolean BE_CanUseTeleporter( const gentity_t *ent, gentity_t *other ) {
 		}
 
 		if ( !allowed ) {
-			G_assert( other );
+			G_assert( other != NULL );
 
 
 			/* TODO: Print some info to the player? */
@@ -855,7 +855,7 @@ qboolean BE_CanUseMover( const gentity_t *ent, gentity_t *other ) {
 		int i;
 
 
-		G_assert( ent );
+		G_assert( ent != NULL );
 
 
 		for ( i = 0; i < numSecrets; i++ ) {
@@ -877,7 +877,7 @@ qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, co
 	int len;
 
 
-	G_assert( message );
+	G_assert( message != NULL );
 
 
 	len = strlen( be_hideChat.string );
