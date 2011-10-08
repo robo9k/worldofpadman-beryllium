@@ -1,4 +1,4 @@
-<!-- b3 config for beryllium plugin 0.8.0 -->
+<!-- b3 config for beryllium plugin 0.8.1 -->
 <configuration plugin="beryllium">
 	<settings name="commands">
 		<set name="forceteam-ft">60</set>
@@ -13,6 +13,7 @@
 		<set name="runas-do">80</set>
 		<set name="lockteam-lt">60</set>
 		<set name="handicap-hc">60</set>
+		<set name="maps-m">20</set>
 
 		<!-- pass-through rcon commands from b3 -->
 		<set name="rcon-rc">60</set>

@@ -71,6 +71,9 @@
 ##  * Added command lockteam
 ##  * Added command handicap
 ##
+## 17:00 08.10.2011 by thbrn
+##  * Added command maps
+##
 ##
 ## TODO:
 ##
@@ -106,11 +109,12 @@
 
 
 ## major.minor.(svn)revision
-__version__ = '0.8.0'
+__version__ = '0.8.1'
 __author__  = 'thbrn'
 
 import b3
 import b3.plugin
+import re
 
 
 ##------------------------------------------------------------------------------
@@ -123,6 +127,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
     _adminPlugin = None
     _votes = {}
     _rcon = {}
+    _maps = []
 
     ## NOTE: b3 has a verbose warning if no handle(), but at
     ##       same time says "Depreciated. Use onEvent()"
@@ -175,6 +180,9 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         ## version command is not in config, always add
         self._adminPlugin.registerCommand(self, 'beryllium', 40, self.cmd_version)
+
+        self.registerEvent(b3.events.EVT_GAME_ROUND_START)
+        self.loadMaps()
 
 
     def onLoadConfig(self):
@@ -523,6 +531,25 @@ class BerylliumPlugin(b3.plugin.Plugin):
         return True
 
 
+    def cmd_maps(self, data, client, cmd=None):
+        """\
+        [searchterm] - displays maps available on the server
+        """
+
+        results = []
+        input = self._adminPlugin.parseUserCmd(data)
+        if input and input[0]:
+            for map in self._maps:
+                if map.find(input[0]) <> -1:
+                    results.append(map)
+        else:
+            results = self._maps
+        
+
+        self.printLines(client, results)
+        return True
+
+
     def printLines(self, client, lines):
         ## Prints a bunch of lines to a client
 
@@ -558,5 +585,23 @@ class BerylliumPlugin(b3.plugin.Plugin):
 
         if len(buff) > 0:
             self.console.write('sprint %s "%s"' % (cid,buff))
+
+
+    def onEvent(self, event):
+        if event.type == b3.events.EVT_GAME_ROUND_START:
+            loadMaps()
+
+
+    def loadMaps(self):
+        mapnameRegexp = re.compile(r'^(?P<mapname>.+)\.bsp$', re.IGNORECASE)
+        maplist = self.console.write('dir maps bsp')
+        self._maps = []
+
+        for line in maplist.split('\n'):
+            match = re.match(mapnameRegexp, line)
+            if match:
+                self._maps.append(match.group('mapname').lower())
+
+        self._maps.sort()
 
 
