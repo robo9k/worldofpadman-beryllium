@@ -229,6 +229,8 @@ SelectRandomFurthestSpawnPoint
 Chooses a player start, deathmatch start, etc
 ============
 */
+/* changed beryllium */
+/*
 gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot ) {
 	gentity_t	*spot;
 	vec3_t		delta;
@@ -332,6 +334,121 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 
 	return list_spot[rnd];
 }
+*/
+
+/* Taken from ioquake.
+   There's some error causing the final list_spot[rnd]->s.* to point into nowhere
+   in the original wop code.
+*/
+gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot ) {
+	gentity_t	*spot;
+	vec3_t		delta;
+	float		dist;
+	float		list_dist[MAX_SPAWN_POINTS];
+	gentity_t	*list_spot[MAX_SPAWN_POINTS];
+	int			numSpots, rnd, i, j;
+
+	numSpots = 0;
+	spot = NULL;
+
+	while((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL)
+	{
+		if(SpotWouldTelefrag(spot))
+			continue;
+
+		if(((spot->flags & FL_NO_BOTS) && isbot) ||
+		   ((spot->flags & FL_NO_HUMANS) && !isbot))
+		{
+			// spot is not for this human/bot player
+			continue;
+		}
+
+		VectorSubtract( spot->s.origin, avoidPoint, delta );
+		dist = VectorLength( delta );
+
+		for (i = 0; i < numSpots; i++)
+		{
+			if(dist > list_dist[i])
+			{
+				if (numSpots >= MAX_SPAWN_POINTS)
+					numSpots = MAX_SPAWN_POINTS - 1;
+					
+				for(j = numSpots; j > i; j--)
+				{
+					list_dist[j] = list_dist[j-1];
+					list_spot[j] = list_spot[j-1];
+				}
+				
+				list_dist[i] = dist;
+				list_spot[i] = spot;
+				
+				numSpots++;
+				break;
+			}
+		}
+		
+		if(i >= numSpots && numSpots < MAX_SPAWN_POINTS)
+		{
+			list_dist[numSpots] = dist;
+			list_spot[numSpots] = spot;
+			numSpots++;
+		}
+	}
+	
+	if(!numSpots)
+	{
+
+		/* wop specific: try to avoid telefrags */
+		spot = NULL;
+		j = 1;
+
+		for ( i = 1; j > 0; i++ ) {
+			j = 0;
+			while ( ( spot = G_Find( spot, FOFS( classname ), "info_player_deathmatch" ) ) != NULL ) {
+				gentity_t	tmp;
+				trace_t		tr;
+
+				VectorCopy( spot->s.origin, tmp.s.origin );
+				tmp.s.origin[2] += ( 9 + 64 * i ); /* FIXME: Magical constants */
+
+				trap_Trace( &tr, spot->s.origin, playerMins, playerMaxs, tmp.s.origin,
+				            ENTITYNUM_NONE, ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP ) );
+				if ( tr.fraction != 1.0f ) {
+					continue;
+				}
+
+				j++;
+				if ( SpotWouldTelefrag( &tmp ) ) {
+					continue;
+				}
+	
+				VectorCopy( tmp.s.origin, origin );
+				VectorCopy( spot->s.angles, angles );
+				return spot;
+			}
+		}
+
+		spot = G_Find(NULL, FOFS(classname), "info_player_deathmatch");
+
+		if (!spot)
+			G_Error( "Couldn't find a spawn point" );
+
+		VectorCopy (spot->s.origin, origin);
+		origin[2] += 9;
+		VectorCopy (spot->s.angles, angles);
+		return spot;
+	}
+
+	// select a random spot from the spawn points furthest away
+	rnd = random() * (numSpots / 2);
+
+	VectorCopy (list_spot[rnd]->s.origin, origin);
+	origin[2] += 9;
+	VectorCopy (list_spot[rnd]->s.angles, angles);
+
+	return list_spot[rnd];
+}
+/* end beryllium */
 
 /*
 ===========

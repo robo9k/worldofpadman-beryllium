@@ -12,13 +12,17 @@
 
   :: Current Version
 
-  v0.20a - 07.10.11
+  v0.21a - 08.10.11
+  * Fix bug in spawnpoint logic causing the server to crash
+
+
+  :: History
+
+  :: v0.20a - 07.10.11
   * Fix bug in server command "handicap"
   * Add server command "sound"
   * Add server command "runas"
 
-
-  :: History
 
   :: v0.19a - 03.10.11
   * Add modkuh compatibility
