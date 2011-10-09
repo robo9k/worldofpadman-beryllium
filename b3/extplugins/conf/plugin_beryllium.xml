@@ -13,7 +13,7 @@
 		<set name="runas-do">80</set>
 		<set name="lockteam-lt">60</set>
 		<set name="handicap-hc">60</set>
-		<set name="maps-m">20</set>
+		<set name="maplist-ml">20</set>
 
 		<!-- pass-through rcon commands from b3 -->
 		<set name="rcon-rc">60</set>

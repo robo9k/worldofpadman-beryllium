@@ -531,7 +531,7 @@ class BerylliumPlugin(b3.plugin.Plugin):
         return True
 
 
-    def cmd_maps(self, data, client, cmd=None):
+    def cmd_maplist(self, data, client, cmd=None):
         """\
         [searchterm] - displays maps available on the server
         """
