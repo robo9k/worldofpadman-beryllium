@@ -790,6 +790,8 @@ PickTeam
 
 ================
 */
+/* changed beryllium */
+/*
 team_t PickTeam( int ignoreClientNum ) {
 	int		counts[TEAM_NUM_TEAMS];
 
@@ -808,6 +810,38 @@ team_t PickTeam( int ignoreClientNum ) {
 	}
 	return TEAM_BLUE;
 }
+*/
+team_t PickTeam( int ignoreClientNum ) {
+	int		counts[TEAM_NUM_TEAMS];
+	team_t	team;
+
+	counts[TEAM_BLUE] = TeamCount( ignoreClientNum, TEAM_BLUE );
+	counts[TEAM_RED] = TeamCount( ignoreClientNum, TEAM_RED );
+
+	if ( counts[TEAM_BLUE] > counts[TEAM_RED] ) {
+		team = TEAM_RED;
+	}
+	else if ( counts[TEAM_RED] > counts[TEAM_BLUE] ) {
+		team = TEAM_BLUE;
+	}
+	/* equal team count, so join the team with the lowest score */
+	/* TODO: Also consider number of humans/bots */
+	else if ( level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED] ) {
+		team = TEAM_RED;
+	}
+	else {
+		team = TEAM_BLUE;
+	}
+
+	/* If team is locked, default to spectator, so things don't break */
+	/* TODO: Could join OtherTeam, but breaks balance */
+	if ( level.teamLocked[team] ) {
+		team = TEAM_SPECTATOR;
+	}
+
+	return team;
+}
+/* end beryllium */
 
 /*
 ===========

@@ -12,11 +12,14 @@
 
   :: Current Version
 
-  v0.21a - 08.10.11
-  * Fix bug in spawnpoint logic causing the server to crash
+  v0.21b - 09.10.11
+  * Fix locked teams with autojoin
 
 
   :: History
+
+  :: v0.21a - 08.10.11
+  * Fix bug in spawnpoint logic causing the server to crash
 
   :: v0.20a - 07.10.11
   * Fix bug in server command "handicap"

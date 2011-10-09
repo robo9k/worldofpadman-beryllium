@@ -69,3 +69,5 @@ Modify upload.sh not to include login credentials, then git add
 
 Add "vote yes" to b3 cv. beware of console client
 
+Disallow locking spectator team?
+

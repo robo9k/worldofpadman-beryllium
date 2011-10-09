@@ -762,13 +762,17 @@ static void BE_Svcmd_LockTeam_f( void ) {
 		return;
 	}
 
-	if ( ( g_gametype.integer < GT_TEAM ) && ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) ) {
-		G_Printf( "Not a valid team in non-team gametype.\n" );
-		return;		
+	if ( g_gametype.integer < GT_TEAM ) {
+		if ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) {
+			G_Printf( "Not a valid team in non-team gametype.\n" );
+			return;
+		}
 	}
-	else if ( TEAM_FREE == team ) {
-		G_Printf( "Not a valid team in team gametype.\n" );
-		return;
+	else {
+		if ( ( TEAM_FREE == team ) ) {
+			G_Printf( "Not a valid team in team gametype.\n" );
+			return;
+		}
 	}
 
 	/* TODO: Does it make sense to lock spectators? */
