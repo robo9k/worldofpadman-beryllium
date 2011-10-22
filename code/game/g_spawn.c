@@ -436,9 +436,10 @@ replacePair_t q3ToWopItems[] = {
 	/* changed beryllium */
 	/*
 	{ "item_enviro",	"item_climber"			},
-	*/
-	/* end beryllium */
 	{ "item_hast",		"item_speedy"			},
+	*/
+	{ "item_haste",		"item_speedy"			},
+	/* end beryllium */
 	{ "item_flight",	"item_jump"				},
 	{ "item_invis",		"item_visionless"		},
 	{ "item_regen",		"item_revival"			},

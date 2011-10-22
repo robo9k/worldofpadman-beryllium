@@ -12,11 +12,14 @@
 
   :: Current Version
 
-  v0.21b - 09.10.11
-  * Fix locked teams with autojoin
+  v0.21c - 22.10.11
+  * Fix item_haste
 
 
   :: History
+
+  :: v0.21b - 09.10.11
+  * Fix locked teams with autojoin
 
   :: v0.21a - 08.10.11
   * Fix bug in spawnpoint logic causing the server to crash
