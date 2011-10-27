@@ -190,6 +190,11 @@
        ********************
        ERROR: Bad item index 42 on entity
        ********************
+
+
+    :: be_overrideEntities
+    When activated, will look for a file to replace the map's entities.
+    Take a look at the included "maps/wop_journeyCTL.dat" as an example.
   
   
   :: Commands

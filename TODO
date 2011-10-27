@@ -71,6 +71,3 @@ Add "vote yes" to b3 cv. beware of console client
 
 Disallow locking spectator team?
 
-Update README about $map.dat, add more code docu, add sample to release, add cvar, add debug output
-check whether BE_Free really works, call BE_Defrag?
-

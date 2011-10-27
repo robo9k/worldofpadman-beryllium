@@ -618,7 +618,7 @@ static void ParseSecrets( char *buff ) {
 static void BE_LoadSecrets( void ) {
 	int				len;
 	fileHandle_t	f;
-	char			buff[8192];
+	char			*buff, *buffPtr;
 	char			filename[MAX_QPATH];
 
 
@@ -634,18 +634,18 @@ static void BE_LoadSecrets( void ) {
 		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
 		return;
 	}
-	else if ( len >= sizeof( buff ) ) {
-		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, ( sizeof( buff ) -1 ) );
-		trap_FS_FCloseFile( f );
-		return;
-	}
+
+	buff = buffPtr = BE_Alloc( len );
+	G_assert( buff );
 
 	trap_FS_Read( buff, len, f );
 	buff[len] = '\0';
 	trap_FS_FCloseFile( f );
 
 	COM_BeginParseSession( filename );
-	ParseSecrets( buff );
+	ParseSecrets( buffPtr );
+
+	BE_Free( buff );
 }
 
 
@@ -703,7 +703,7 @@ void BE_WriteBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		// FIXME: Hardcoded cvar name, use #define?
+		/* FIXME: Hardcoded, cvarTable_t.cvarName */
 		G_Printf( "be_banFile not set, will not save to disk.\n" );
 		return;
 	}
@@ -763,12 +763,12 @@ static void ParseBans( char *buff ) {
 void BE_LoadBans( void ) {
 	int				len;
 	fileHandle_t	f;
-	char			buff[8192];
+	char			*buff, *buffPtr;
 	char			*filename;
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		// FIXME: Hardcoded cvar name, use #define?
+		/* FIXME: Hardcoded, cvarTable_t.cvarName */
 		G_Printf( BE_LOG_PREFIX"be_banFile not set, will not read banlist from disk.\n" );
 		return;
 	}
@@ -778,18 +778,18 @@ void BE_LoadBans( void ) {
 		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
 		return;	
 	}
-	else if ( len >= sizeof( buff ) ) {
-		G_Printf( BE_LOG_PREFIX"File \"%s\" too large; is %d, max %ld.\n", filename, len, ( sizeof( buff ) - 1 ) );
-		trap_FS_FCloseFile( f );
-		return;
-	}
+
+	buff = buffPtr = BE_Alloc( len );
+	G_assert( buff != NULL );
 
 	trap_FS_Read( buff, len, f );
 	buff[len] = '\0';
 	trap_FS_FCloseFile( f );
 
 	COM_BeginParseSession( filename );
-	ParseBans( buff );
+	ParseBans( buffPtr );
+
+	BE_Free( buff );
 }
 
 
@@ -937,8 +937,8 @@ static void BE_LoadEntities( const char *mapname ) {
 		return;	
 	}
 
-	/* We need a second pointer because COM_Parse() will override and thus
-	   leak our buffer otherwise.
+	/* We need a second pointer because COM_Parse() will overwrite and thus
+	   leak our buffer pointer otherwise.
 	*/
 	pWorldspawn = pWorldspawnParsePoint = BE_Alloc( len );
 	G_assert( pWorldspawn != NULL );
