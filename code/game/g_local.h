@@ -1208,6 +1208,7 @@ int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t 
 #include "be_cmds.h"
 #include "be_svcmds.h"
 #include "be_storage.h"
+#include "be_alloc.h"
 
 /* end beryllium */
 

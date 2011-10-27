@@ -113,6 +113,8 @@ extern vmCvar_t	be_selfDamage;
 
 extern vmCvar_t	be_chatFlags;
 
+extern vmCvar_t	be_overrideEntities;
+
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
@@ -160,6 +162,10 @@ qboolean DeleteBan( unsigned int index );
 
 /* See NOTE in implementation */
 qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force );
+
+qboolean BE_GetEntityToken( char *buffer, int bufferSize );
+void BE_PreSpawnEntities( void );
+void BE_PostSpawnEntities( void );
 
 #endif
 

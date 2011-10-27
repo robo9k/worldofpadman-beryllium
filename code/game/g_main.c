@@ -125,6 +125,8 @@ vmCvar_t	be_selfDamage;
 
 vmCvar_t	be_chatFlags;
 
+vmCvar_t	be_overrideEntities;
+
 /* end beryllium */
 
 
@@ -264,7 +266,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_selfDamage, "be_selfDamage", "1.0", CVAR_ARCHIVE, 0, qtrue },
 
-	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue }
+	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue },
+
+	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue }
 
 	/* end beryllium */
 };
@@ -504,6 +508,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_ProcessIPBans();
 
 	G_InitMemory();
+	/* added beryllium */
+	BE_InitMemory();
+	/* end beryllium */
 
 	// set some level globals
 	memset( &level, 0, sizeof( level ) );

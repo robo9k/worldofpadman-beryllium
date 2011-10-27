@@ -7,8 +7,7 @@
 
 #include "g_local.h"
 
-
-#define POOLSIZE	(512 * 1024)
+#define POOLSIZE	(8192 * 1024)
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;

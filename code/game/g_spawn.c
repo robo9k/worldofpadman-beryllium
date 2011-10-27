@@ -779,7 +779,12 @@ qboolean G_ParseSpawnVars( void ) {
 	level.numSpawnVarChars = 0;
 
 	// parse the opening brace
+	/* changed beryllium */
+	/*
 	if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	*/
+	if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	/* end beryllium */
 		// end of spawn string
 		return qfalse;
 	}
@@ -790,7 +795,12 @@ qboolean G_ParseSpawnVars( void ) {
 	// go through all the key / value pairs
 	while ( 1 ) {	
 		// parse key
+		/* changed beryllium */
+		/*
 		if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		*/
+		if ( !BE_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -798,8 +808,13 @@ qboolean G_ParseSpawnVars( void ) {
 			break;
 		}
 		
-		// parse value	
+		// parse value
+		/* changed beryllium */
+		/*	
 		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		*/
+		if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -916,6 +931,10 @@ void G_SpawnEntitiesFromString( void ) {
 	level.numSpawnVars = 0;
 	level.sr_tl_tele = NULL;
 
+	/* added beryllium */
+	BE_PreSpawnEntities();
+	/* end beryllium */
+
 	// the worldspawn is not an actual entity, but it still
 	// has a "spawn" function to perform any global setup
 	// needed by a level (setting configstrings or cvars, etc)
@@ -928,6 +947,10 @@ void G_SpawnEntitiesFromString( void ) {
 	while( G_ParseSpawnVars() ) {
 		G_SpawnGEntityFromSpawnVars();
 	}	
+
+	/* added beryllium */
+	BE_PostSpawnEntities();
+	/* end beryllium */
 
 	level.spawning = qfalse;			// any future calls to G_Spawn*() will be errors
 }

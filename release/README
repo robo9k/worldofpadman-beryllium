@@ -140,7 +140,7 @@
   
     Changes will only take effect when loading a new map. Watch
     out for error messages ;)
-    Take a look at the included "maps/wop_diner.dat" as an example.
+    Take a look at the included "maps/wop_diner.cfg" as an example.
   
   
     :: be_debugSecrets

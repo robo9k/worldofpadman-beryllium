@@ -26,6 +26,8 @@ char	secretNames[MAX_SECRETS][MAX_TARGETNAME];
 int			numGUIDBans;
 guidBan_t	guidBans[MAX_GUIDBANS];
 
+static char	*pWorldspawn, *pWorldspawnParsePoint;
+
 
 /* Functions */
 
@@ -625,7 +627,7 @@ static void BE_LoadSecrets( void ) {
 		return;
 	}
 
-	Com_sprintf( filename, sizeof( filename ), "maps/%s.dat", level.mapname );
+	Com_sprintf( filename, sizeof( filename ), "maps/%s.cfg", level.mapname );
 	
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
@@ -909,6 +911,97 @@ int G_FrameMsec( void ) {
 	}
 	else {
 		return 1;
+	}
+}
+
+
+static void BE_LoadEntities( const char *mapname ) {
+	int				len;
+	fileHandle_t	f;
+	char			filename[MAX_QPATH];
+
+
+	G_assert( mapname );
+
+	pWorldspawn = NULL;
+	if ( !be_overrideEntities.integer ) {
+		/* Make sure we've NULLed pWorldspawn, since it's used in all other checks */
+		return;
+	}
+
+	Com_sprintf( filename, sizeof( filename ), "maps/%s.dat", mapname );
+
+	len = trap_FS_FOpenFile( filename, &f, FS_READ );
+	if ( !f ) {
+		G_Printf( BE_LOG_PREFIX"Could not open \"%s\", will fallback to .bsp entities.\n", filename );
+		return;	
+	}
+
+	/* We need a second pointer because COM_Parse() will override and thus
+	   leak our buffer otherwise.
+	*/
+	pWorldspawn = pWorldspawnParsePoint = BE_Alloc( len );
+	G_assert( pWorldspawn != NULL );
+
+	trap_FS_Read( pWorldspawn, len, f );
+	pWorldspawn[len] = '\0';
+	trap_FS_FCloseFile( f );
+
+	G_Printf( BE_LOG_PREFIX"Loaded entities from \"%s\".\n", filename );
+}
+
+
+/*
+	Called once we're ready to parse entities
+*/
+void BE_PreSpawnEntities( void ) {
+	char	serverinfo[MAX_INFO_STRING];
+	char	mapname[MAX_INFO_VALUE];
+	
+
+	trap_GetServerinfo( serverinfo, sizeof( serverinfo ) );
+	Q_strncpyz( mapname, Info_ValueForKey( serverinfo, "mapname" ), sizeof( mapname ) );
+
+	/* FIXME: Copy pasta. BE_InitBeryllium() is called to late. */
+
+	BE_LoadEntities( mapname );
+}
+
+
+static void BE_FreeEntities( void ) {
+	if ( pWorldspawn != NULL ) {
+		BE_Free( pWorldspawn );
+		pWorldspawn = NULL;
+	}
+}
+
+
+/*
+	Called after entities have been parsed
+*/
+void BE_PostSpawnEntities( void ) {
+	BE_FreeEntities();
+}
+
+
+/*
+	See GET_ENTITY_TOKEN in SV_GameSystemCalls()
+*/
+qboolean BE_GetEntityToken( char *buffer, int bufferSize ) {
+	const char	*s;
+
+	if ( NULL == pWorldspawn ) {
+		return trap_GetEntityToken( buffer, bufferSize );
+	}
+	else {
+		s = COM_Parse( &pWorldspawnParsePoint );
+		Q_strncpyz( buffer, s, bufferSize );
+		if ( !pWorldspawnParsePoint && !s[0] ) {
+			return qfalse;
+		}
+		else {
+			return qtrue;
+		}
 	}
 }
 
