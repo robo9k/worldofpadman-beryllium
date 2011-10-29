@@ -348,6 +348,15 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 		pm.pointcontents = trap_PointContents;
 		pm.gametype=g_gametype.integer;
 
+		/* added beryllium */
+		if ( be_dmFlags.integer & BE_DF_BACKGROUNDRELOAD ) {
+			pm.reloadTime = client->reloadTime;
+		}
+		else {
+			pm.reloadTime = NULL;
+		}
+		/* end beryllium */
+
 		// perform a pmove
 		Pmove (&pm);
 		// save results of pmove
@@ -893,6 +902,15 @@ void ClientThink_real( gentity_t *ent ) {
 
 
 	pm.gametype = g_gametype.integer;
+
+	/* added beryllium */
+	if ( be_dmFlags.integer & BE_DF_BACKGROUNDRELOAD ) {
+		pm.reloadTime = client->reloadTime;
+	}
+	else {
+		pm.reloadTime = NULL;
+	}
+	/* end beryllium */
 
 	Pmove( &pm );
 

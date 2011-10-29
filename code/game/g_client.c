@@ -1580,6 +1580,14 @@ trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
 
 			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_PUNCHY );
 			client->ps.ammo[WP_PUNCHY] = -1;
+
+			/* added beryllium */
+			/* modkuh >= v9 compat */
+			if ( be_dmFlags.integer & BE_DF_GRAPPLE ) {
+				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
+				client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+			}
+			/* end beryllium */
 		}
 	}
 

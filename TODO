@@ -71,3 +71,8 @@ Add "vote yes" to b3 cv. beware of console client
 
 Disallow locking spectator team?
 
+Add func_fakebrush (e.g. for BigBalloon)(EF_INVISIBLE to fool client?) 
+Add more docu, e.g. for the wop_journeyCTL example. Include entdmp?
+Include contents string parser, add rotating (fakebrush)?
+push to eeebox
+

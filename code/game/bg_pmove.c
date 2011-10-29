@@ -1657,6 +1657,23 @@ shootafterrspecialHI:
 		pm->ps->weaponTime -= pml.msec;
 	}
 
+	/* added beryllium */
+	if ( pm->reloadTime ) {
+		for ( addTime = WP_NONE; addTime < WP_NUM_WEAPONS; ++addTime ) {
+			if ( pm->reloadTime[addTime] >= 0 ) {
+				pm->reloadTime[addTime] -= pml.msec;
+			}
+			else {
+				pm->reloadTime[addTime] = 0;
+			}
+		}
+	}
+	else {
+		/* NOTE: It seems like we need a value != 0 for clientside prediction, anyone will do. */
+		/*pm->ps->weaponTime = 42;*/
+	}
+	/* end beryllium */
+
 	// check for weapon change
 	// can't change if weapon is firing, but can change
 	// again if lowering or raising
@@ -1699,6 +1716,14 @@ shootafterrspecialHI:
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
 	}
+
+	/* added beryllium */
+	if ( pm->reloadTime ) {
+		if ( pm->reloadTime[pm->ps->weapon] > 0 ) {
+			return;
+		}
+	}
+	/* end beryllium */
 
 	if ( ( pm->ps->stats[STAT_WEAPONS] & ( 1 << WP_SPRAYPISTOL ) ) &&
 	     ( ( pm->ps->stats[STAT_SPRAYROOMSECS] > 0 ) && ( pm->ps->weapon != WP_SPRAYPISTOL ) ) ) {
@@ -1807,7 +1832,17 @@ fire:
 		break;
 	}
 
+	/* changed beryllium */
+	/*
 	pm->ps->weaponTime += addTime;
+	*/
+	if ( pm->reloadTime ) {
+		pm->reloadTime[pm->ps->weapon] += addTime;
+	}
+	else {
+		pm->ps->weaponTime += addTime;
+	}
+	/* end beryllium */
 }
 
 /*

@@ -67,6 +67,11 @@ enum {
 	CHAT_SPECTATOR_TEAM	= 2
 };
 
+enum {
+	BE_DF_BACKGROUNDRELOAD	= 1,
+	BE_DF_GRAPPLE			= 2
+};
+
 extern int			numGUIDBans;
 extern guidBan_t	guidBans[MAX_GUIDBANS];
 
@@ -114,6 +119,8 @@ extern vmCvar_t	be_selfDamage;
 extern vmCvar_t	be_chatFlags;
 
 extern vmCvar_t	be_overrideEntities;
+
+extern vmCvar_t	be_dmFlags;
 
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */

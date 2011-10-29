@@ -194,8 +194,21 @@
 
     :: be_overrideEntities
     When activated, will look for a file to replace the map's entities.
-    Take a look at the included "maps/wop_journeyCTL.dat" as an example.
-  
+    There's no sample file or documentation yet, as this feature needs some
+    additional work. Stay tuned!
+
+
+    :: be_dmFlags
+    This is a bitmask, supporting the following flags:
+      1 - Reload weapons in background
+      2 - Spawn with grapple
+
+    Both options require a clientside mod such as modkuh >= v9, otherwise
+    clientside prediction will be wrong or the client even crashes with
+       ********************
+       ERROR: Couldn't find weapon 11
+       ********************
+
   
   :: Commands
   

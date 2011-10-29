@@ -439,6 +439,8 @@ struct gclient_s {
 
 	int			dropTime;
 
+	int			reloadTime[WP_NUM_WEAPONS];
+
 	/* unlagged - backward reconciliation #1 */
 	/* NOTE: We don't do any backward reconciliation, this is needed for g_truePing */
 	int			frameOffset;
