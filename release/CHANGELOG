@@ -12,12 +12,15 @@
 
   :: Current Version
 
-  v0.22a - 22.10.11
-  * Add cvar "be_dmFlags"
-  * Add cvar "be_overrideEntities"
+  v0.22b - 30.10.11
+  * Fix Punchy in combination with be_dmFlags 1
 
 
   :: History
+
+  :: v0.22a - 22.10.11
+  * Add cvar "be_dmFlags"
+  * Add cvar "be_overrideEntities"
 
   :: v0.21c - 22.10.11
   * Fix item_haste

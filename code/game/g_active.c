@@ -867,9 +867,10 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// check for the hit-scan gauntlet, don't let the action
 	// go through as an attack unless it actually hits something
+	/* changed beryllium */
 	if ( ( client->ps.weapon == WP_PUNCHY ) &&
 	     !( ucmd->buttons & BUTTON_TALK ) && ( ucmd->buttons & BUTTON_ATTACK ) &&
-	     ( client->ps.weaponTime <= 0 ) &&
+	     ( client->ps.weaponTime <= 0 ) && (client->reloadTime[WP_PUNCHY] <= 0 ) &&
 		 !InSprayroom( client ) ) {
 		pm.gauntletHit = CheckGauntletAttack( ent );
 	}
