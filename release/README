@@ -203,18 +203,34 @@
         1 - Reload weapons in background
         2 - Spawn with grapple
         4 - Spawn with full health and armor
-        8 - Do not spawn powerups
-       16 - Do not spawn holdables
+        8 - Do not spawn powerups and do not drop them either
+       16 - Do not spawn holdables and do not drop them either
        32 - Do not spawn armor
        64 - Do not spawn health
-      128 - Do not spawn ammo
-      256 - Do not spawn weapons
+      128 - Do not spawn ammo, players get unlimited ammo on weapon pickup
+      256 - Do not spawn weapons and do not drop them either
 
     Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
     clientside prediction will be wrong or the client even crashes with
        ********************
        ERROR: Couldn't find weapon 11
        ********************
+
+
+    :: be_startWeapons
+    If set, defines the weapons players will spawn with. If be_dmFlags has
+    option NOAMMO, they will get infinite ammo, otherwise the default amount
+    from weapon pickup is used.
+    This is a bitmask, supporting the following flags:
+          2 - Punchy
+          4 - Nipper
+          8 - Pumper
+         16 - Balloony
+         32 - Betty
+         64 - Boaster
+        128 - Splasher
+        256 - BubbleG
+        512 - Imperius
 
   
   :: Commands

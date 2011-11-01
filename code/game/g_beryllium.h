@@ -129,6 +129,8 @@ extern vmCvar_t	be_overrideEntities;
 
 extern vmCvar_t	be_dmFlags;
 
+extern vmCvar_t	be_startWeapons;
+
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );

@@ -1,0 +1,6 @@
+q3asm -m creates a qagame.map
+run with vm_game 1, developer 1
+VM_ValueToSymbole(vm, programCounter)
+
+"A map must be BSP'd with the -grapplereach option when using bspc.exe. The bots can then calculate routes to places while using the grapple."
+

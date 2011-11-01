@@ -113,6 +113,12 @@ void TossClientItems( gentity_t *self ) {
 	{
 		weapon = WP_NONE;
 	}
+
+	/* added beryllium */
+	if ( be_dmFlags.integer & BE_DF_NOWEAPONS ) {
+		weapon = WP_NONE;
+	}
+	/* end beryllium */
 	
 	// drop the weapon if not punchy, nipper of spraypistol
 	if ( weapon > WP_NIPPER && weapon != WP_GRAPPLING_HOOK && 
@@ -179,6 +185,13 @@ void TossClientItems( gentity_t *self ) {
 		angle = 45;
 		for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ )
 		{
+			/* added beryllium */
+			/* A little rough, but works */
+			if ( be_dmFlags.integer & BE_DF_NOPOWERUPS ) {
+				break;
+			}
+			/* end beryllium */
+
 			if( i == PW_BERSERKER ) continue; // berserker doesn't get dropped
 
 			if ( self->client->ps.powerups[ i ] > level.time ) {
@@ -198,6 +211,13 @@ void TossClientItems( gentity_t *self ) {
 
 		for(i=1;i<HI_NUM_HOLDABLE; i++)
 		{
+			/* added beryllium */
+			/* A little rough, but works */
+			if ( be_dmFlags.integer & BE_DF_NOHOLDABLES ) {
+				break;
+			}
+			/* end beryllium */
+
 			if(bg_itemlist[self->client->ps.stats[STAT_HOLDABLE_ITEM]].giTag == i)
 			{
 				item = BG_FindItemForHoldable( i );

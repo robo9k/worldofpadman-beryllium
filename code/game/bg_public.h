@@ -846,5 +846,8 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 
 int G_FrameMsec( void );
 
+#define UNLIMITED	999
+#define AMMOLESS	-1	
+
 /* end beryllium */
 
