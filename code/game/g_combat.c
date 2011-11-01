@@ -188,7 +188,10 @@ void TossClientItems( gentity_t *self ) {
 			/* added beryllium */
 			/* A little rough, but works */
 			if ( be_dmFlags.integer & BE_DF_NOPOWERUPS ) {
-				break;
+				/* Still drop Lollies! */
+				if ( !( ( i == PW_REDFLAG ) || ( i == PW_BLUEFLAG ) ) ) {
+					continue;
+				}
 			}
 			/* end beryllium */
 

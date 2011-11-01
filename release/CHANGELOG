@@ -12,11 +12,14 @@
 
   :: Current Version
 
-  v0.24a - 01.11.11
-  * Add cvar "be_startWeapons"
+  v0.24b - 01.11.11
+  * Fix Lollies not being dropped with NOPOWERUPS in be_dmFlags
 
 
   :: History
+
+  :: v0.24a - 01.11.11
+  * Add cvar "be_startWeapons"
 
   :: v0.23a - 01.11.11
   * Add NOPOWERUPS, NOHOLDABLES. NOARMOR, NOHEALTH,
