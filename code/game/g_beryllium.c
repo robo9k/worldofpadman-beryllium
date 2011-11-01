@@ -1032,3 +1032,79 @@ void BE_ClientSpawn( gentity_t *ent ) {
 	}
 }
 
+
+/*
+	Called before searching any original spawn functions
+*/
+qboolean BE_CallSpawn( const char *classname ) {
+	qboolean result = qtrue;
+
+
+	G_assert( classname );
+
+
+	if ( g_q3Items.integer != 2 ) {
+		if ( !Q_strncmp( "item_health", classname, 11 ) ) {
+			/* Pretend we don't know item_health* at all */
+			result = qfalse;
+		}
+	}
+
+	if ( be_dmFlags.integer & BE_DF_NOHEALTH ) {
+		if ( !Q_stricmp( "station_health", classname ) ) {
+			result = qfalse;
+		}
+	}
+
+
+	if ( !result ) {
+		G_DPrintf( BE_LOG_PREFIX"Not spawning \"%s\" since it is disabled.\n", classname );
+	}
+	return result;
+}
+
+
+/*
+	Called before item is registered, so call RegisterItem( item ) yourself
+	where needed.
+*/
+qboolean BE_ItemDisabled( gitem_t *item ) {
+	qboolean result = qfalse;
+
+	G_assert( item );
+
+
+	if ( ( be_dmFlags.integer & BE_DF_NOPOWERUPS )
+	     && ( IT_POWERUP == item->giType ) ) {
+		result = qtrue;
+	}
+	if ( ( be_dmFlags.integer & BE_DF_NOHOLDABLES )
+	     && ( IT_HOLDABLE == item->giType ) ) {
+		result = qtrue;
+	}
+	if ( ( be_dmFlags.integer & BE_DF_NOARMOR )
+	     && ( IT_ARMOR == item->giType ) ) {
+		result = qtrue;
+	}
+	if ( ( be_dmFlags.integer & BE_DF_NOHEALTH )
+	     && ( IT_HEALTH == item->giType ) ) {
+		/* Has additional code for WoP's healthstations */
+		result = qtrue;
+	}
+	if ( ( be_dmFlags.integer & BE_DF_NOAMMO )
+	     && ( IT_AMMO == item->giType ) ) {
+		result = qtrue;
+	}
+	if ( ( be_dmFlags.integer & BE_DF_NOWEAPONS )
+	     && ( IT_WEAPON == item->giType ) ) {
+		/* TODO: Don't spawn misc_externalmodel weaponmarkers either? */
+		result = qtrue;
+	}
+
+
+	if ( result ) {
+		G_DPrintf( BE_LOG_PREFIX"Not spawning \"%s\" since it is disabled.\n", item->classname );
+	}
+	return result;
+}
+

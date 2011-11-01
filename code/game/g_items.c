@@ -826,6 +826,12 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 	G_SpawnFloat( "random", "0", &ent->random );
 	G_SpawnFloat( "wait", "0", &ent->wait );
 
+	/* added beryllium */
+	if ( BE_ItemDisabled( item ) ) {
+		return;
+	}
+	/* end beryllium */
+
 	RegisterItem( item );
 	if ( G_ItemDisabled(item) )
 		return;

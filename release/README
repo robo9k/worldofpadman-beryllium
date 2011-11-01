@@ -200,9 +200,15 @@
 
     :: be_dmFlags
     This is a bitmask, supporting the following flags:
-      1 - Reload weapons in background
-      2 - Spawn with grapple
-      4 - Spawn with full health and armor
+        1 - Reload weapons in background
+        2 - Spawn with grapple
+        4 - Spawn with full health and armor
+        8 - Do not spawn powerups
+       16 - Do not spawn holdables
+       32 - Do not spawn armor
+       64 - Do not spawn health
+      128 - Do not spawn ammo
+      256 - Do not spawn weapons
 
     Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
     clientside prediction will be wrong or the client even crashes with

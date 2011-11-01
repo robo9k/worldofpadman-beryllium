@@ -70,7 +70,13 @@ enum {
 enum {
 	BE_DF_BACKGROUNDRELOAD	= 1,
 	BE_DF_GRAPPLE			= 2,
-	BE_DF_STARTHEALTH		= 4
+	BE_DF_STARTHEALTH		= 4,
+	BE_DF_NOPOWERUPS		= 8,
+	BE_DF_NOHOLDABLES		= 16,
+	BE_DF_NOARMOR			= 32,
+	BE_DF_NOHEALTH			= 64,
+	BE_DF_NOAMMO			= 128,
+	BE_DF_NOWEAPONS			= 256
 };
 
 extern int			numGUIDBans;
@@ -176,6 +182,9 @@ qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force );
 qboolean BE_GetEntityToken( char *buffer, int bufferSize );
 void BE_PreSpawnEntities( void );
 void BE_PostSpawnEntities( void );
+
+qboolean BE_CallSpawn( const char *classname );
+qboolean BE_ItemDisabled( gitem_t *item );
 
 #endif
 
