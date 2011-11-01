@@ -12,18 +12,28 @@
 
   :: Current Version
 
-  v0.22b - 30.10.11
-  * Fix Punchy in combination with be_dmFlags 1
+  v0.24a - 01.11.11
+  * Add cvar "be_startWeapons"
 
 
   :: History
+
+  :: v0.23a - 01.11.11
+  * Add NOPOWERUPS, NOHOLDABLES. NOARMOR, NOHEALTH,
+    NOAMMO, NOWEAPONS options to cvar "be_dmFlags"
+
+  :: v0.22c - 01.11.11
+  * Add STARTHEALTH option to cvar "be_dmFlags"
+
+  :: v0.22b - 30.10.11
+  * Fix Punchy in combination with be_dmFlags 1
 
   :: v0.22a - 22.10.11
   * Add cvar "be_dmFlags"
   * Add cvar "be_overrideEntities"
 
   :: v0.21c - 22.10.11
-  * Fix item_haste
+  * Fix item_hast(e)
 
   :: v0.21b - 09.10.11
   * Fix locked teams with autojoin
