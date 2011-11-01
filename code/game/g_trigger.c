@@ -126,6 +126,12 @@ void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
+	/* added beryllium */
+	if ( other->client && other->client->hook ) {
+		return;
+	}
+	/* end beryllium */
+
 	BG_TouchJumpPad( &other->client->ps, &self->s );
 }
 
