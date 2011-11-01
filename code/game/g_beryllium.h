@@ -69,7 +69,8 @@ enum {
 
 enum {
 	BE_DF_BACKGROUNDRELOAD	= 1,
-	BE_DF_GRAPPLE			= 2
+	BE_DF_GRAPPLE			= 2,
+	BE_DF_STARTHEALTH		= 4
 };
 
 extern int			numGUIDBans;
@@ -145,6 +146,8 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
 void BE_ClientTimerActions( gentity_t* ent );
 
 void BE_ClientBegan( int clientNum );
+
+void BE_ClientSpawn( gentity_t *ent );
 
 void BE_ClientKilled( gentity_t *self );
 

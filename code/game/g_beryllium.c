@@ -1005,3 +1005,30 @@ qboolean BE_GetEntityToken( char *buffer, int bufferSize ) {
 	}
 }
 
+
+/*
+	Called after all original spawn logic is executed, but
+	before client is linked into world.
+
+	Remove/add weapons, items etc. here.
+*/
+void BE_ClientSpawn( gentity_t *ent ) {
+	gclient_t *client;
+
+
+	G_assert( ent );
+	client = ent->client;
+
+
+	/* modkuh >= v9 compat */
+	if ( be_dmFlags.integer & BE_DF_GRAPPLE ) {
+		client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
+		client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+	}
+
+	if ( be_dmFlags.integer & BE_DF_STARTHEALTH ) {
+		ent->health = client->ps.stats[STAT_HEALTH] = ( client->ps.stats[STAT_MAX_HEALTH] * 2 );
+		client->ps.stats[STAT_ARMOR] = client->ps.stats[STAT_HEALTH];
+	}
+}
+

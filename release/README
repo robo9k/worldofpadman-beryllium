@@ -202,8 +202,9 @@
     This is a bitmask, supporting the following flags:
       1 - Reload weapons in background
       2 - Spawn with grapple
+      3 - Spawn with full health and armor
 
-    Both options require a clientside mod such as modkuh >= v9, otherwise
+    Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
     clientside prediction will be wrong or the client even crashes with
        ********************
        ERROR: Couldn't find weapon 11
