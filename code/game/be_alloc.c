@@ -216,10 +216,13 @@ void BE_MemoryInfo( void ) {
 	int size, chunks;
 	freeMemNode_t *end = (freeMemNode_t *)( memory_pool + POOL_SIZE );
 	void *p;
+	char sizeBuf[128];
 
-	G_Printf( "Beryllium memory information:\n" );
-	G_Printf( "%p-%p: %d out of %d bytes allocated\n",
-	          fmn, end, ( POOL_SIZE - freeMem ), POOL_SIZE );
+	G_Printf( "%p-%p: ", fmn, end );
+	ReadableSize( sizeBuf, sizeof( sizeBuf ), ( POOL_SIZE - freeMem ) );
+	G_Printf( "%s out of ", sizeBuf );
+	ReadableSize( sizeBuf, sizeof( sizeBuf ), POOL_SIZE );
+	G_Printf( "%s allocated.\n", sizeBuf );
 
 	while ( fmn < end ) {
 		size = chunks = 0;
@@ -230,7 +233,8 @@ void BE_MemoryInfo( void ) {
 			fmn = (freeMemNode_t *)( (char *)fmn + fmn->size );
 		}
 		if ( size ) {
-			Com_Printf( "	%p: %d bytes free (%d chunks)\n", p, size, chunks );
+			ReadableSize( sizeBuf, sizeof( sizeBuf ), size );
+			Com_Printf( "	%p: %s free (%d chunks)\n", p, sizeBuf, chunks );
 		}
 		size = chunks = 0;
 		p = fmn;
@@ -240,7 +244,8 @@ void BE_MemoryInfo( void ) {
 			fmn = (freeMemNode_t *)( (size_t)fmn + *(int *)fmn );
 		}
 		if ( size ) {
-			Com_Printf( "	%p: %d bytes allocated (%d chunks)\n", p, size, chunks );
+			ReadableSize( sizeBuf, sizeof( sizeBuf ), size );
+			Com_Printf( "	%p: %s allocated (%d chunks)\n", p, sizeBuf, chunks );
 		}
 	}
 }

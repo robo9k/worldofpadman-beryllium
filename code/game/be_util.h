@@ -100,5 +100,7 @@ void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *loc
 
 void PlayGlobalSound( int soundIndex );
 
+void ReadableSize( char *buf, size_t bufsize, int value );
+
 #endif
 

@@ -689,3 +689,32 @@ void PlayGlobalSound( int soundIndex ) {
 	te->r.svFlags |= SVF_BROADCAST;
 }
 
+
+/*
+	Prints the given size in bytes in a more human readable form using suffixes
+*/
+void ReadableSize( char *buf, size_t bufsize, int value ) {
+	G_assert( buf );
+
+	if ( value > ( 1024 * 1024 * 1024 ) ) {
+		/* Gigabyte */
+		Com_sprintf( buf, bufsize, "%d", value / ( 1024 * 1024 * 1024 ) );
+		Com_sprintf( ( buf + strlen( buf ) ), ( bufsize - strlen( buf ) ), ".%02d GB", 
+		             ( value % ( 1024 * 1024 * 1024 ) ) * 100 / ( 1024 * 1024 * 1024 ) );
+	}
+	else if ( value > ( 1024 * 1024 ) ) {
+		/* Megabyte */
+		Com_sprintf( buf, bufsize, "%d", value / (1024*1024) );
+		Com_sprintf( ( buf + strlen( buf ) ), ( bufsize - strlen( buf ) ), ".%02d MB", 
+		               ( value % ( 1024 * 1024 ) ) * 100 / ( 1024 * 1024 ) );
+	}
+	else if ( value > 1024 ) {
+		/* Kilobyte */
+		Com_sprintf( buf, bufsize, "%d KB", ( value / 1024 ) );
+	}
+	else {
+		/* Byte */
+		Com_sprintf( buf, bufsize, "%d bytes", value );
+	}
+}
+

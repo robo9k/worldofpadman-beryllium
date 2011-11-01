@@ -81,6 +81,6 @@ AirKill award
 Move changes to gameplay or requiring a mod into separate lithium mod?
 When is a gameplay critical fix a plain change to gameplay?
 
-Modify meminfo to display human readable numbers.
+Use BE_Alloc for guid bans, secrets
 Modify BE_Alloc to return NULL instead of failing with G_Error directly, but print WARNING
 
