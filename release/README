@@ -200,17 +200,18 @@
 
     :: be_dmFlags
     This is a bitmask, supporting the following flags:
-        1 - Reload weapons in background
-        2 - Spawn with grapple
-        4 - Spawn with full health and armor
-        8 - Do not spawn powerups and do not drop them either
-       16 - Do not spawn holdables and do not drop them either
-       32 - Do not spawn armor
-       64 - Do not spawn health
-      128 - Do not spawn ammo, players get unlimited ammo on weapon pickup
-      256 - Do not spawn weapons and do not drop them either
-      512 - Killerducks neither attack their owner nor teammates and are prone to
+         1 - Reload weapons in background
+         2 - Spawn with grapple
+         4 - Spawn with full health and armor
+         8 - Do not spawn powerups and do not drop them either
+        16 - Do not spawn holdables and do not drop them either
+        32 - Do not spawn armor
+        64 - Do not spawn health
+       128 - Do not spawn ammo, players get unlimited ammo on weapon pickup
+       256 - Do not spawn weapons and do not drop them either
+       512 - Killerducks neither attack their owner nor teammates and are prone to
             visionless unless very close to target
+      1024 - Hand out "excellent" awards for airkills
 
     Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
     clientside prediction will be wrong or the client even crashes with

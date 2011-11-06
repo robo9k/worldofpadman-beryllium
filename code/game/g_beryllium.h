@@ -77,7 +77,8 @@ enum {
 	BE_DF_NOHEALTH			= 64,
 	BE_DF_NOAMMO			= 128,
 	BE_DF_NOWEAPONS			= 256,
-	BE_DF_CLEVERDUCKS		= 512
+	BE_DF_CLEVERDUCKS		= 512,
+	BE_DF_AIRKILL			= 1024
 };
 
 extern int			numGUIDBans;

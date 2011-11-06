@@ -538,6 +538,17 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 				self->client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_GAUNTLETREWARD;
 			}
 
+			/* added beryllium */
+			if ( be_dmFlags.integer & BE_DF_AIRKILL ) {
+				if ( ENTITYNUM_NONE == self->s.groundEntityNum ) {
+G_Printf("^1AIRKILL!\n" );
+					attacker->client->ps.persistant[PERS_EXCELLENT_COUNT]++;
+					G_AddEvent( attacker, EV_HEHE1, 0 );
+					SetAward( attacker->client, AWARD_EXCELLENT );
+				}
+			}
+			/* end added */
+
 			// check for two kills in a short amount of time
 			// if this is close enough to the last kill, give a reward sound
 			if ( level.time - attacker->client->lastKillTime < CARNAGE_REWARD_TIME ) {
