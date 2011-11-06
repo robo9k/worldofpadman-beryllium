@@ -908,7 +908,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 				return;
 			}
 		*/
-		// NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage
+		/* NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage */
+		/* TODO: MOD_KILLERDUCKS as well? */
 		if ( ( ( targ != attacker ) && ( OnSameTeam( targ, attacker ) || IsItemSameTeam( attacker, targ ) ) )
 	         || ( ( targ == attacker ) && ( mod == MOD_BOOMIES ) ) ) {
 			if ( g_friendlyFire.integer <= 0 ) {

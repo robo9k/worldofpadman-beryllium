@@ -209,6 +209,8 @@
        64 - Do not spawn health
       128 - Do not spawn ammo, players get unlimited ammo on weapon pickup
       256 - Do not spawn weapons and do not drop them either
+      512 - Killerducks neither attack their owner nor teammates and are prone to
+            visionless unless very close to target
 
     Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
     clientside prediction will be wrong or the client even crashes with

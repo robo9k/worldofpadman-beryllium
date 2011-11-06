@@ -322,6 +322,8 @@ void move_killerducks(gentity_t *ent)
 		}
 	}
 
+	/* changed beryllium */
+	/*
 	//check distance of the owner
 	if(opfer==-1)
 	{
@@ -337,6 +339,38 @@ void move_killerducks(gentity_t *ent)
 			opferlenght=tmpv3[0];
 		}
 	}
+	*/
+	if ( !( be_dmFlags.integer & BE_DF_CLEVERDUCKS ) ) {
+		if ( -1 == opfer ) {
+			/* No victim yet, attack owner */
+			VectorSubtract( level.clients[ ownerNum ].ps.origin, ent->r.currentOrigin, tmpv3 );
+			tmpv3[2] *= 2.0;
+
+			tmpv3[0] = VectorLengthSquared( tmpv3 );
+			if ( tmpv3[0] < opferlenght ) {
+				opfer = ownerNum;
+				opferlenght = tmpv3[0];
+			}
+		}
+	}
+	else {
+		if ( -1 != opfer ) {
+			if ( level.clients[ opfer ].ps.powerups[PW_VISIONLESS]
+			     && ( opferlenght > Square( 128.0 ) ) ) {
+				/* FIXME: Magical constant */
+				/* Don't "see" far away players with visionless */
+				opfer = -1;
+			}
+
+			if ( g_gametype.integer >= GT_TEAM ) {			
+				if ( level.clients[ opfer ].ps.persistant[PERS_TEAM] == level.clients[ ownerNum ].ps.persistant[PERS_TEAM] ) {
+					/* Forcefully ignore previously selected teammate */
+					opfer = -1;
+				}
+			}
+		}
+	}
+	/* end beryllium */
 
 	if(opfer!=-1 && (level.time-(ent->nextthink - 10000))>500)// in die ersten 1/2 sek. sollen die opfer egal sein
 	{
