@@ -541,7 +541,6 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			/* added beryllium */
 			if ( be_dmFlags.integer & BE_DF_AIRKILL ) {
 				if ( ENTITYNUM_NONE == self->s.groundEntityNum ) {
-G_Printf("^1AIRKILL!\n" );
 					attacker->client->ps.persistant[PERS_EXCELLENT_COUNT]++;
 					G_AddEvent( attacker, EV_HEHE1, 0 );
 					SetAward( attacker->client, AWARD_EXCELLENT );
