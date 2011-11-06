@@ -123,6 +123,7 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 		return;
 	}
 	if ( ent->client->ps.eFlags & EF_VOTED ) {
+		/* TODO: Print vote? */
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote already cast.\n" );
 		return;
 	}
@@ -131,6 +132,10 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 		return;
 	}
 
+	if ( trap_Argc() < 2 ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Usage: vote <yes|no>\n" );
+		return;
+	}
 
 	SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Vote cast, thank you.\n" );
 
