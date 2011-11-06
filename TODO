@@ -76,11 +76,15 @@ Add more docu, e.g. for the wop_journeyCTL example. Include entdmp?
 Include contents string parser, add rotating (fakebrush)?
 push to eeebox
 
-AirKill award
-
 Move changes to gameplay or requiring a mod into separate lithium mod?
 When is a gameplay critical fix a plain change to gameplay?
 
 Use BE_Alloc for guid bans, secrets
 Modify BE_Alloc to return NULL instead of failing with G_Error directly, but print WARNING
+
+Add revival-like regeneration for lolly-carrier?
+
+Make respawn protect less annoying
+
+Add spectator tell
 
