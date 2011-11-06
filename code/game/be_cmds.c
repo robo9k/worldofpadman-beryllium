@@ -19,13 +19,13 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #include "g_local.h"
 
-
 /* Variables */
 const ccmd_t BE_CCMDS[] = {
-	{ "callvote",	CMD_MESSAGE,	BE_Cmd_CallVote_f	},
-	{ "cv",			CMD_MESSAGE,	BE_Cmd_CallVote_f	},
-	{ "vote",		CMD_MESSAGE,	BE_Cmd_Vote_f		},
-	{ "ignore",		0,				BE_Cmd_Ignore_f		}
+	{ "callvote",		CMD_MESSAGE,	BE_Cmd_CallVote_f		},
+	{ "cv",				CMD_MESSAGE,	BE_Cmd_CallVote_f		},
+	{ "vote",			CMD_MESSAGE,	BE_Cmd_Vote_f			},
+	{ "ignore",			0,				BE_Cmd_Ignore_f			},
+	{ "tell_spectator",	CMD_MESSAGE,	BE_Cmd_TellSpectator_f	}
 };
 const unsigned int NUM_CCMDS = ARRAY_LEN( BE_CCMDS );
 
@@ -182,5 +182,40 @@ void BE_Cmd_Ignore_f( gentity_t *ent ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, message );
 		}
 	}
+}
+
+
+/*
+	Allows to use tell chat to the player you're spectating
+*/
+void BE_Cmd_TellSpectator_f( gentity_t *ent ) {
+	int spectatorNum;
+
+
+	G_assert( ent );
+
+	if ( trap_Argc() < 2 ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, "Usage: tell_spectator <text>\n" );
+		return;		
+	}
+
+	if ( !( ( TEAM_SPECTATOR == ent->client->sess.sessionTeam ) || LPSDeadSpec( ent->client ) ) ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You are no spectator!\n" );
+		return;
+	}
+
+	spectatorNum = ent->client->sess.spectatorClient;
+	if ( spectatorNum <= 0 ) {
+		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"You are not following a single player!\n" );
+		return;	
+	}
+
+
+	/* Assume that spectatorNum is valid, connected etc. */
+	G_Say( ent, ( g_entities + spectatorNum ), SAY_TELL, ConcatArgs( 1 ) );
+	/* Echo back to author, so it does not seem "lost" */
+	/* TODO: Print target instead of using cgame tell to self? */
+	/* TODO: Save ConcatArgs() result into buffer */
+	G_Say( ent, ent, SAY_TELL, ConcatArgs( 1 ) );
 }
 

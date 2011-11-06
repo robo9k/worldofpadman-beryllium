@@ -255,6 +255,11 @@
     You can use -1 as client id to ignore all bots.
     If the server supports it, VoIP is also disabled for
     the targets.
+
+
+    :: tell_spectator text
+    When spectating a player, will issue a private message to him, just
+    as the normal "tell cid text" would.
   
      
     :: Server

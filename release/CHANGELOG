@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v0.23c - 06.11.11
-  * Add AIRKILL option to cvar "be_dmFlags"
+  v0.24a - 06.11.11
+  * Add client command "tell_spectator"
 
   :: History
+
+  :: v0.23d - 06.11.11
+  * Add AIRKILL option to cvar "be_dmFlags"
 
   :: v0.23c - 06.11.11
   * Add CLEVERDUCKS option to cvar "be_dmFlags"
