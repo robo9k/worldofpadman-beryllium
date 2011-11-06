@@ -12,11 +12,16 @@
 
   :: Current Version
 
-  v0.24b - 01.11.11
-  * Fix Lollies not being dropped with NOPOWERUPS in be_dmFlags
-
+  v0.23c - 06.11.11
+  * Add AIRKILL option to cvar "be_dmFlags"
 
   :: History
+
+  :: v0.23c - 06.11.11
+  * Add CLEVERDUCKS option to cvar "be_dmFlags"
+
+  :: v0.24b - 01.11.11
+  * Fix Lollies not being dropped with NOPOWERUPS in be_dmFlags
 
   :: v0.24a - 01.11.11
   * Add cvar "be_startWeapons"
