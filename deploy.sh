@@ -1,9 +1,13 @@
 #!/bin/sh
 
-MODNAME="beryllium"
-SRC="release"
-## destination could include VERSION
-DST=$MODNAME
+BUILD_DIR='build'
+VERSION=`./version.sh`
+
+BERYLLIUM='beryllium-v'$VERSION
+SRC='release'
+DST=$BUILD_DIR'/'$BERYLLIUM
+ZIP=$BERYLLIUM'.zip'
+SYMLINK='beryllium-current.zip'
 
 ## TODO: Fix Makefile git dependencies so we can remove make clean
 make clean
@@ -18,25 +22,38 @@ cp -R $SRC $DST
 cp build/release-linux-x86_64/baseq3/vm/qagame.qvm $DST/vm/
 
 ## next prepare and copy template files
-VERSION=`./version.sh`
 ./replace.sh "__VERSION__" $VERSION $SRC/README > $DST/README
 
 ## zip all together
-rm $MODNAME.zip
-zip -r -9 $MODNAME $DST/*
+rm $ZIP
+cd $BUILD_DIR
+zip -r -9 $ZIP $BERYLLIUM/*
+
+rm $SYMLINK
+ln -s $ZIP $SYMLINK
+
+cd ..
 
 rm -rf $DST
 
 
-PLUGINNAME="b3-beryllium"
-PLUGINSRC="b3"
-PLUGINDST=$PLUGINNAME
+BERYLLIUM_B3='beryllium-b3-v'$VERSION
+SRC='b3'
+DST=$BUILD_DIR'/'$BERYLLIUM_B3
+ZIP=$BERYLLIUM_B3'.zip'
+SYMLINK='beryllium-b3-current.zip'
 
 #svn export $PLUGINSRC $PLUGINDST
-cp -R $PLUGINSRC $PLUGINDST
+cp -R $SRC $DST
 
-rm $PLUGINNAME.zip
-zip -r -9 $PLUGINNAME $PLUGINDST/*
+rm $ZIP
+cd $BUILD_DIR
+zip -r -9 $ZIP $BERYLLIUM_B3/*
 
-rm -rf $PLUGINDST
+rm $SYMLINK
+ln -s $ZIP $SYMLINK
+
+cd ..
+
+rm -rf $DST
 

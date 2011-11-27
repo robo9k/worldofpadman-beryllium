@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v0.24a - 06.11.11
-  * Add client command "tell_spectator"
+  v1.0a - 26.11.11
+  * Rename cvar "be_version" to "beryllium"
 
   :: History
+
+  :: v0.24a - 06.11.11
+  * Add client command "tell_spectator"
 
   :: v0.23d - 06.11.11
   * Add AIRKILL option to cvar "be_dmFlags"

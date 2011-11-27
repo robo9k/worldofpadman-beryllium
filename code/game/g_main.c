@@ -228,7 +228,7 @@ static cvarTable_t		gameCvarTable[] = {
 
 	/* added beryllium */
 
-	{ &be_version, "be_version", BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+	{ &be_version, "beryllium", "v"BERYLLIUM_VERSION, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
 	{ &g_version, "g_version", "wop 1.5_SVN1898M", ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 

@@ -2,10 +2,8 @@
 changes.diff
 
 #
-build/**/*
+build/
 
 #
 *~
 
-b3-beryllium.zip
-beryllium.zip

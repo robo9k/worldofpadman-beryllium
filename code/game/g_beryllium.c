@@ -80,6 +80,7 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	/* TODO: Visualise this by making weapons non-functional? Or simply centerprint countdown?
 	         Remove protection if weapon fired!
 	*/
+	/* TODO: Add MOD_WATER, MOD_SLIME, MOD_LAVA? */
 	if ( ( MOD_TRIGGER_HURT != *mod ) && ( targ != attacker ) ) {
 		if ( ( level.time - attacker->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {	
 			*damage = 0;
@@ -290,7 +291,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	/* "127.0.0.1" or the like */
 	/* NOTE: Other possible values "bot", "localhost". But these don't occur, since
 	         we check for isBot and "localhost" luckily passes. We might also want to
-	         check number of dots?
+	         check number of dots (beware of IPv6)?
 	*/
 	if ( strlen( ip ) < 7 ) {
 		return "Invalid IP in userinfo.";
@@ -318,7 +319,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		}
 
 		if ( count >= be_maxConnections.integer ) {
-			return "Maximum simultaneos connections per IP exceeded.";
+			return "Maximum simultanous connections per IP exceeded.";
 		}
 	}
 

@@ -8,7 +8,7 @@ Do more sanity checks and calls to G_Error plus some debug output.
 Improve vote pass. Print amount of yes-no-dontcare-required at vote end?
 Allow players to change their mind? Enforce delay/maximum count
 
-Unlagged?
+Unlagged? Or at least its serverside-only features or similar ones like anti-warp
 
 Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
@@ -81,10 +81,20 @@ When is a gameplay critical fix a plain change to gameplay?
 
 Use BE_Alloc for guid bans, secrets
 Modify BE_Alloc to return NULL instead of failing with G_Error directly, but print WARNING
+Reduce poolsize (8 megs seems a little too much for those 1k config files..)
 
 Add revival-like regeneration for lolly-carrier?
 
 Make respawn protect less annoying
 
-Add spectator tell
+Teleport players back into map instead of dying in space void
+
+g_teamForceBalance is broken?
+
+bspc -reachability for be's entity replacement. Engine hack to exclude .aas from pure check? New .aas equired after all?
+
+=-> split into beryllium and lithium mod
+    beryllium should only include security and bug fixes as well as provide bare metal functionality like be_overrideEntities, be_oneUp
+	lithium should include additional things that change gameplay such as be_dmFlags
+    both should not include redundant stuff like tell_spectator
 

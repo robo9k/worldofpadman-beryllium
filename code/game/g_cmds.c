@@ -789,11 +789,11 @@ qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force ) {
 
 			// We allow a spread of two
 			if ( ( TEAM_RED == team ) && ( ( counts[TEAM_RED] - counts[TEAM_BLUE] ) > 1 ) ) {
-				SendClientCommand( clientNum, CCMD_PRT, va( S_COLOR_NEGATIVE"The %s"S_COLOR_NEGATIVE" team has too many players.\n", Teamname( team ) ) );
+				SendClientCommand( clientNum, CCMD_CP, va( S_COLOR_NEGATIVE"The %s"S_COLOR_NEGATIVE" team has too many players.\n", Teamname( team ) ) );
 				return qfalse;
 			}
 			else if ( ( TEAM_BLUE == team ) && ( ( counts[TEAM_BLUE] - counts[TEAM_RED] ) > 1 ) ) {
-				SendClientCommand( clientNum, CCMD_PRT, va( S_COLOR_NEGATIVE"The %s"S_COLOR_NEGATIVE" team has too many players.\n", Teamname( team ) ) );
+				SendClientCommand( clientNum, CCMD_CP, va( S_COLOR_NEGATIVE"The %s"S_COLOR_NEGATIVE" team has too many players.\n", Teamname( team ) ) );
 				return qfalse;
 			}
 		}
