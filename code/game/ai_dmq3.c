@@ -2314,6 +2314,11 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo)) {
 			continue;
 		}
+		/* added beryllium */
+		if ( g_entities[i].flags & FL_NOTARGET ) {
+			continue;
+		}
+		/* end beryllium */
 		// no fighting in the sprayroom please
 		if( ClientInSprayroom(i) ) continue;
 		//if not an easy fragger don't shoot at chatting players
