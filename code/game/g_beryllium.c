@@ -998,8 +998,6 @@ qboolean BE_GetEntityToken( char *buffer, int bufferSize ) {
 /*
 	Called after all original spawn logic is executed, but
 	before client is linked into world.
-
-	Remove/add weapons, items etc. here.
 */
 void BE_ClientSpawn( gentity_t *ent ) {
 	gclient_t *client;
@@ -1007,62 +1005,6 @@ void BE_ClientSpawn( gentity_t *ent ) {
 
 	G_assert( ent );
 	client = ent->client;
-
-	if ( be_startWeapons.integer ) {
-		gitem_t *item;
-		int i, weaponNum;
-		int validWeapons[] = {
-			WP_PUNCHY,
-			WP_NIPPER,
-			WP_PUMPER,
-			WP_BALLOONY,
-			WP_BETTY,
-			WP_BOASTER,
-			WP_SPLASHER,
-			WP_BUBBLEG,
-			WP_IMPERIUS
-			/* WP_GRAPPLING_HOOK */
-		};
-
-		/* Reset, then add weapons */
-		client->ps.stats[STAT_WEAPONS] = 0;
-		if ( IsSyc() ) {
-			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_SPRAYPISTOL );
-		}
-
-		for ( i = 0; i < ARRAY_LEN( validWeapons ); i++ ) {
-			weaponNum = validWeapons[i];
-			if ( !( be_startWeapons.integer & ( 1 << weaponNum ) ) ) {
-				continue;
-			}
-
-			client->ps.stats[STAT_WEAPONS] |= ( 1 << weaponNum );
-			if ( be_dmFlags.integer & BE_DF_NOAMMO ) {
-				client->ps.ammo[weaponNum] = UNLIMITED;
-			}
-			else {
-				item = BG_FindItemForWeapon( weaponNum );
-				G_assert( item );
-				client->ps.ammo[weaponNum] = item->quantity;
-			}
-		}
-
-		/* Select the highest available weapon */
-		client->ps.weapon = WP_NONE;
-		/* FIXME: Could start at WP_KMA97 right away */
-		for ( i = ( WP_NUM_WEAPONS - 1 ) ; i > WP_NONE ; i-- ) {
-			if ( ( WP_SPRAYPISTOL == i )
-			     || ( WP_GRAPPLING_HOOK == i ) ) {
-				continue;
-			}
-
-			if ( client->ps.stats[STAT_WEAPONS] & ( 1 << i ) ) {
-				client->ps.weapon = i;
-				break;
-			}
-		}
-	}
-
 
 	/* modkuh >= v9 compat */
 	if ( be_dmFlags.integer & BE_DF_GRAPPLE ) {
