@@ -34,7 +34,7 @@
   values, since it is assumed that admins know what they
   are doing :)
   
-    :: be_version
+    :: g_beryllium
     A read-only cvar that indicates the beryllium version.
   
   
@@ -385,7 +385,11 @@
     Plays the sound globally on the server. Be aware that there is a limit
     of the maximum number of sounds. If you reach it, the server will crash.
 
-    
+
+    :: beryllium
+    Prints version information about beryllium.
+
+
 
 
   :: Other changes
