@@ -295,6 +295,8 @@
     :: smp cid text
     Messageprint text to a client.
     Text will be printed in the upper right of the screen.
+    Please note that this is also used by the game in BigBalloon to
+    indicate Balloons' status.
   
   
     :: sprint cid text
@@ -308,13 +310,13 @@
     "server" as the player name.
 
     You can print newlines with scp and sprint by using "\n" in
-    the text, which will get expanded to a real newline.
+    the text, which will get expanded to a real newline, e.g.
+    scp -1 "line one\nline two"
 
 
     :: dropclient cid [reason]
     Basically the same as clientkick, but you can supply an
-    additional argument
-    which will be printed.
+    additional argument which will be printed.
   
   
     :: cancelvote
@@ -332,21 +334,15 @@
 
     :: rename cid newname
     Rename given client to newname.
-    be_maxNameChanges setting does not apply to this,
-    other limits like invalid characters in name
-    or multiple names do still apply (afterwards)!
+    be_maxNameChanges setting does not apply to this, other
+    limits like invalid characters in name or multiple names
+    do still apply (afterwards)!
     This does not add to the client's rename counter.
 
 
     :: scallvote vote
     Almost the same as client's callvote, but some restrictions
     do not apply.
-
-
-    :: logprint text
-    Will add an entry to the game log, just like the regular
-    entries. Since this uses game logic, the entry will also
-    be printed to the server console.
 
 
     :: rehashguids
