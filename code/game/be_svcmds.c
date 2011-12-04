@@ -39,6 +39,7 @@ static void BE_Svcmd_LockTeam_f( void );
 static void BE_Svcmd_RunAs_f( void );
 static void BE_Svcmd_PlaySound_f( void );
 static void BE_Svcmd_Memory_f( void );
+static void BE_Svcmd_Beryllium_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -67,7 +68,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "lockteam",		BE_Svcmd_LockTeam_f			},
 	{ "runas",			BE_Svcmd_RunAs_f			},
 	{ "sound",			BE_Svcmd_PlaySound_f		},
-	{ "memory",			BE_Svcmd_Memory_f			}
+	{ "memory",			BE_Svcmd_Memory_f			},
+	{ "beryllium",		BE_Svcmd_Beryllium_f		}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -859,10 +861,18 @@ static void BE_Svcmd_PlaySound_f( void ) {
 /*
 	Prints information about beryllium's internal memory usage
 */
-/*
-	Plays a sound to all players
-*/
 static void BE_Svcmd_Memory_f( void ) {
 	BE_MemoryInfo();
+}
+
+
+/*
+	Prints version information about beryllium.
+*/
+static void BE_Svcmd_Beryllium_f( void ) {
+	G_Printf( "%s\n", BERYLLIUM_ASCII_S );
+	G_Printf( "version: %s\n", BERYLLIUM_VERSION );
+	G_Printf( "built:   %s, %s\n", __DATE__, __TIME__ );
+	G_Printf( "base:    %s\n", G_VERSION_S );
 }
 

@@ -53,6 +53,14 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #define EC					"\x19"
 
+#define BERYLLIUM_ASCII_S	" _____             _ _ _           \n" \
+							"| __  |___ ___ _ _| | |_|_ _ _____ \n" \
+							"| __ -| -_|  _| | | | | | | |     |\n" \
+							"|_____|___|_| |_  |_|_|_|___|_|_|_|\n" \
+							"              |___|                \n"
+
+#define G_VERSION_S			"wop 1.5_SVN1898M"
+
 typedef struct {
 	char guid[GUIDSTRMAXLEN];
 } guidBan_t;
