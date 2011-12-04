@@ -90,18 +90,6 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		}
 	}
 
-	if ( targ == attacker ) {
-		/* Darn boomies are considered self damage instead of team damage */
-		if ( MOD_BOOMIES == *mod ) {
-			*damage *= g_friendlyFire.value;
-		}
-		else {
-			*damage *= be_selfDamage.value;
-		}
-	}
-	else if ( OnSameTeam( targ, attacker ) || IsItemSameTeam( attacker, targ ) ) {
-		*damage *= g_friendlyFire.value;
-	}
 }
 
 

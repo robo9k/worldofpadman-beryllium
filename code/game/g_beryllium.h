@@ -131,8 +131,6 @@ extern vmCvar_t	be_banFile;
 /* Parts of unlagged gamecode here as not to pollute the vanilla code */
 extern vmCvar_t g_truePing;
 
-extern vmCvar_t	be_selfDamage;
-
 extern vmCvar_t	be_chatFlags;
 
 extern vmCvar_t	be_overrideEntities;
