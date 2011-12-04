@@ -32,7 +32,7 @@
   Since Beryllium is a serverside mod, players will not need to
   download anything and your server can remain pure.
 
-  Do not hesitate to take a look at the included "beryllium.cfg"
+  Do not hesitate to take a look at the included "cfg/beryllium.cfg"
   for some recommended settings.
 
 
