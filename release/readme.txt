@@ -171,17 +171,7 @@
 
     :: g_truePing
     Taken from the unlagged code, will do exactly the same.
-    Read their README if you wish to known more.
-
-
-    :: g_friendlyFire
-    Now works with fractions, i.e. "0.5" to cause half the damage
-    to your teammates.
-
-
-    :: be_selfDamage
-    Like the modified g_friendlyFire. The fraction of damage you
-    will do to yourself.
+    Read their readme if you wish to known more.
 
 
     :: be_chatFlags
@@ -205,45 +195,6 @@
     additional work. Stay tuned!
 
 
-    :: be_dmFlags
-    This is a bitmask, supporting the following flags:
-         1 - Reload weapons in background
-         2 - Spawn with grapple
-         4 - Spawn with full health and armor
-         8 - Do not spawn powerups and do not drop them either
-        16 - Do not spawn holdables and do not drop them either
-        32 - Do not spawn armor
-        64 - Do not spawn health (neither station_health nor item_health)
-       128 - Do not spawn ammo, players get unlimited ammo on weapon pickup
-       256 - Do not spawn weapons and do not drop them either
-       512 - Killerducks neither attack their owner nor teammates and are prone to
-             visionless unless very close to target
-      1024 - Hand out "excellent" awards for airkills
-
-    Option 1 and 2 require a clientside mod such as modkuh >= v9, otherwise
-    clientside prediction will be wrong or the client even crashes with
-       ********************
-       ERROR: Couldn't find weapon 11
-       ********************
-
-    Changes to any of the "Do not spawn" options will only take effect after
-    loading a new map.
-
-
-    :: be_startWeapons
-    If set, defines the weapons players will spawn with. If be_dmFlags has
-    option NOAMMO, they will get infinite ammo, otherwise the default amount
-    from weapon pickup is used.
-    This is a bitmask, supporting the following flags:
-          2 - Punchy
-          4 - Nipper
-          8 - Pumper
-         16 - Balloony
-         32 - Betty
-         64 - Boaster
-        128 - Splasher
-        256 - BubbleG
-        512 - Imperius
 
   
   :: Commands
@@ -267,9 +218,6 @@
     the targets.
 
 
-    :: tell_spectator text
-    When spectating a player, will issue a private message to him, just
-    as the normal "tell cid text" would.
 
 
     :: Server
@@ -311,7 +259,7 @@
 
     You can print newlines with scp and sprint by using "\n" in
     the text, which will get expanded to a real newline, e.g.
-    scp -1 "line one\nline two"
+      scp -1 "line one\nline two"
 
 
     :: dropclient cid [reason]
