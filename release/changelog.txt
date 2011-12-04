@@ -12,13 +12,17 @@
 
   :: Current Version
 
-  v1.0a - 26.11.11
+  v1.1a - 04.12.11
+  * Remove various features that should not be part
+    of Beryllium, but a separate mod
+
+  :: History
+
+  :: v1.0a - 26.11.11
   * Rename cvar "be_version" to "g_beryllium"
   * Add server command "beryllium"
   * Upstream: Fix LPS ending after warmup/map_restart due to previous
     BigBalloon fix
-
-  :: History
 
   :: v0.24a - 06.11.11
   * Add client command "tell_spectator"

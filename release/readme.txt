@@ -17,12 +17,13 @@
   This readme is for Beryllium __VERSION__ and may thus not apply
   to older versions.
   This version is based on World of Padman v1.5 and will therefore
-  not work with older, newer or beta versions of the game.
+  not work with older, newer or beta versions of the game. This is
+  a limitation of the Quake 3 QVM system.
 
   :: Installation
 
-  Due to its targets, outlined above, you should not install
-  Beryllium into a seperate mod folder.
+  According to Beryllium's aims outlined above, you should not
+  install Beryllium into a seperate mod folder.
 
   This means you would copy the included "vm/qagame.qvm" into
   "~/.padman/wop/vm/qagame.qvm" on a Linux system.
