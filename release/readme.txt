@@ -3,153 +3,160 @@
               | __ -| -_|  _| | | | | | | |     |
               |_____|___|_| |_  |_|_|_|___|_|_|_|
                             |___|                
-  
-  :: Installation
-  
-  The usual distribution includes a "vm/qagame.qvm". You need to
-  copy this file into a "vm/" folder below your mod's folder.
-  The full path depends on your fs_homepath (and fs_basepath)
-  and fs_game (and fs_basegame ) setting.
-  One example is "/home/wopded/.padman/beryllium/vm/qagame.qvm".
 
-  Note that you do not need really to use a separate mod folder,
-  since beryllium is a serverside mod. You could use the default
-  fs_game folder as well, i.e. "wop".
-  This is a good idea, since beryllium does not change gameplay,
-  and thus there is no real need to indicate the use of a mod
-  to the clients.
-  
-  Plus since this is a serverside mod, you do not need to serve
-  beryllium's files via autodownload.
-  
-  If you do not change any of the default settings, beryllium
+  :: About
+
+  Beryllium is a serverside mod which strives to add important
+  administration functionality. This also means to fix existing
+  bugs or provide options to circumvent them.
+  It is however not meant to add new features to the gameplay.
+
+  If you do not change any of the default settings, Beryllium
   will almost behave as the vanilla game.
+
+  This readme is for Beryllium __VERSION__ and may thus not apply
+  to older versions.
+  This version is based on World of Padman v1.5 and will therefore
+  not work with older, newer or beta versions of the game.
+
+  :: Installation
+
+  Due to its targets, outlined above, you should not install
+  Beryllium into a seperate mod folder.
+
+  This means you would copy the included "vm/qagame.qvm" into
+  "~/.padman/wop/vm/qagame.qvm" on a Linux system.
+  Windows and Mac locations are similar, please refer to the
+  World of Padman readme.
+
+  Since Beryllium is a serverside mod, players will not need to
+  download anything and your server can remain pure.
+
   Do not hesitate to take a look at the included "beryllium.cfg"
   for some recommended settings.
-  
-  
+
+
   :: Variables
-  
+
   Please note that beryllium does not check cvars for sane
   values, since it is assumed that admins know what they
   are doing :)
-  
+
     :: g_beryllium
     A read-only cvar that indicates the beryllium version.
-  
-  
+
+
     :: g_version
     A read-only cvar that indicates the codebase being used.
-  
-  
+
+
     :: be_voteDuration
     How long a vote lasts. Time is in seconds. Will only take
     effect for votes called after changing the cvar.
-  
-  
+
+
     :: be_allowedVotes
     List of allowed votes. Each vote name needs to be
     enclosed in "/".
     Take a look at the default value.
-  
-  
+
+
     :: be_votePause
     General pause between votes. Time is in seconds.
-  
-  
+
+
     :: be_voteRate
     How often a client can call a vote. Time is in seconds.
-  
-  
+
+
     :: be_votePass
     How many clients need to vote yes for a vote to pass.
     This is a minimum, i.e. the actual number of clients has
     to be above.
     This is a fraction from 0.0 to 1.0
-  
-  
+
+
     :: be_respawnProtect
     After respawning, clients don't take and handle damage.
     Time is in seconds. There is no notification whether you
     or a target are (still) protected.
-  
-  
+
+
     :: be_maxVotes
     Maximum number of votes per client. This gets reset at
     map change or restart.
-  
-  
+
+
     :: be_switchTeamTime
     Minimum pause between team changes for players in seconds.
-  
-  
+
+
     :: be_maxNameChanges
     Number of times a client can rename. Does not apply while
     the client is connecting.
     Will stick to the last name before hitting limit.
     Set to -1 for unlimited (default vanilla behaviour) renames.
-  
-  
+
+
     :: be_maxConnections
     Maximum number of connections per IP, connections above
     the limit are rejected with an error message.
     This defeats tools like q3fill almost entirely (you could
     furthermore set sv_timeout to a low value).
     If set to default of 0, unlimited connections are allowed.
-  
-  
+
+
     :: be_checkGUIDs
     This is a bitmask, supporting the following flags:
       1 - Reject empty GUIDs
       2 - Reject invalid GUIDs
-  
-    With wrong game installations, the GUID of players may
+
+    With broken game installations, the GUID of players may
     sometimes be empty, but this is a rare case.
     Cheat tools like aimbots etc. tend to change the GUID to
     invalid values.
-  
     A valid GUID is exactly 32 chars long and only consists
     of 0-9 and A-F.
-  
-    Please also read ioquake's README concerning the purpose
+
+    Please also read ioquake's readme concerning the purpose
     of cl_guid!
-  
-  
+
+
     :: be_campDistance
     If greater than zero, this is the the distance in units
     the players have to move each second. If they do not, they
     are considered camping and after 20 seconds killed.
-  
-  
+
+
     :: be_checkPings
     Will check the ping of each connected and playing player
     every second and kicks if the ping is not within sv_minping
     and sv_maxping or if there were no recent packets for longer
     than the variable's value.
-  
-  
+
+
     :: be_oneUp
     Players get an extra life in LPS each be_oneUp kills.
-  
-  
+
+
     :: be_noSecrets
     If enabled, players can no longer use specific teleporters
     and movers.
     When using disabled teleporters, players will be taken to a
     random spawnpoint instead.
-  
+
     Changes will only take effect when loading a new map. Watch
     out for error messages ;)
     Take a look at the included "maps/wop_diner.cfg" as an example.
-  
-  
+
+
     :: be_debugSecrets
     Will print debug output to players using teleporters and
     movers, which can be used for be_noSecrets.
     This cvar has the cheat flag and can thus only be set in
     combination with devmap.
-  
-  
+
+
     :: be_hideChat
     If set, will hide chat prefixed with this string. E.g. if you
     set it to "!", chat text like "!kick me" will only be written
@@ -240,14 +247,14 @@
 
   
   :: Commands
-  
+
     :: Client
-  
+
     :: callvote shuffleteams
     Will do the same as the server command. Enabled by default,
     unless blacklisted with be_allowedVotes.
-  
-  
+
+
     :: ignore [cid]
     Allows to ignore any text chat from a given client.
     Without arguments the current list of ignored players will
@@ -263,28 +270,28 @@
     :: tell_spectator text
     When spectating a player, will issue a private message to him, just
     as the normal "tell cid text" would.
-  
-     
+
+
     :: Server
-  
+
     :: stell cid text
     Serverside tell chat.
-  
-  
+
+
     :: ssay text
     Serverside say chat.
-  
-  
+
+
     :: ssay_team team text
     Serverside team chat. Use r,b,s,f as team name.
-  
-  
+
+
     :: scp cid text
     Centerprint text to a client.
     Text will be printed in large letters in the middle of
     the screen.
-  
-  
+
+
     :: smp cid text
     Messageprint text to a client.
     Text will be printed in the upper right of the screen.
@@ -293,8 +300,8 @@
     :: sprint cid text
     Print text to a client.
     Text will be printed to the upper left chat area.
-  
-     
+
+
     You can use -1 as client id for scp, smp and sprint to send
     to every client.
     Messages sent with stell, ssay and ssay_team will use
@@ -302,8 +309,8 @@
 
     You can print newlines with scp and sprint by using "\n" in
     the text, which will get expanded to a real newline.
-  
-  
+
+
     :: dropclient cid [reason]
     Basically the same as clientkick, but you can supply an
     additional argument
@@ -313,24 +320,24 @@
     :: cancelvote
     Cancel a currently running vote, i.e. emulate that everyone
     voted no.
-  
-  
+
+
     :: shuffleteams
     In team gametypes try to even teams by splitting players
     evenly across teams.
     This does not restart the game or reset scores, except on
     players (since their scores are currently not saved on
     team changes).
-  
-  
+
+
     :: rename cid newname
     Rename given client to newname.
     be_maxNameChanges setting does not apply to this,
     other limits like invalid characters in name
     or multiple names do still apply (afterwards)!
     This does not add to the client's rename counter.
-  
-  
+
+
     :: scallvote vote
     Almost the same as client's callvote, but some restrictions
     do not apply.
@@ -377,10 +384,6 @@
     Locks or unlocks the given team. Teams will remain locked until nextmap.
 
 
-    :: runas cid command
-    Runs a command as another player.
-
-
     :: sound filename
     Plays the sound globally on the server. Be aware that there is a limit
     of the maximum number of sounds. If you reach it, the server will crash.
@@ -400,35 +403,26 @@
    * Beryllium automatically renames players, preventing
      multiple players having the same name.
    * Several names are now forbidden, e.g. "server".
-   * Players should no longer be able to use non-existant skins.
    * Quite a few sanity checks are being run against votes.
    * Some bugs in the original code have been fixed
    * Most bugfixes from WoP's bleeding edge code have been 
      backported, even those changing gameplay
-   * Beryllium is mostly compatible with modkuh
-  
-  
-  :: Versions
-  
-   * The current version of Beryllium is __VERSION__.
-   * The code bases upon World of Padman's v1.5 gamecode and is
-    thus only compatible with this version of the game.
-    Due to its generic nature, it could also be applied to other
-    versions or even other ioquake3 based games.
-  
-  
+
+
+
+
   :: Credits
-  
+
   Thanks in no particular order:
    * World of Padman Team
    * Community around the game
    * ioquake
    * id Software
-  
+
   Beryllium uses portions of other people's code, which was
   licensed under the GPL or a similar license.
   Furthermore, some ideas have been adopted or copied.
-  
+
   Thus additional credits go to:
    * Tremulous
    * OpenArena
@@ -437,5 +431,5 @@
    * ExcessivePlus
    * ETpro
    * BigBrotherBot
-  
-  
+
+

@@ -13,7 +13,10 @@
   :: Current Version
 
   v1.0a - 26.11.11
-  * Rename cvar "be_version" to "beryllium"
+  * Rename cvar "be_version" to "g_beryllium"
+  * Add server command "beryllium"
+  * Upstream: Fix LPS ending after warmup/map_restart due to previous
+    BigBalloon fix
 
   :: History
 
