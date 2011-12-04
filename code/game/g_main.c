@@ -1620,7 +1620,15 @@ void CheckExitRules( void ) {
 			}
 		}
 
+		/* changed beryllium */
+		/*
 		if ( playersWithLivesLeft <= 1 ) {
+		*/
+		/* After warmup, i.e. map_restart, no clients are connected, which
+		   causes above logic to yield 0 playersWithLivesLeft.
+		*/
+		if ( ( playersWithLivesLeft <= 1 ) && ( playersWithLivesLeft < level.numPlayingClients ) ) {
+		/* end beryllium */
 			if ( tmpcl ) {
 				trap_SendServerCommand( -1, va( "print \"%s"S_COLOR_WHITE" is the Last Standing Pad!\n\"", tmpcl->pers.netname ) );
 			}
