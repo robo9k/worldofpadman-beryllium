@@ -24,7 +24,7 @@ cp -R $SRC $DST
 cp build/release-linux-x86_64/baseq3/vm/qagame.qvm $DST/vm/
 
 ## next prepare and copy template files
-./replace.sh "__VERSION__" $VERSION $SRC/README > $DST/README
+./replace.sh "__VERSION__" $VERSION $SRC/readme.txt > $DST/readme.txt
 
 ## zip all together
 rm $ZIP
