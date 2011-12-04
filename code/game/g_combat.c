@@ -114,12 +114,6 @@ void TossClientItems( gentity_t *self ) {
 		weapon = WP_NONE;
 	}
 
-	/* added beryllium */
-	if ( be_dmFlags.integer & BE_DF_NOWEAPONS ) {
-		weapon = WP_NONE;
-	}
-	/* end beryllium */
-	
 	// drop the weapon if not punchy, nipper of spraypistol
 	if ( weapon > WP_NIPPER && weapon != WP_GRAPPLING_HOOK && 
 		weapon != WP_SPRAYPISTOL &&
@@ -185,16 +179,6 @@ void TossClientItems( gentity_t *self ) {
 		angle = 45;
 		for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ )
 		{
-			/* added beryllium */
-			/* A little rough, but works */
-			if ( be_dmFlags.integer & BE_DF_NOPOWERUPS ) {
-				/* Still drop Lollies! */
-				if ( !( ( i == PW_REDFLAG ) || ( i == PW_BLUEFLAG ) ) ) {
-					continue;
-				}
-			}
-			/* end beryllium */
-
 			if( i == PW_BERSERKER ) continue; // berserker doesn't get dropped
 
 			if ( self->client->ps.powerups[ i ] > level.time ) {
@@ -214,13 +198,6 @@ void TossClientItems( gentity_t *self ) {
 
 		for(i=1;i<HI_NUM_HOLDABLE; i++)
 		{
-			/* added beryllium */
-			/* A little rough, but works */
-			if ( be_dmFlags.integer & BE_DF_NOHOLDABLES ) {
-				break;
-			}
-			/* end beryllium */
-
 			if(bg_itemlist[self->client->ps.stats[STAT_HOLDABLE_ITEM]].giTag == i)
 			{
 				item = BG_FindItemForHoldable( i );
@@ -537,16 +514,6 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 				// also play humiliation on target
 				self->client->ps.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_GAUNTLETREWARD;
 			}
-
-			/* added beryllium */
-			if ( be_dmFlags.integer & BE_DF_AIRKILL ) {
-				if ( ENTITYNUM_NONE == self->s.groundEntityNum ) {
-					attacker->client->ps.persistant[PERS_EXCELLENT_COUNT]++;
-					G_AddEvent( attacker, EV_HEHE1, 0 );
-					SetAward( attacker->client, AWARD_EXCELLENT );
-				}
-			}
-			/* end added */
 
 			// check for two kills in a short amount of time
 			// if this is close enough to the last kill, give a reward sound

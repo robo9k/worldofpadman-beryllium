@@ -277,13 +277,6 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 
 	Add_Ammo( other, ent->item->giTag, quantity );
 
-	/* added beryllium */
-	if ( be_dmFlags.integer & BE_DF_NOAMMO ) {
-		/* Override whatever Add_Ammo() did */
-		other->client->ps.ammo[ent->item->giTag] = UNLIMITED;
-	}
-	/* end beryllium */
-
 	if (ent->item->giTag == WP_GRAPPLING_HOOK)
 		other->client->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
 

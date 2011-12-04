@@ -1006,16 +1006,7 @@ void BE_ClientSpawn( gentity_t *ent ) {
 	G_assert( ent );
 	client = ent->client;
 
-	/* modkuh >= v9 compat */
-	if ( be_dmFlags.integer & BE_DF_GRAPPLE ) {
-		client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
-		client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
-	}
-
-	if ( be_dmFlags.integer & BE_DF_STARTHEALTH ) {
-		ent->health = client->ps.stats[STAT_HEALTH] = ( client->ps.stats[STAT_MAX_HEALTH] * 2 );
-		client->ps.stats[STAT_ARMOR] = client->ps.stats[STAT_HEALTH];
-	}
+	/* Do nothing, currently */
 }
 
 
@@ -1036,13 +1027,6 @@ qboolean BE_CallSpawn( const char *classname ) {
 		}
 	}
 
-	if ( be_dmFlags.integer & BE_DF_NOHEALTH ) {
-		if ( !Q_stricmp( "station_health", classname ) ) {
-			result = qfalse;
-		}
-	}
-
-
 	if ( !result ) {
 		G_DPrintf( BE_LOG_PREFIX"Not spawning \"%s\" since it is disabled.\n", classname );
 	}
@@ -1059,34 +1043,7 @@ qboolean BE_ItemDisabled( gitem_t *item ) {
 
 	G_assert( item );
 
-
-	if ( ( be_dmFlags.integer & BE_DF_NOPOWERUPS )
-	     && ( IT_POWERUP == item->giType ) ) {
-		result = qtrue;
-	}
-	if ( ( be_dmFlags.integer & BE_DF_NOHOLDABLES )
-	     && ( IT_HOLDABLE == item->giType ) ) {
-		result = qtrue;
-	}
-	if ( ( be_dmFlags.integer & BE_DF_NOARMOR )
-	     && ( IT_ARMOR == item->giType ) ) {
-		result = qtrue;
-	}
-	if ( ( be_dmFlags.integer & BE_DF_NOHEALTH )
-	     && ( IT_HEALTH == item->giType ) ) {
-		/* Has additional code for WoP's healthstations */
-		result = qtrue;
-	}
-	if ( ( be_dmFlags.integer & BE_DF_NOAMMO )
-	     && ( IT_AMMO == item->giType ) ) {
-		result = qtrue;
-	}
-	if ( ( be_dmFlags.integer & BE_DF_NOWEAPONS )
-	     && ( IT_WEAPON == item->giType ) ) {
-		/* TODO: Don't spawn misc_externalmodel weaponmarkers either? */
-		result = qtrue;
-	}
-
+	/* Do nothing, currently */
 
 	if ( result ) {
 		G_DPrintf( BE_LOG_PREFIX"Not spawning \"%s\" since it is disabled.\n", item->classname );
