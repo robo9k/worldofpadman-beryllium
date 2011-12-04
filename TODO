@@ -98,9 +98,8 @@ bspc -reachability for be's entity replacement. Engine hack to exclude .aas from
 	lithium should include additional things that change gameplay such as be_dmFlags
     both should not include redundant stuff like tell_spectator
 
+    remove remaining "do nothing" stubs?
+
 upload to users.loop8.net/~brain/ foo /beryllium/files
  and include symlinks to *-current.zip
-
-rm
-	* g_q3Items 2
 

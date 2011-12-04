@@ -1019,13 +1019,7 @@ qboolean BE_CallSpawn( const char *classname ) {
 
 	G_assert( classname );
 
-
-	if ( g_q3Items.integer != 2 ) {
-		if ( !Q_strncmp( "item_health", classname, 11 ) ) {
-			/* Pretend we don't know item_health* at all */
-			result = qfalse;
-		}
-	}
+	/* Do nothing, currently */
 
 	if ( !result ) {
 		G_DPrintf( BE_LOG_PREFIX"Not spawning \"%s\" since it is disabled.\n", classname );

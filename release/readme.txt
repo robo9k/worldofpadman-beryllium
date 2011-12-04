@@ -166,7 +166,8 @@
 
 
     :: be_banFile
-    Path where to save bans from beryllium's GUID ban system.
+    Filename for Beryllium's GUID bans.
+    This file will be overwritten on several events.
 
 
     :: g_truePing
@@ -178,15 +179,6 @@
     This is a bitmask, supporting the following flags:
       1 - Swap say and say_team
       2 - Spectators can only use say_team (and tell)
-
-
-    :: g_q3Items
-    This has been extended by the setting "2". If set, item_health* from
-    Quake3 will also be spawned. This requires a clientside mod such as modkuh.
-    Otherwise the client will crash with
-       ********************
-       ERROR: Bad item index 42 on entity
-       ********************
 
 
     :: be_overrideEntities
