@@ -10,6 +10,8 @@ ZIP=$BERYLLIUM'.zip'
 SYMLINK='beryllium-current.zip'
 
 ## TODO: Fix Makefile git dependencies so we can remove make clean
+## ^ Njet, we also need to remove old beryllium versions
+rm -rf $BUILD_DIR
 make clean
 make -j3
 
