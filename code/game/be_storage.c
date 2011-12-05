@@ -96,10 +96,18 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 
 	endp = buff;
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
-		/* NOTE: QVM version of strtol() uses const char**, stdlib does not */
+		#ifdef Q3_VM
 		stor->ignoreList[i] = strtol( endp, &endp, 10 );
+		#else
+		// stdlib does not use const char
+		stor->ignoreList[i] = strtol( (char*)endp, (char**)&endp, 10 );
+		#endif
 	}
+	#ifdef Q3_VM
 	stor->firstTime = strtol( endp, &endp, 10 );
+	#else
+	stor->firstTime = strtol( (char*)endp, (char**)&endp, 10 );
+	#endif
 }
 
 
