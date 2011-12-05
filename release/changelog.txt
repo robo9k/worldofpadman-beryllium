@@ -12,11 +12,15 @@
 
   :: Current Version
 
-  v1.1a - 04.12.11
-  * Remove various features that should not be part
-    of Beryllium, but a separate mod
+  v1.1b - 05.12.11
+  * Fix compiler warnings etc.
+  * Make /notarget work for Bots, Boomies, BamBams and Killerducks
 
   :: History
+
+  :: v1.1a - 04.12.11
+  * Remove various features that should not be part
+    of Beryllium, but a separate mod
 
   :: v1.0a - 26.11.11
   * Rename cvar "be_version" to "g_beryllium"
