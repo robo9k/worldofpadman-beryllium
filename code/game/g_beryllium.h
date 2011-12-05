@@ -25,6 +25,12 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 	#error "BERYLLIUM_VERSION not defined, Makefile corrupt?"
 #endif
 
+#ifdef NDEBUG
+	#define BERYLLIUM_VERSION_S BERYLLIUM_VERSION
+#else
+	#define BERYLLIUM_VERSION_S BERYLLIUM_VERSION"-dbg"
+#endif
+
 
 #define S_COLOR_DEFAULT		S_COLOR_WHITE	/* Used to "reset" colored output after other colored output */
 #define S_COLOR_POSITIVE	S_COLOR_GREEN

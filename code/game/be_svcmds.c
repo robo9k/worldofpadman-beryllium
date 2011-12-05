@@ -871,7 +871,7 @@ static void BE_Svcmd_Memory_f( void ) {
 */
 static void BE_Svcmd_Beryllium_f( void ) {
 	G_Printf( "%s\n", BERYLLIUM_ASCII_S );
-	G_Printf( "version: %s\n", BERYLLIUM_VERSION );
+	G_Printf( "version: %s\n", BERYLLIUM_VERSION_S );
 	G_Printf( "built:   %s, %s\n", __DATE__, __TIME__ );
 	G_Printf( "base:    %s\n", G_VERSION_S );
 }
