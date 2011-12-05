@@ -937,9 +937,13 @@ gentity_t *SelectCTFSpawnPoint ( team_t team, int teamstate, vec3_t origin, vec3
 
 /*---------------------------------------------------------------------------*/
 
+/* changed beryllium */
+/*
 static int QDECL SortClients( const void *a, const void *b ) {
 	return *(int *)a - *(int *)b;
 }
+*/
+/* end beryllium */
 
 
 /*

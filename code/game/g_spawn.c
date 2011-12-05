@@ -520,11 +520,15 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*s, *value;
-	const char	*gametypeName;
+	char		*value;
 	gitem_t		*item;
-
+	/* changed beryllium */
+	/*
+	char		*s;
+	const char	*gametypeName;
 	static const char *gametypeNames[] = {"ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"};
+	*/
+	/* end beryllium */
 
 	// get the next free entity
 	ent = G_Spawn();

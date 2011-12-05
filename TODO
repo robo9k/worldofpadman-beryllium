@@ -105,3 +105,5 @@ Move pers.nameChanges to store.nameChanges?
 upload to users.loop8.net/~brain/ foo /beryllium/files
  and include symlinks to *-current.zip
 
+fix compiler warnings for qvm/so
+
