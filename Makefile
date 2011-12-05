@@ -1067,7 +1067,7 @@ endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) $(DBG) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1133,12 +1133,14 @@ all: debug release
 debug:
 	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" OPTIMIZEVM="$(DEBUG_CFLAGS)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  DBG=""
 
 release:
 	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" OPTIMIZEVM="-DNDEBUG $(OPTIMIZEVM)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  DBG="-DNDEBUG"
 
 # Create the build directories, check libraries and print out
 # an informational message, then start building
@@ -1358,7 +1360,7 @@ endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" -o $@ $<
+$(Q)$(Q3LCC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" $(DBG) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
