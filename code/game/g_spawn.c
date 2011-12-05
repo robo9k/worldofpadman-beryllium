@@ -289,12 +289,6 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 		return qfalse;
 	}
 
-	/* added beryllium */
-	if ( !BE_CallSpawn( ent->classname ) ) {
-		return qfalse;
-	}
-	/* end beryllium */
-
 	// check item spawn functions
 	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
 		if ( !strcmp(item->classname, ent->classname) ) {

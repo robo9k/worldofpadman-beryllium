@@ -1656,10 +1656,6 @@ trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
 		}
 	}
 
-	/* added beryllium */
-	BE_ClientSpawn( ent );
-	/* end beryllium */
-
 	// run a client frame to drop exactly to the floor,
 	// initialize animations and other things
 	client->ps.commandTime = level.time - 100;

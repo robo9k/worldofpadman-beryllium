@@ -152,8 +152,6 @@ void BE_ClientTimerActions( gentity_t* ent );
 
 void BE_ClientBegan( int clientNum );
 
-void BE_ClientSpawn( gentity_t *ent );
-
 void BE_ClientKilled( gentity_t *self );
 
 void BE_ClientDisconnect( int clientNum );
@@ -181,9 +179,6 @@ qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force );
 qboolean BE_GetEntityToken( char *buffer, int bufferSize );
 void BE_PreSpawnEntities( void );
 void BE_PostSpawnEntities( void );
-
-qboolean BE_CallSpawn( const char *classname );
-qboolean BE_ItemDisabled( gitem_t *item );
 
 #endif
 
