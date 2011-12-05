@@ -12,6 +12,7 @@ Unlagged? Or at least its serverside-only features or similar ones like anti-war
 
 Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
+sv_floodProtect already limits to 1/s
 
 Mute players' chat, vote, voip etc.
 
@@ -35,7 +36,7 @@ Create sort of a help system, which at least explains votes and newly added comm
 Take care of special vote situations:
 - Most players are connecting, one fully connected calls a vote
 
-Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly etc.
+Add voteFlags variable for spectatorCallvote, spectatorVote, warmupOnly, countVotersOnly etc.
 
 spectatedTeamChat etc.
 
@@ -46,6 +47,7 @@ default team spectator
 Maybe record some stats? Those stimulate players and could be used to detect noobs or cheaters.
 
 Give points depending on difficulty. For example less points while using padpower, more when on low health while killing with punchy.
+^ lithium
 
 According to rambetters iourt patches, there are more bad chars than vanilla Info_Validate() checks for
 
@@ -84,10 +86,12 @@ Modify BE_Alloc to return NULL instead of failing with G_Error directly, but pri
 Reduce poolsize (8 megs seems a little too much for those 1k config files..)
 
 Add revival-like regeneration for lolly-carrier?
+^ lithium
 
 Make respawn protect less annoying
 
 Teleport players back into map instead of dying in space void
+^ lithium
 
 g_teamForceBalance is broken?
 
