@@ -1552,7 +1552,12 @@ void ClientSpawn(gentity_t *ent) {
 		
 		// add instagib weapon to client's inventory
 		client->ps.stats[ STAT_WEAPONS ] = ( 1 << weapon );
+		/* changed beryllium */
+		/*
 		client->ps.ammo[ weapon ] = INFINITE;
+		*/
+		client->ps.ammo[ weapon ] = UNLIMITED;
+		/* end beryllium */
 trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
 	}
 	else
