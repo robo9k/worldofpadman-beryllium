@@ -308,6 +308,11 @@ void move_killerducks(gentity_t *ent)
 		if( ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( &level.clients[i] ) ) {
 			continue;
 		}
+		/* added beryllium */
+		if ( g_entities[i].flags & FL_NOTARGET ) {
+			continue;
+		}
+		/* end beryllium */
 		
 		tmpv3[0]=level.clients[i].ps.origin[0]-ent->r.currentOrigin[0];
 		tmpv3[1]=level.clients[i].ps.origin[1]-ent->r.currentOrigin[1];
@@ -331,11 +336,19 @@ void move_killerducks(gentity_t *ent)
 
 		tmpv3[0]=tmpv3[0]*tmpv3[0]+tmpv3[1]*tmpv3[1]+tmpv3[2]*tmpv3[2];
 
+		/* changed beryllium */
+		/*
 		if(tmpv3[0]<opferlenght)
 		{
 			opfer=ownerNum;//r.ownerNum;
 			opferlenght=tmpv3[0];
 		}
+		*/
+		if ( ( tmpv3[0] < opferlenght ) && !( g_entities[ownerNum].flags & FL_NOTARGET ) ) {
+			opfer = ownerNum;
+			opferlenght = tmpv3[0];
+		}
+		/* end beryllium */
 	}
 
 	if(opfer!=-1 && (level.time-(ent->nextthink - 10000))>500)// in die ersten 1/2 sek. sollen die opfer egal sein

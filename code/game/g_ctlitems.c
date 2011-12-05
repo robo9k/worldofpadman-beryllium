@@ -104,6 +104,12 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if(!other->client) return;
 	if(!ent->team) return;
 
+	/* added beryllium */
+	if ( other->flags & FL_NOTARGET ) {
+		return;
+	}
+	/* end beryllium */
+
 	if(((ent->team[0] == 'b' && other->client->sess.sessionTeam == TEAM_RED) ||
 		(ent->team[0] == 'r' && other->client->sess.sessionTeam == TEAM_BLUE))
 		&& (ent->timestamp==0 || (level.time - ent->timestamp)>100 ))
@@ -123,11 +129,12 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 
 		/* added beryllium */
 		if ( other->client->ps.powerups[PW_VISIONLESS] && ( tmpLen > RANGE_BAMBAM_VISIONLESS ) ) {
-			// I'm the invisible man I'm the invisible man
-			// Incredible how you can see right through me
+			/* I'm the invisible man I'm the invisible man
+			   Incredible how you can see right through me
+			*/
 			return;
 		}
-		/* end added */
+		/* end beryllium */
 
 		VectorMA(other->s.pos.trBase, (tmpLen/missileVelocity), other->s.pos.trDelta, end);
 		trap_Trace(&tr,start,NULL,NULL,end,ent - g_entities,MASK_SHOT);
@@ -420,6 +427,12 @@ static void boomies_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if ( !other->client ) {
 		return;
 	}
+
+	/* added beryllium */
+	if ( other->flags & FL_NOTARGET ) {
+		return;
+	}
+	/* end beryllium */
 
 	if ( !IsItemSameTeam( ent, other ) ) {
 		// EXPLODE! goes the wiesel
