@@ -1388,6 +1388,8 @@ void ClientBegin( int clientNum ) {
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
 
 	/* added beryllium */
+	client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+
 	BE_ClientBegan( clientNum );
 	/* end beryllium */
 
@@ -1631,7 +1633,11 @@ trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
 	client->ps.pm_time = 100;
 
 	client->respawnTime = level.time;
+	/* changed beryllium */
+	/*
 	client->inactivityTime = level.time + g_inactivity.integer * 1000;
+	*/
+	/* end beryllium */
 	client->latched_buttons = 0;
 
 	// set default animations

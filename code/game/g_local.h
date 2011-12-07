@@ -330,6 +330,9 @@ typedef struct {
 
 	int 		lifeShards;
 
+	int			inactivityTime;
+	qboolean	inactivityWarning;
+
 	/* unlagged - true ping */
 	int			realPing;
 	int			pingsamples[NUM_PING_SAMPLES];
@@ -414,8 +417,13 @@ struct gclient_s {
 
 	// timers
 	int			respawnTime;		// can respawn when time > this, force after g_forcerespwan
+	/* changed beryllium */
+	/* These are cleared on each spawn, moved to clientPersistant_t */
+	/*
 	int			inactivityTime;		// kick players when time > this
 	qboolean	inactivityWarning;	// qtrue if the five seoond warning has been given
+	*/
+	/* end beryllium */
 	int			rewardTime;			// clear the EF_AWARD_IMPRESSIVE, etc when time > this
 
 	int			airOutTime;

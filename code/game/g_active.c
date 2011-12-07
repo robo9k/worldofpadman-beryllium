@@ -382,6 +382,8 @@ Returns qfalse if the client is dropped
 =================
 */
 qboolean ClientInactivityTimer( gclient_t *client ) {
+	/* changed beryllium */
+	/*
 	if ( ! g_inactivity.integer ) {
 		// give everyone some time, so if the operator sets g_inactivity during
 		// gameplay, everyone isn't kicked
@@ -404,6 +406,35 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 		}
 	}
 	return qtrue;
+	*/
+
+	if ( ! g_inactivity.integer ) {
+		/* Give everyone some time, so if the operator sets g_inactivity during
+		   gameplay, everyone isn't kicked instantly
+		*/
+		client->pers.inactivityTime = ( level.time + 60 * 1000 );
+		client->pers.inactivityWarning = qfalse;
+	}
+	else if ( client->pers.cmd.forwardmove ||
+		client->pers.cmd.rightmove ||
+		client->pers.cmd.upmove ||
+		( client->pers.cmd.buttons & BUTTON_ATTACK ) ) {
+		client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+		client->pers.inactivityWarning = qfalse;
+	}
+	else if ( !client->pers.localClient ) {
+		if ( level.time > client->pers.inactivityTime ) {
+			trap_DropClient( client - level.clients, "Dropped due to inactivity" );
+			return qfalse;
+		}
+		if ( ( level.time > ( client->pers.inactivityTime - 10000 ) ) && !client->pers.inactivityWarning ) {
+			client->pers.inactivityWarning = qtrue;
+			SendClientCommand( ( client - level.clients ), CCMD_CP, S_COLOR_BOLD"Ten seconds until inactivity drop!\n" );
+		}
+	}
+
+	return qtrue;
+	/* end beryllium */
 }
 
 /*
