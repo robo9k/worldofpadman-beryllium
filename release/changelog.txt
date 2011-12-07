@@ -12,11 +12,15 @@
 
   :: Current Version
 
-  v1.1b - 05.12.11
-  * Fix compiler warnings etc.
-  * Make /notarget work for Bots, Boomies, BamBams and Killerducks
+  v1.1c - 07.12.11
+  * Fix inactivity for respawning players
+
 
   :: History
+
+  :: v1.1b - 05.12.11
+  * Fix compiler warnings etc.
+  * Make /notarget work for Bots, Boomies, BamBams and Killerducks
 
   :: v1.1a - 04.12.11
   * Remove various features that should not be part
