@@ -787,7 +787,7 @@ void BE_LoadBans( void ) {
 */
 void BE_InitBeryllium( void ) {
 	char serverinfo[MAX_INFO_STRING];
-	
+
 
 	trap_GetServerinfo( serverinfo, sizeof( serverinfo ) );
 

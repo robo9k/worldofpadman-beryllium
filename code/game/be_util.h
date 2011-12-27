@@ -102,5 +102,7 @@ void PlayGlobalSound( int soundIndex );
 
 void ReadableSize( char *buf, size_t bufsize, int value );
 
+qboolean G_ColoredOutput( void );
+
 #endif
 

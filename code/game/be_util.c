@@ -718,3 +718,23 @@ void ReadableSize( char *buf, size_t bufsize, int value ) {
 	}
 }
 
+
+/*
+	Returns whether console supports color tags
+*/
+qboolean G_ColoredOutput( void ) {
+	/* tty has color tag conversion enabled */
+	if ( trap_Cvar_VariableIntegerValue( "com_ansiColor" ) ) {
+		return qtrue;
+	}
+
+	/* If running a listen server, ingame console will be used */
+	if ( trap_Cvar_VariableIntegerValue( "dedicated" ) == 0 ) {
+		return qtrue;
+	}
+
+	/* TODO: rcon output, if there is a way to check capabilities of remote end */
+
+	return qfalse;
+}
+
