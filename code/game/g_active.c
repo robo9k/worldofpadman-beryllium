@@ -1136,11 +1136,22 @@ void ClientEndFrame( gentity_t *ent ) {
 	P_DamageFeedback (ent);
 
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
+	/* changed beryllium */
+	/*
 	if ( level.time - ent->client->lastCmdTime > 1000 ) {
 		ent->s.eFlags |= EF_CONNECTION;
 	} else {
 		ent->s.eFlags &= ~EF_CONNECTION;
 	}
+	*/
+	/* s->eFlags gets overwritten by ps->eFlags in BG_PlayerStateToEntityState.. */
+	if ( ( level.time - ent->client->lastCmdTime ) > 1000 ) {
+		ent->client->ps.eFlags |= EF_CONNECTION;
+	}
+	else {
+		ent->client->ps.eFlags &= ~EF_CONNECTION;
+	}
+	/* end beryllium */
 
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
