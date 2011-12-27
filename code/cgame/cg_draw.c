@@ -1209,9 +1209,9 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 				p = CG_ConfigString(CS_LOCATIONS + ci->location);
 				if (!p || !*p)
 					p = "unknown";
-				len = CG_DrawStrlen(p);
-				if (len > lwidth)
-					len = lwidth;
+//				len = CG_DrawStrlen(p);
+//				if (len > lwidth)
+//					len = lwidth;
 
 //				xx = x + TINYCHAR_WIDTH * 2 + TINYCHAR_WIDTH * pwidth + 
 //					((lwidth/2 - len/2) * TINYCHAR_WIDTH);
@@ -1283,6 +1283,54 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 }
 #endif
 
+static float CG_DrawVoiceNames( float y )
+{
+	const char	*info;
+	const char	*name;
+	float		alpha;
+	int			i;
+	float		durationFraction;
+	int			lines = 0;
+	int			nameLeft;
+	int			iconLeft;
+	static const int duration_max = 2000;
+	static const float alpha_max = 1.0f;
+	static const float alpha_min = 0.0f;
+	static const int lines_max = 3;
+	static const int icon2textSpacing = 3;
+	static const int iconWidth = BIGCHAR_HEIGHT;
+	static const int iconHeight = BIGCHAR_HEIGHT;
+
+	for(i=0; i<MAX_CLIENTS;i++)
+	{
+		if( !cg.lastVoiceTime[i] )
+			continue;
+
+		if( cg.lastVoiceTime[i] < cg.time - duration_max )
+			continue;
+
+		if( i == cg.predictedPlayerState.clientNum )
+			continue;
+
+		if( lines++ > lines_max )
+			break;
+
+		info = CG_ConfigString( CS_PLAYERS + i );
+		name = Info_ValueForKey(  info, "n" );
+		durationFraction = (float)(cg.time - cg.lastVoiceTime[i]) / duration_max;
+		alpha = alpha_max - ( durationFraction * (alpha_max - alpha_min) );
+		
+		nameLeft = 640 - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH);
+		CG_DrawBigString( nameLeft, y, name, alpha );
+
+		iconLeft = nameLeft - icon2textSpacing - iconWidth;
+		CG_DrawPic( iconLeft, y, iconWidth, iconHeight, cgs.media.voiceIcon );
+
+		y += BIGCHAR_HEIGHT + 2;
+	}
+	return y;
+}
+
 /*
 =====================
 CG_DrawUpperRight
@@ -1335,6 +1383,9 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame)
 	}
 	if ( cg_drawAttacker.integer ) {
 		y = CG_DrawAttacker( y );
+	}
+	if ( cg_drawVoiceNames.integer ){
+		y = CG_DrawVoiceNames( y );
 	}
 
 }
@@ -1589,8 +1640,6 @@ static float CG_DrawPowerups( float y ) {
 				  size = ICON_SIZE;
 			  }
 
-				// TODO: Draw a different icon if items is disabled
-				//       Check ( client->ps.stats[STAT_FORBIDDENITEMS] & HI_ )
 			  CG_DrawPic( 640 - size, y + ICON_SIZE / 2 - size / 2, 
 				  size, size, trap_R_RegisterShader( item->icon ) );
 			  CG_DrawStringExt(640-24-2,y+ICON_SIZE-16,va("%3i",sortedTime[i] /1000),colorWhite,qtrue,qtrue,8,16,4);
@@ -1724,8 +1773,8 @@ CG_DrawTeamInfo
 =================
 */
 static void CG_DrawTeamInfo( void ) {
-	int w, h;
-	int i, len;
+	int h;
+	int i;
 	vec4_t		hcolor;
 	int		chatHeight;
 
@@ -1745,16 +1794,6 @@ static void CG_DrawTeamInfo( void ) {
 		}
 
 		h = (cgs.teamChatPos - cgs.teamLastChatPos) * TINYCHAR_HEIGHT;
-
-		w = 0;
-
-		for (i = cgs.teamLastChatPos; i < cgs.teamChatPos; i++) {
-			len = CG_DrawStrlen(cgs.teamChatMsgs[i % chatHeight]);
-			if (len > w)
-				w = len;
-		}
-		w *= TINYCHAR_WIDTH;
-		w += TINYCHAR_WIDTH * 2;
 
 		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED ) {
 			hcolor[0] = 1.0f;
@@ -1805,6 +1844,10 @@ static void CG_DrawHoldableItem( float y ) {
 
 		y -= ICON_SIZE;
 		CG_DrawPic( 640-ICON_SIZE, y, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
+		if ( cg.snap->ps.stats[STAT_FORBIDDENITEMS] & ( 1 << bg_itemlist[value].giTag ) ) {
+			CG_DrawPic( 640-ICON_SIZE, y, ICON_SIZE, ICON_SIZE, cgs.media.noammoShader );
+		}
+
 		if(bg_itemlist[value].giTag == HI_FLOATER)
 		{
 			vec4_t	tmpcolor = {0.33f,0.33f,1.0f,0.66f};
@@ -1950,6 +1993,17 @@ void CG_AddLagometerSnapshotInfo( snapshot_t *snap ) {
 		lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = -1;
 		lagometer.snapshotCount++;
 		return;
+	}
+
+	if ( cg.demoPlayback && ( PM_INTERMISSION != snap->ps.pm_type ) ) {
+		if ( cg.snap ) {
+			int serverFrameTime = ( snap->serverTime - cg.snap->serverTime );
+			// NOTE: "-15 dependent on fps and maxpackets"
+			snap->ping = ( ( snap->serverTime - snap->ps.commandTime ) - serverFrameTime - 15 );
+		}
+		else {
+			snap->ping = ( snap->serverTime - snap->ps.commandTime );
+		}
 	}
 
 	// add this snapshot's info
@@ -2308,7 +2362,7 @@ CG_DrawCrosshair3D
 */
 static void CG_DrawCrosshair3D(void)
 {
-	float		w, h;
+	float		w;
 	qhandle_t	hShader;
 	float		f;
 	int			ca;
@@ -2331,14 +2385,13 @@ static void CG_DrawCrosshair3D(void)
 		return;
 	}
 
-	w = h = cg_crosshairSize.value;
+	w = cg_crosshairSize.value;
 
 	// pulse the size of the crosshair when picking up items
 	f = cg.time - cg.itemPickupBlendTime;
 	if ( f > 0 && f < ITEM_BLOB_TIME ) {
 		f /= ITEM_BLOB_TIME;
 		w *= ( 1 + f );
-		h *= ( 1 + f );
 	}
 
 	ca = cg_drawCrosshair.integer;
@@ -2628,12 +2681,11 @@ static void CG_DrawWarmup( void ) {
 	int			w;
 	int			sec;
 	int			i;
-	float scale;
-	clientInfo_t	*ci1, *ci2;
+	float		scale;
 	int			cw;
+	clientInfo_t	*ci1, *ci2;
 	const char	*s;
 	float		WarmupReady, curWarmupReady;
-	const char	*info;
 
 	sec = cg.warmup;
 	if ( !sec ) {
@@ -2699,11 +2751,8 @@ static void CG_DrawWarmup( void ) {
 		sec = 0;
 	}
 
-//	WarmupReady=CG_GetCvarFloat("g_WarmupReady");
-//	curWarmupReady=CG_GetCvarFloat("g_curWarmupReady");
-	info = CG_ConfigString( CS_SERVERINFO );
-	WarmupReady = atof( Info_ValueForKey( info, "g_WarmupReady" ) );
-	curWarmupReady = atof( Info_ValueForKey( info, "g_curWarmupReady" ) );
+	WarmupReady		= cg_warmupReady.value;
+	curWarmupReady	= cg_curWarmupReady.value;
 
 	if(WarmupReady>0.0f && curWarmupReady<WarmupReady)
 		s = va( "Waiting for %.0f%% ready (current %.0f%%)",100.0f*WarmupReady,100.0f*curWarmupReady);
@@ -2842,6 +2891,194 @@ void CG_GetBalloonStateColor(entityState_t* s, vec4_t col)
 	if( s->frame < 11 && (( cg.time / 400 ) & 1) )
 		Vector4Copy(white, col);
 }
+
+
+static void CG_GetBalloonColor( int index, vec4_t color ) {
+	static const vec4_t red    = { 1.0, 0.0, 0.0, 1.0 };
+	static const vec4_t blue   = { 0.0, 0.0, 1.0, 1.0 };
+	static const vec4_t white  = { 1.0, 1.0, 1.0, 1.0 };
+	static const vec4_t yellow = { 1.0f, 0.9f, 0.1f, 1.0f };
+	// FIXME: Make this buffer safe
+	char status = cgs.balloonState[index];
+
+	switch ( status ) {
+		case '0':
+			// uncaptured
+			Vector4Copy( white, color );
+			return;
+
+		case '1'+TEAM_RED-1:
+		case 'a'+TEAM_RED-1:
+			// fully or partially captured by red
+			Vector4Copy( red, color );
+			break;
+
+		case '1'+TEAM_BLUE-1:
+		case 'a'+TEAM_BLUE-1:
+			// fully or partially captured by blue
+			Vector4Copy( blue, color );
+			break;
+
+		default:
+			Vector4Copy( yellow, color );
+			return;
+	}
+
+	if ( ( ( cg.time / 400 ) & 1 )
+	     && ( ( ( 'a'+TEAM_RED-1 ) == status ) || ( ( 'a'+TEAM_BLUE-1 ) == status ) ) ) {
+		// flicker if not fully captured
+		Vector4Copy( white, color );
+	}
+}
+
+
+static void CG_DrawBalloonIcon( centity_t *cent ) {
+	vec4_t iconColor;
+	vec3_t iconPos;
+	trace_t trace;
+	float squaredDist;
+	float size, x, y;
+
+	if ( !( cg_icons.integer & ICON_BALLOON ) ) {
+		return;
+	}
+	
+	CG_GetBalloonStateColor( &cent->currentState, iconColor );
+
+	VectorCopy( cent->currentState.origin, iconPos );
+	iconPos[2] += 40; // draw icon above visible box model
+	squaredDist = Calculate_2DOf3D( iconPos, &cg.refdef, &x, &y );
+	if ( !squaredDist ) {
+		return;
+	}
+
+	// don't draw the icon if the box model is visible and close
+	CG_Trace( &trace, cg.refdef.vieworg, NULL, NULL, cent->currentState.origin, cg.snap->ps.clientNum, MASK_OPAQUE );
+	if ( 1.0 == trace.fraction ) {
+		if ( DistanceSquared( cg.refdef.vieworg, cent->currentState.origin ) < Square( 250 ) ) {
+			return;
+		}
+	}
+
+	size = Com_Clamp( 0.5, 1, ( 1 / ( sqrt( squaredDist ) * 0.002 ) ) );
+
+	trap_R_SetColor( iconColor );
+	CG_DrawPic( ( x - 16.0 * size ), ( y - 16.0 * size ), ( 32.0 * size ), ( 32.0 * size ), cgs.media.bbBoxIcon );
+	trap_R_SetColor( NULL );
+}
+
+
+static void CG_DrawHealthstationIcon( centity_t *cent ) {
+	vec3_t iconPos;
+	float size, x, y;
+	float squaredDist;
+
+	if ( !( cg_icons.integer & ICON_HEALTHSTATION ) ) {
+		return;
+	}
+
+	if ( cg.snap->ps.stats[STAT_HEALTH] > ( cg.snap->ps.stats[STAT_MAX_HEALTH] * 0.5 ) ) {
+		// Don't draw any healthstation icons if not low on health
+		// FIXME: Handicap. Instagib.
+		return;
+	}
+
+	VectorCopy( cent->lerpOrigin, iconPos );
+	iconPos[2] += 120; // draw icon above visible model
+
+	squaredDist = Calculate_2DOf3D( iconPos, &cg.refdef, &x, &y );
+	if ( !squaredDist ) {
+		return;
+	}
+
+	// TODO: don't draw the icon if the healthstation is visible and close
+
+	size = Com_Clamp( 0.5, 1, ( 1 / ( sqrt( squaredDist ) * 0.002 ) ) );
+
+	trap_R_SetColor( NULL );
+	CG_DrawPic( ( x - 16.0 * size ), ( y - 16.0 * size ), ( 32.0 * size ), ( 32.0 * size ), cgs.media.healthstationIcon );
+}
+
+
+static void CG_DrawSprayroomIcon( centity_t *cent ) {
+	vec3_t iconPos;
+	float size, x, y;
+	float squaredDist;
+	trace_t trace;
+
+	if ( !( cg_icons.integer & ICON_SPRAYROOM ) ) {
+		return;
+	}
+
+	if ( cg.snap->ps.ammo[WP_SPRAYPISTOL] <= 0 ) {
+		// Only draw icon when carrying cartridges
+		return;
+	}
+
+	VectorCopy( cent->currentState.origin2, iconPos );
+	iconPos[2] += 100; // draw icon above visible model
+
+	squaredDist = Calculate_2DOf3D( iconPos, &cg.refdef, &x, &y );
+	if ( !squaredDist ) {
+		return;
+	}
+
+	// don't draw the icon if the sprayroom teleporter is visible and close
+	CG_Trace( &trace, cg.refdef.vieworg, NULL, NULL, cent->currentState.origin2, cg.snap->ps.clientNum, MASK_OPAQUE );
+	if ( 1.0 == trace.fraction ) {
+		if ( DistanceSquared( cg.refdef.vieworg, cent->currentState.origin2 ) < Square( 250 ) ) {
+			return;
+		}
+	}
+
+	size = Com_Clamp( 0.5, 1, ( 1 / ( sqrt( squaredDist ) * 0.002 ) ) );
+
+	trap_R_SetColor( NULL );
+	CG_DrawPic( ( x - 16.0 * size ), ( y - 16.0 * size ), ( 32.0 * size ), ( 32.0 * size ), cgs.media.sprayroomIcon );
+}
+
+
+static void CG_DrawBambamIcon( centity_t *cent ) {
+	trace_t	trace;
+	vec3_t start, end;
+	float x, y;
+
+	VectorCopy( cg.refdef.vieworg, start );
+	VectorCopy( cent->lerpOrigin, end );
+	end[2] += 60; // upper end of bambam
+
+	CG_Trace( &trace, start, NULL, NULL, end, cg.snap->ps.clientNum , MASK_OPAQUE );
+	if ( 1.0 == trace.fraction ) {
+		if ( CG_WorldToScreen( end, &x, &y ) ) {
+			float squaredDistance = DistanceSquared( start, end );
+
+			float size = Com_Clamp( 0, 1, ( 1.f / ( sqrt( squaredDistance ) * 0.005 ) ) );
+			float hb_x = ( x - 48.0 * size );
+			float hb_y = ( y - 12.0 * size );
+			float hb_w = ( 96.0 * size );
+			float hb_h = ( 24.0 * size );
+			float hb_scale = cent->currentState.angles2[2]; // Bambam's scaled health is stored in this unused var :)
+			vec4_t color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+			CG_AdjustFrom640( &hb_x, &hb_y, &hb_w, &hb_h );
+
+			trap_R_DrawStretchPic( hb_x, hb_y, hb_w, hb_h, 0, 0, 1, 1, cgs.media.bambamHealthIconBG );
+			switch ( cent->currentState.time2 ) {
+				case TEAM_RED:
+					color[0] = 1.0f;
+					break;
+				default:
+					color[2] = 1.0f;
+					break;
+			}
+			trap_R_SetColor( color );
+			trap_R_DrawStretchPic( hb_x, hb_y, hb_w * hb_scale, hb_h, 0, 0, hb_scale, 1, cgs.media.bambamHealthIcon );
+			trap_R_SetColor( NULL );
+		}
+	}
+}
+
+
 
 /*
 =================
@@ -3101,32 +3338,21 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			if(cg.snap->ps.ammo[weaponNum]>=0)
 				CG_DrawStringExt(20,425,va("%3i",cg.snap->ps.ammo[weaponNum]),colorBlack,qtrue,qfalse,8,16,3);
 
-			//fuer die kreuze (team makierung:
-			//cg.snap->ps.persistant[PERS_SCORE]
-			//cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR,TEAM_BLUE
-			if ( cgs.gametype<GT_TEAM)
-			{
-				if(cgs.gametype==GT_LPS)
-				{
-//					if(cg.warmup)
-//					{
-//						cgs.scores1=SCORE_NOT_PRESENT;
-//						cgs.scores2=SCORE_NOT_PRESENT;
-//					}
-					int ownLives = cg.snap->ps.stats[STAT_LIVESLEFT]<0?0:cg.snap->ps.stats[STAT_LIVESLEFT];
-					if(cgs.scores1 != ownLives)
-					{
+			if ( cgs.gametype < GT_TEAM ) {
+				// LPS has livesleft as primary score only when LPSF_PPOINTLIMIT is not enabled
+				if ( ( cgs.gametype == GT_LPS ) && !( cgs.lpsflags & LPSF_PPOINTLIMIT ) ) {
+					int ownLives = ( ( cg.snap->ps.stats[STAT_LIVESLEFT] < 0 ) ? 0 : cg.snap->ps.stats[STAT_LIVESLEFT] );
+
+					if ( cgs.scores1 != ownLives ) {
 						hudscore2 = ownLives;
-						CG_DrawPic( 8.75f, 364+98, 14, 14, cgs.media.hud_teammarker );
+						CG_DrawPic( 8.75f, ( 364 + 98 ), 14, 14, cgs.media.hud_teammarker );
 					}
-					else
-					{
+					else {
 						hudscore2 = cgs.scores2;
-						CG_DrawPic( 8.75f, 364+79, 14, 14, cgs.media.hud_teammarker );
+						CG_DrawPic( 8.75f, ( 364 + 79 ), 14, 14, cgs.media.hud_teammarker );
 					}
 				}
-				else
-				{
+				else {
 					if(cgs.scores1 != cg.snap->ps.persistant[PERS_SCORE])
 					{
 						hudscore2 = cg.snap->ps.persistant[PERS_SCORE];
@@ -3253,6 +3479,46 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			trap_R_DrawStretchPic(x,y,w,h,0,0,1,1,cgs.media.hud_bc[hudnum]);
 		}
 //^^ bc
+
+		{
+
+		int i;
+		centity_t *cent = NULL;
+
+		// Iterate over all entities and draw their icons where required
+		for ( i = 0 ; i < MAX_GENTITIES ; i++ ) {
+			cent = &cg_entities[i];
+
+			if ( !cent->currentValid ) {
+				// Only draw entities which have valid data from snapshots,
+				// otherwise we'd be using stale data
+				continue;
+			}
+
+			switch ( cent->currentState.eType ) {
+				case ET_BAMBAM:
+					CG_DrawBambamIcon( cent );
+					break;
+				case ET_BALLOON:
+					CG_DrawBalloonIcon( cent );
+					break;
+				case ET_STATION:
+					CG_DrawHealthstationIcon( cent );
+					break;
+				case ET_TELEPORT_TRIGGER:
+					// Magical constant is set for sprayroom teleporter in SP_trigger_teleport
+					if ( 0x23 == cent->currentState.generic1 ) {
+						CG_DrawSprayroomIcon( cent );
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		}
+
 //vv br
 		if((cgs.gametype==GT_SPRAY || cgs.gametype==GT_SPRAYFFA) && team != TEAM_SPECTATOR)
 		{
@@ -3297,53 +3563,16 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 		{
 			vec4_t yellow = { 1.0f, 0.9f, 0.1f, 1.0f };
 			vec4_t orange = { 1.0f, 0.4f, 0.1f, 1.0f };
+			vec4_t iconColor;
 			int i;
-			float squaredDist;
-			int balloonNum = -1;
 
-			// draw ballonstate hud icons and wallhack box icons	
-			// TODO: balloon entity IDs never change during a match, cache them!
-			for ( i = 0 ; i < MAX_GENTITIES ; i++ ) 
-			{
-				if( cg_entities[i].currentState.eType == ET_BALLOON )
-				{
-					vec4_t iconColor;
-					vec3_t pos;
-					trace_t trace;
-					float size;						
-					
-					balloonNum++;
-					CG_GetBalloonStateColor( &cg_entities[i].currentState, iconColor );
-
-					// draw hud icon
-					trap_R_SetColor( iconColor );
-					CG_DrawPic( ( 640 - 34 ), ( 480 - 33 - 36 * balloonNum ), 27, 27, cgs.media.hud_balloon );
-					trap_R_SetColor( NULL );
-					
-					// draw wallhack box icon
-					VectorCopy( cg_entities[i].currentState.origin, pos );
-					pos[2] += 40;
-					squaredDist = Calculate_2DOf3D( pos, &cg.refdef, &x, &y );
-					if ( !squaredDist )
-						continue;
-
-					// don't draw the icon if the box is visible and close
-					CG_Trace( &trace, cg.refdef.vieworg, NULL, NULL, cg_entities[i].currentState.origin, cg.snap->ps.clientNum , MASK_OPAQUE );
-					if( trace.fraction == 1.0)
-					{
-						if( DistanceSquared( cg.refdef.vieworg, cg_entities[i].currentState.origin) < Square(250) ) // square(100)
-						{
-							continue;
-						}
-					}
-
-					size = Com_Clamp( 0.5, 1, ( 1 / ( sqrt( squaredDist ) * 0.002 ) ) );
-		
-					trap_R_SetColor( iconColor );
-					CG_DrawPic( ( x - 16.0 * size ), ( y - 16.0 * size ), ( 32.0 * size ), ( 32.0 * size ), cgs.media.bbBoxIcon );
-					trap_R_SetColor( NULL );
-				}
+			// draw hud icon
+			for ( i = 0; i < MAX_BALLOONS; i++ ) {
+				CG_GetBalloonColor( i, iconColor );
+				trap_R_SetColor( iconColor );
+				CG_DrawPic( ( 640 - 34 ), ( 480 - 33 - 36 * i ), 27, 27, cgs.media.hud_balloon );
 			}
+			trap_R_SetColor( NULL );
 
 			// draw status bar
 			i = cg.predictedPlayerState.stats[STAT_BALLOONTIME];
@@ -3424,51 +3653,10 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 					CG_DrawPic( 640-CTL_BG_WIDTH, 480-CTL_BG_HEIGHT, CTL_BG_WIDTH, CTL_BG_HEIGHT, cgs.media.hud_CTL_bg_blue );
 				}
 			}
-
-			// FIXME: Iterating over all entities is a bad idea.
-			//        Seems like bambam's lerpOrigin is offset?
-
-			for ( i = 0 ; i < MAX_GENTITIES ; i++ ) {
-
-				/// skip non-up-to-date entity ... contains somehow invalid date (e.g. bambam could still be in there, even if it was "killed")
-				if(!cg_entities[i].currentValid)
-					continue;
-
-				if ( cg_entities[i].currentState.eType == ET_BAMBAM ) {
-					trace_t	trace;
-					vec3_t start, end;
-
-					VectorCopy( cg.refdef.vieworg, start );
-
-					VectorCopy( cg_entities[i].lerpOrigin, end );
-					end[2] += 60; // upper end of bambam
-
-					CG_Trace( &trace, start, NULL, NULL, end, cg.snap->ps.clientNum , MASK_OPAQUE );
-					if ( trace.fraction == 1.0 ) {
-						if ( CG_WorldToScreen( end, &x, &y ) ) {
-							float squaredDistance = DistanceSquared(cg.refdef.vieworg,end);
-
-							float size = Com_Clamp( 0, 1, ( 1.f / ( sqrt( squaredDistance ) * 0.005 ) ) );
-							float hb_x = ( x - 48.0 * size );
-							float hb_y = ( y - 12.0 * size );
-							float hb_w = ( 96.0 * size );
-							float hb_h = ( 24.0 * size );
-							float hb_scale = cg_entities[i].currentState.angles2[2]; // Bambam's scaled health is stored in this unused var :)
-
-							CG_AdjustFrom640(&hb_x,&hb_y,&hb_w,&hb_h);
-
-							trap_R_DrawStretchPic( hb_x, hb_y, hb_w, hb_h, 0, 0, 1, 1, cgs.media.bambamHealthIconBG );
-							trap_R_DrawStretchPic( hb_x, hb_y, hb_w * hb_scale, hb_h, 0, 0, hb_scale, 1, cgs.media.bambamHealthIcon );
-						}
-
-					}
-				}
-			}
 		}
 //^^ br		
-		// TODO: Remove cg_drawLPSwallhack, there is a dmflags for this
 		if ( ( cgs.gametype == GT_LPS ) && !( cgs.lpsflags & LPSF_NOARROWS ) &&
-		     cg_drawLPSwallhack.integer ) {
+		     ( cg_icons.integer & ICON_ARROW ) ) {
 			int i;
 			int mostLives;
 
@@ -3800,7 +3988,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 					//       or linewrapping. On the other hand, long text crashes the game anyways..
 					CG_DrawStringExt( ( cg.chaticons[i] ? ( CHAT_ICONSIZE + ( 2 * CHAT_PADDING ) ) : CHAT_PADDING ),
 					                    ( ( j * CHAT_ICONSIZE ) + ( ( CHAT_ICONSIZE - CHAT_CHARHEIGHT ) / 2 ) ),
-					                    cg.chattext[i], colorWhite, qfalse, qfalse, CHAT_CHARWIDTH, CHAT_CHARHEIGHT, strlen( cg.chattext[i] ) );
+					                    cg.chattext[i], colorWhite, qfalse, qtrue, CHAT_CHARWIDTH, CHAT_CHARHEIGHT, strlen( cg.chattext[i] ) );
 
 					j++;
 				}

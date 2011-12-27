@@ -96,7 +96,7 @@ void CG_LoadingClient( int clientNum ) {
 
 	if ( loadingPlayerIconCount < MAX_LOADING_PLAYER_ICONS ) {
 		Q_strncpyz( model, Info_ValueForKey( info, "model" ), sizeof( model ) );
-		skin = Q_strrchr( model, '/' );
+		skin = strrchr( model, '/' );
 		if ( skin ) {
 			*skin++ = '\0';
 		} else {
@@ -159,13 +159,11 @@ void CG_DrawInformation( void ) {
 	CG_DrawPic( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, trap_R_RegisterShaderNoMip("loadingscreen/connecting"));
 	
 	s = Info_ValueForKey( info, "mapname" );
-	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s.tga", s ) );
+	levelshot = trap_R_RegisterShaderNoMip( va( "levelshots/%s", s ) );
 	if ( !levelshot ) {
 		levelshot = trap_R_RegisterShaderNoMip( "levelshots/unknownmap" );
 	}
 
-	// FIXME: This is ugly as hell. But who cares, if the concept behind
-	//        it sucks anyways. Don't even bother thinking about it..
 	switch ( cgs.gametype ) {
 		case GT_BALLOON:
 			info = "menu/help/loadinghelp_bb.tga";
@@ -195,7 +193,6 @@ void CG_DrawInformation( void ) {
 	}
 
 	helppage = trap_R_RegisterShaderNoMip( info );
-
 
 
 	// now scale x and width to preserve the levelshot aspect ratio

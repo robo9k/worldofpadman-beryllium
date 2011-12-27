@@ -55,16 +55,6 @@ const char *TeamName(int team)  {
 	return "FREE";
 }
 
-const char *OtherTeamName(int team) {
-	if (team==TEAM_RED)
-		return "BLUE";
-	else if (team==TEAM_BLUE)
-		return "RED";
-	else if (team==TEAM_SPECTATOR)
-		return "SPECTATOR";
-	return "FREE";
-}
-
 const char *TeamColorString(int team) {
 	if (team==TEAM_RED)
 		return S_COLOR_RED;
@@ -82,12 +72,7 @@ void QDECL PrintMsg( gentity_t *ent, const char *fmt, ... ) {
 	char		*p;
 	
 	va_start (argptr,fmt);
-	/* changed beryllium */
-	/*
-	if (Q_vsnprintf (msg, sizeof(msg), fmt, argptr) > sizeof(msg)) {
-	*/
-	if ( Q_vsnprintf( msg, sizeof( msg ), fmt, argptr ) >= sizeof( msg ) ) {
-	/* end beryllium */
+	if (Q_vsnprintf (msg, sizeof(msg), fmt, argptr) >= sizeof(msg)) {
 		G_Error ( "PrintMsg overrun" );
 	}
 	va_end (argptr);
@@ -364,7 +349,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		targ->client->pers.teamState.lasthurtcarrier = 0;
 
 		attacker->client->ps.persistant[PERS_DEFEND_COUNT]++;
-		team = attacker->client->sess.sessionTeam;
 		// add the sprite over the player's head
 		SetAward( attacker->client, AWARD_DEFEND );
 
@@ -380,7 +364,6 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		targ->client->pers.teamState.lasthurtcarrier = 0;
 
 		attacker->client->ps.persistant[PERS_DEFEND_COUNT]++;
-		team = attacker->client->sess.sessionTeam;
 		// add the sprite over the player's head
 		SetAward( attacker->client, AWARD_DEFEND );
 
@@ -669,7 +652,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	}
 
 	if ( ent->flags & FL_DROPPED_ITEM ) {
-		// hey, its not home.  return it by teleporting it back
+		// hey, it's not home.  return it by teleporting it back
 		PrintMsg( NULL, "%s" S_COLOR_WHITE " returned the %s lolly!\n", cl->pers.netname, TeamName( team ) );
 
 		AddScore( other, ent->r.currentOrigin, CTF_RECOVERY_BONUS, SCORE_BONUS_RECOVERY_S );
@@ -937,123 +920,6 @@ gentity_t *SelectCTFSpawnPoint ( team_t team, int teamstate, vec3_t origin, vec3
 
 /*---------------------------------------------------------------------------*/
 
-/* changed beryllium */
-/*
-static int QDECL SortClients( const void *a, const void *b ) {
-	return *(int *)a - *(int *)b;
-}
-*/
-/* end beryllium */
-
-
-/*
-==================
-TeamplayLocationsMessage
-
-Format:
-	clientNum location health armor weapon powerups
-
-==================
-*/
-/* changed beryllium */
-/*
-void TeamplayInfoMessage( gentity_t *ent ) {
-	char		entry[1024];
-	char		string[8192];
-	int			stringlength;
-	int			i, j;
-	gentity_t	*player;
-	int			cnt;
-	int			h, a;
-	int			clients[TEAM_MAXOVERLAY];
-
-	if ( ! ent->client->pers.teamInfo )
-		return;
-
-	// figure out what client should be on the display
-	// we are limited to 8, but we want to use the top eight players
-	// but in client order (so they don't keep changing position on the overlay)
-	for (i = 0, cnt = 0; i < g_maxclients.integer && cnt < TEAM_MAXOVERLAY; i++) {
-		player = g_entities + level.sortedClients[i];
-		if (player->inuse && player->client->sess.sessionTeam == 
-			ent->client->sess.sessionTeam ) {
-			clients[cnt++] = level.sortedClients[i];
-		}
-	}
-
-	// We have the top eight players, sort them by clientNum
-	qsort( clients, cnt, sizeof( clients[0] ), SortClients );
-
-	// send the latest information on all clients
-	string[0] = 0;
-	stringlength = 0;
-
-	for (i = 0, cnt = 0; i < g_maxclients.integer && cnt < TEAM_MAXOVERLAY; i++) {
-		player = g_entities + i;
-		if (player->inuse && player->client->sess.sessionTeam == 
-			ent->client->sess.sessionTeam ) {
-
-			h = player->client->ps.stats[STAT_HEALTH];
-			a = player->client->ps.stats[STAT_ARMOR];
-			if (h < 0) h = 0;
-			if (a < 0) a = 0;
-
-			Com_sprintf (entry, sizeof(entry),
-				" %i %i %i %i %i %i %i", 
-//				level.sortedClients[i], player->client->pers.teamState.location, h, a, 
-				i, player->client->pers.teamState.location, h, a, 
-				player->client->ps.weapon, player->s.powerups, player->client->ps.ammo[WP_SPRAYPISTOL]);
-			j = strlen(entry);
-			if (stringlength + j > sizeof(string))
-				break;
-			strcpy (string + stringlength, entry);
-			stringlength += j;
-			cnt++;
-		}
-	}
-
-	trap_SendServerCommand( ent-g_entities, va("tinfo %i %s", cnt, string) );
-}
-
-void CheckTeamStatus(void) {
-	int i;
-	gentity_t *loc, *ent;
-
-	if (level.time - level.lastTeamLocationTime > TEAM_LOCATION_UPDATE_TIME) {
-
-		level.lastTeamLocationTime = level.time;
-
-		for (i = 0; i < g_maxclients.integer; i++) {
-			ent = g_entities + i;
-
-			if ( ent->client->pers.connected != CON_CONNECTED ) {
-				continue;
-			}
-
-			if (ent->inuse && (ent->client->sess.sessionTeam == TEAM_RED ||	ent->client->sess.sessionTeam == TEAM_BLUE)) {
-				loc = Team_GetLocation( ent );
-				if (loc)
-					ent->client->pers.teamState.location = loc->health;
-				else
-					ent->client->pers.teamState.location = 0;
-			}
-		}
-
-		for (i = 0; i < g_maxclients.integer; i++) {
-			ent = g_entities + i;
-
-			if ( ent->client->pers.connected != CON_CONNECTED ) {
-				continue;
-			}
-
-			if (ent->inuse && (ent->client->sess.sessionTeam == TEAM_RED ||	ent->client->sess.sessionTeam == TEAM_BLUE)) {
-				TeamplayInfoMessage( ent );
-			}
-		}
-	}
-}
-*/
-
 /*
 ==================
 TeamplayLocationsMessage
@@ -1155,8 +1021,6 @@ void CheckTeamStatus(void) {
 		}
 	}
 }
-/* end beryllium */
-
 
 /*-----------------------------------------------------------------*/
 

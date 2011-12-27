@@ -560,6 +560,27 @@ static void Upload32( unsigned *data,
 	scan = ((byte *)data);
 	samples = 3;
 
+	if( r_greyscale->integer )
+	{
+		for ( i = 0; i < c; i++ )
+		{
+			byte luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
+			scan[i*4] = luma;
+			scan[i*4 + 1] = luma;
+			scan[i*4 + 2] = luma;
+		}
+	}
+	else if( r_greyscale->value )
+	{
+		for ( i = 0; i < c; i++ )
+		{
+			float luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
+			scan[i*4] = LERP(scan[i*4], luma, r_greyscale->value);
+			scan[i*4 + 1] = LERP(scan[i*4 + 1], luma, r_greyscale->value);
+			scan[i*4 + 2] = LERP(scan[i*4 + 2], luma, r_greyscale->value);
+		}
+	}
+
 	if(lightMap)
 	{
 		if(r_greyscale->integer)
@@ -759,14 +780,14 @@ image_t *R_CreateImage( const char *name, const byte *pic, int width, int height
 	long		hash;
 
 	if (strlen(name) >= MAX_QPATH ) {
-		ri.Error (ERR_DROP, "R_CreateImage: \"%s\" is too long\n", name);
+		ri.Error (ERR_DROP, "R_CreateImage: \"%s\" is too long", name);
 	}
 	if ( !strncmp( name, "*lightmap", 9 ) ) {
 		isLightmap = qtrue;
 	}
 
 	if ( tr.numImages == MAX_DRAWIMAGES ) {
-		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit\n");
+		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
 	}
 
 	image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( image_t ), h_low );
@@ -839,8 +860,7 @@ static imageExtToLoaderMap_t imageLoaders[ ] =
 	{ "bmp",  R_LoadBMP }
 };
 
-static int numImageLoaders = sizeof( imageLoaders ) /
-		sizeof( imageLoaders[ 0 ] );
+static int numImageLoaders = ARRAY_LEN( imageLoaders );
 
 /*
 =================
@@ -853,9 +873,11 @@ Loads any of the supported image types into a cannonical
 void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 {
 	qboolean orgNameFailed = qfalse;
+	int orgLoader = -1;
 	int i;
 	char localName[ MAX_QPATH ];
 	const char *ext;
+	char *altName;
 
 	*pic = NULL;
 	*width = 0;
@@ -886,6 +908,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 				// Loader failed, most likely because the file isn't there;
 				// try again without the extension
 				orgNameFailed = qtrue;
+				orgLoader = i;
 				COM_StripExtension( name, localName, MAX_QPATH );
 			}
 			else
@@ -900,7 +923,10 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height )
 	// the image formats supported
 	for( i = 0; i < numImageLoaders; i++ )
 	{
-		char *altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
+		if (i == orgLoader)
+			continue;
+
+		altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
 
 		// Load
 		imageLoaders[ i ].ImageLoader( altName, pic, width, height );
@@ -1072,13 +1098,10 @@ R_CreateFogImage
 static void R_CreateFogImage( void ) {
 	int		x,y;
 	byte	*data;
-	float	g;
 	float	d;
 	float	borderColor[4];
 
 	data = ri.Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
-
-	g = 2.0;
 
 	// S is distance, T is depth
 	for (x=0 ; x<FOG_S ; x++) {
@@ -1411,7 +1434,7 @@ static char *CommaParse( char **data_p ) {
 
 	if (len == MAX_TOKEN_CHARS)
 	{
-//		Com_Printf ("Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
+//		ri.Printf (PRINT_DEVELOPER, "Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
 		len = 0;
 	}
 	com_token[len] = 0;
@@ -1440,12 +1463,12 @@ qhandle_t RE_RegisterSkin( const char *name ) {
 	char		surfName[MAX_QPATH];
 
 	if ( !name || !name[0] ) {
-		Com_Printf( "Empty name passed to RE_RegisterSkin\n" );
+		ri.Printf( PRINT_DEVELOPER, "Empty name passed to RE_RegisterSkin\n" );
 		return 0;
 	}
 
 	if ( strlen( name ) >= MAX_QPATH ) {
-		Com_Printf( "Skin name exceeds MAX_QPATH\n" );
+		ri.Printf( PRINT_DEVELOPER, "Skin name exceeds MAX_QPATH\n" );
 		return 0;
 	}
 

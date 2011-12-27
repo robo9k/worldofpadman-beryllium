@@ -81,12 +81,7 @@ extern vmCvar_t bot_developer;
 #define AIDBG_ROUTES		16
 #define AIDBG_GAMETYPE		32
 #define AIDBG_MOVE			64
-/* changed beryllium */
-/*
-#define AIDBG_NBG			128
-*/
 #define AIDBG_GOAL			128
-/* end beryllium */
 #define AIDBG_COMBAT		256
 #define AIDBG_ALL			32767
 
@@ -190,7 +185,7 @@ typedef struct bot_state_s
 	playerState_t cur_ps;							//current player state
 	int last_eFlags;								//last ps flags
 	usercmd_t lastucmd;								//usercmd from last frame
-	int entityeventTime[1024];						//last entity event time
+	int entityeventTime[MAX_GENTITIES];				//last entity event time
 	//
 	bot_settings_t settings;						//several bot settings
 	int (*ainode)(struct bot_state_s *bs);			//current AI node
@@ -248,7 +243,6 @@ typedef struct bot_state_s
 	float lastair_time;								//last time the bot had air
 	float teleport_time;							//last time the bot teleported
 	float camp_time;								//last time camped
-	float camp_range;								//camp range
 	float weaponchange_time;						//time the bot started changing weapons
 	float firethrottlewait_time;					//amount of time to wait
 	float firethrottleshoot_time;					//amount of time to shoot

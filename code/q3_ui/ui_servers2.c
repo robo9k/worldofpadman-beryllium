@@ -181,13 +181,14 @@ typedef struct servernode_s {
 	int		pingtime;
 	int		gametype;
 	char	 gamename[16];
+	qboolean mod;
 	int		nettype;
 	int		minPing;
 	int		maxPing;
 } servernode_t; 
 
 typedef struct {
-	char			buff[MAX_LISTBOXWIDTH + ARRAY_LEN(S_COLOR_BLACK) - 1];
+	char			buff[MAX_LISTBOXWIDTH + ( 6 * ( ARRAY_LEN( S_COLOR_BLACK ) - 1 ) )]; // extra space for color codes
 	servernode_t*	servernode;
 } table_t;
 
@@ -252,27 +253,64 @@ static int				g_onlyhumans;
 static int              g_hideprivate;
 
 /*
- *Removes illigal chars but keeps colors
- */
-static char *Q_CleanStrWithColor( char *string ) {
-	char*	d;
-	char*	s;
-	int		c;
+	Removes all color sequences, removes special chars, consecutive spaces etc.
+	Makes sure there is a non-empty output string.
 
-	s = string;
-	d = string;
-	while ((c = *s) != 0 ) {
-		if ( Q_IsColorString( s ) ) {
-			*d++ = c;
-		}
-		else if ( c >= 0x20 && c <= 0x7E ) {
-			*d++ = c;
-		}
-		s++;
+	See ClientCleanName().
+*/
+static void ServerCleanName( const char *in, char *out, int outSize ) {
+	int outpos = 0, colorlessLen = 0, spaces = 0, totalWhitespace = 0;
+
+	// discard leading spaces
+	for ( ; *in == ' '; in++ ) {
+		// NOP
 	}
-	*d = '\0';
+	
+	for( ; ( *in && outpos < ( outSize - 1 ) ); in++ ) {
+		out[outpos] = *in;
 
-	return string;
+		if ( *in == ' ' ) {
+			// don't allow too many consecutive spaces
+			if ( spaces > 2 ) {
+				continue;
+			}
+			
+			spaces++;
+		}
+		else if ( ( outpos > 0 ) && ( out[outpos - 1] == Q_COLOR_ESCAPE ) ) {
+			if ( Q_IsColorString( &out[outpos - 1] ) ) {
+				colorlessLen--;
+				outpos--;
+				continue;
+			}
+			else {
+				spaces = 0;
+				colorlessLen++;
+			}
+		}
+		else {
+			spaces = 0;
+			colorlessLen++;
+		}
+
+		if ( ( *in < ' ' ) || ( *in > '}' ) || ( *in == '`' ) ) {
+			colorlessLen--;
+			continue;
+		}
+
+		if ( *in == ' ' ) {
+			totalWhitespace++;
+		}
+		
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+
+	// don't allow empty names
+	if ( ( *out == '\0' ) || ( colorlessLen == 0 ) || ( totalWhitespace >= colorlessLen ) ) {
+		Q_strncpyz( out, "noname", outSize );
+	}
 }
 
 
@@ -366,7 +404,6 @@ static int QDECL ArenaServers_Compare( const void *arg1, const void *arg2 ) {
 	return 0;
 }
 
-
 /*
 =================
 ArenaServers_Go
@@ -425,7 +462,7 @@ static void ArenaServers_UpdateMenu( void ) {
 	char*			buff;
 	servernode_t*	servernodeptr;
 	table_t*		tableptr;
-	char			*pingColor;
+	char			*pingColor, *slotsColor, *mapColor, *modColor;
 
 	if( g_arenaservers.numqueriedservers > 0 ) {
 		// servers found
@@ -591,20 +628,53 @@ static void ArenaServers_UpdateMenu( void ) {
 		else if( servernodeptr->maxPing && servernodeptr->pingtime > servernodeptr->maxPing ) {
 			pingColor = S_COLOR_BLUE;
 		}
-		else if( servernodeptr->pingtime < 200 ) {
+		else if( servernodeptr->pingtime < 100 ) {
 			pingColor = S_COLOR_GREEN;
 		}
-		else if( servernodeptr->pingtime < 400 ) {
+		else if( servernodeptr->pingtime < 200 ) {
 			pingColor = S_COLOR_YELLOW;
 		}
 		else {
 			pingColor = S_COLOR_RED;
 		}
 
-		Com_sprintf(tableptr->buff, ARRAY_LEN(tableptr->buff), "%-23.23s %-14.14s %2d/%2d %-8.8s %-5.5s%s%-3d",
-			servernodeptr->hostname, servernodeptr->mapname, servernodeptr->numclients,
- 			servernodeptr->maxclients, servernodeptr->gamename,
-			netnames[servernodeptr->nettype], pingColor, servernodeptr->pingtime );
+
+		#define DEFAULT_COLOR_S S_COLOR_YELLOW
+		if ( servernodeptr->numclients >= servernodeptr->maxclients ) {
+			slotsColor = S_COLOR_RED;
+		}
+		else {
+			slotsColor = DEFAULT_COLOR_S;
+		}
+
+		// this only partial exact, works at least for current mod
+		if ( -1 == trap_FS_FOpenFile( va( "maps/%s.bsp", servernodeptr->mapname ), NULL, FS_READ )  ) {
+			mapColor = S_COLOR_RED;
+		}
+		else {
+			mapColor = DEFAULT_COLOR_S;
+		}
+
+		if ( servernodeptr->mod ) {
+			modColor = S_COLOR_CYAN;
+		}
+		else {
+			modColor = DEFAULT_COLOR_S;
+		}
+
+		// TODO: Color if password'ed? Different colors depending on free slots?
+
+		// NOTE: netname has been removed, since it's not really useful to the average player
+		//       Also note that highlighting is partially broken due to static colors
+
+		Com_sprintf( tableptr->buff, ARRAY_LEN( tableptr->buff ), "%-22.22s%s %-18.18s" DEFAULT_COLOR_S " %s%2d+%2d/%2d" DEFAULT_COLOR_S " %s%-8.8s %s%-3d",
+			servernodeptr->hostname,
+			mapColor, servernodeptr->mapname,
+			slotsColor, servernodeptr->humanclients,
+ 			( servernodeptr->numclients - servernodeptr->humanclients ),
+			servernodeptr->maxclients,
+			modColor, servernodeptr->gamename,
+			pingColor, servernodeptr->pingtime );
 
 		j++;
 	}
@@ -705,17 +775,14 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 
 	Q_strncpyz( servernodeptr->adrstr, adrstr, MAX_ADDRESSLENGTH );
 
-	Q_strncpyz( servernodeptr->hostname, Info_ValueForKey( info, "hostname"), MAX_HOSTNAMELENGTH );
-	Q_CleanStrWithColor( servernodeptr->hostname );
-	Q_CleanStr( servernodeptr->hostname ); // color breaks layout
-	//Q_strupr( servernodeptr->hostname );
+	ServerCleanName( Info_ValueForKey( info, "hostname" ), servernodeptr->hostname, sizeof( servernodeptr->hostname ) );
 
 	Q_strncpyz( servernodeptr->mapname, Info_ValueForKey( info, "mapname"), MAX_MAPNAMELENGTH );
 	Q_CleanStr( servernodeptr->mapname );
 	//Q_strupr( servernodeptr->mapname );
 
 	servernodeptr->numclients	= atoi( Info_ValueForKey( info, "clients") );
-	servernodeptr->humanclients	= atoi( Info_ValueForKey( info, "humans") );
+	servernodeptr->humanclients	= atoi( Info_ValueForKey( info, "g_humanplayers") );
 	servernodeptr->needPass		= atoi( Info_ValueForKey( info, "g_needpass") );
 	servernodeptr->maxclients	= atoi( Info_ValueForKey( info, "sv_maxclients") );
 	servernodeptr->pingtime		= pingtime;
@@ -738,10 +805,12 @@ static void ArenaServers_Insert( char* adrstr, char* info, int pingtime )
 	if( *s && ( Q_stricmp( s, BASEGAME ) != 0 ) ) {
 		servernodeptr->gametype = i;
 		Q_strncpyz( servernodeptr->gamename, s, sizeof( servernodeptr->gamename ) );
+		servernodeptr->mod = qtrue;
 	}
 	else {
 		servernodeptr->gametype = i;
 		Q_strncpyz( servernodeptr->gamename, gamenames[i], sizeof( servernodeptr->gamename ) );
+		servernodeptr->mod = qfalse;
 	}
 }
 
@@ -788,13 +857,11 @@ static void ArenaServers_LoadFavorites( void ) {
 	int				i;
 	int				j;
 	int				numtempitems;
-	char			emptyinfo[MAX_INFO_STRING];
 	char			adrstr[MAX_ADDRESSLENGTH];
 	servernode_t	templist[MAX_FAVORITESERVERS];
 	qboolean		found;
 
 	found        = qfalse;
-	emptyinfo[0] = '\0';
 
 	// copy the old
 	memcpy( templist, g_favoriteserverlist, ( sizeof(servernode_t) * MAX_FAVORITESERVERS ) );
@@ -1764,7 +1831,7 @@ void ArenaServers_Cache( void ) {
 		int index;
 		
 		for(index = 0; index < MAX_MASTER_SERVERS; index++)
-			Com_sprintf(global_names[index], sizeof(global_names[index]), "%s%d", GLOBAL_ITEM_NAME, index + 1);
+			Com_sprintf(global_names[index], sizeof(global_names[index]), "%s %d", GLOBAL_ITEM_NAME, index + 1);
 	}
 }
 

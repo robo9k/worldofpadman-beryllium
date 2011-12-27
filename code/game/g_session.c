@@ -32,7 +32,7 @@ void G_WriteClientSessionData( gclient_t *client ) {
 
 	s = va("%i %i %i %i %i %i %i %i %s", 
 		client->sess.sessionTeam,
-		client->sess.spectatorTime,
+		client->sess.spectatorNum,
 		client->sess.spectatorState,
 		client->sess.spectatorClient,
 		client->sess.wins,
@@ -68,7 +68,7 @@ void G_ReadSessionData( gclient_t *client ) {
 
 	sscanf( s, "%i %i %i %i %i %i %i %i %s",
 		&sessionTeam,                 // bk010221 - format
-		&client->sess.spectatorTime,
+		&client->sess.spectatorNum,
 		&spectatorState,              // bk010221 - format
 		&client->sess.spectatorClient,
 		&client->sess.wins,
@@ -125,18 +125,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 					level.numNonSpectatorClients >= g_maxGameClients.integer ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 				} else {
-					/* changed beryllium */
-					/*					
 					sess->sessionTeam = TEAM_FREE;
-					*/
-					/* TODO: Move this into a function */
-					if ( level.teamLocked[TEAM_FREE] ) {
-						sess->sessionTeam = TEAM_SPECTATOR;
-					}
-					else {
-						sess->sessionTeam = TEAM_FREE;
-					}
-					/* end beryllium */
 				}
 				break;
 			case GT_TOURNAMENT:
@@ -144,7 +133,6 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 				if ( level.numNonSpectatorClients >= 2 ) {
 					sess->sessionTeam = TEAM_SPECTATOR;
 				} else {
-					/* beryllium: Locking teams in TOURNAMENT most likely breaks waiting queue */
 					sess->sessionTeam = TEAM_FREE;
 				}
 				break;
@@ -156,7 +144,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo ) {
 	sess->selectedlogo[0]='\0';
 
 	sess->spectatorState = SPECTATOR_FREE;
-	sess->spectatorTime = level.time;
+	AddTournamentQueue(client);
 
 	G_WriteClientSessionData( client );
 }

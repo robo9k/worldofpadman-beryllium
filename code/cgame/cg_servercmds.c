@@ -69,24 +69,34 @@ CG_ParseTeamInfo
 
 =================
 */
-#define TI_VALUES_PER_PERSON 7
+#define TI_VALUES_PER_PLAYER 7
 static void CG_ParseTeamInfo( void ) {
-	int		i;
+	int		i, index;
 	int		client;
 
 	numSortedTeamPlayers = atoi( CG_Argv( 1 ) );
+	if ( ( numSortedTeamPlayers < 0 ) || ( numSortedTeamPlayers > TEAM_MAXOVERLAY ) ) {
+		CG_Error( "CG_ParseTeamInfo: numSortedTeamPlayers out of range (%d)", numSortedTeamPlayers );
+		return;
+	}
 
 	for ( i = 0 ; i < numSortedTeamPlayers ; i++ ) {
-		client = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 2 ) );
+		index = ( i * TI_VALUES_PER_PLAYER );
+
+		client = atoi( CG_Argv( index + 2 ) );
+		if ( ( client < 0 ) || ( client >= MAX_CLIENTS ) ) {
+		  CG_Error( "CG_ParseTeamInfo: bad client number: %d", client );
+		  return;
+		}
 
 		sortedTeamPlayers[i] = client;
 
-		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 3 ) );
-		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 4 ) );
-		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 5 ) );
-		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 6 ) );
-		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 7 ) );
-		cgs.clientinfo[ client ].numCartridges = atoi( CG_Argv( i * TI_VALUES_PER_PERSON + 8 ) );
+		cgs.clientinfo[ client ].location		= atoi( CG_Argv( index + 3 ) );
+		cgs.clientinfo[ client ].health			= atoi( CG_Argv( index + 4 ) );
+		cgs.clientinfo[ client ].armor			= atoi( CG_Argv( index + 5 ) );
+		cgs.clientinfo[ client ].curWeapon		= atoi( CG_Argv( index + 6 ) );
+		cgs.clientinfo[ client ].powerups		= atoi( CG_Argv( index + 7 ) );
+		cgs.clientinfo[ client ].numCartridges	= atoi( CG_Argv( index + 8 ) );
 	}
 }
 
@@ -238,15 +248,24 @@ void CG_UpdateBalloonStates( const char *str ) {
 		}
 
 		// announce normal stuff
-		for ( i = 0; i < MAX_BALLOONS && str[i] && cgs.balloonState[i]; i++ )
-			if ( str[i] != cgs.balloonState[i] )
+		for ( i = 0; ( ( i < MAX_BALLOONS ) && str[i] && cgs.balloonState[i] ); i++ ) {
+			if ( str[i] != cgs.balloonState[i] ) {
 				switch ( str[i] ) {
-				case '0': trap_S_StartLocalSound(cgs.media.Announcer_BalloonDestroyed, CHAN_ANNOUNCER); break;
-				case '1': trap_S_StartLocalSound(cgs.media.Announcer_RedBalloon, CHAN_ANNOUNCER); break;
-				case '2': trap_S_StartLocalSound(cgs.media.Announcer_BlueBalloon, CHAN_ANNOUNCER); break;
-//				case 'a': Com_Printf( "Red Team attacks a balloon\n" ); break;
-//				case 'b': Com_Printf( "Blue Team attacks a balloon\n" ); break;
+					case '0':
+						CG_AddBufferedSound( cgs.media.Announcer_BalloonDestroyed );
+						break;
+					case '1':
+						CG_AddBufferedSound( cgs.media.Announcer_RedBalloon );
+						break;
+					case '2':
+						CG_AddBufferedSound( cgs.media.Announcer_BlueBalloon );
+						break;
+
+					default:
+						break;
 				}
+			}
+		}
 	}
 
 	// copy the new string
@@ -407,6 +426,13 @@ static void CG_AddToTeamChat( const char *str ) {
 		cgs.teamLastChatPos = cgs.teamChatPos - chatHeight;
 }
 
+static void CG_RestartUIMusic( void ) {
+	// Restart q3_ui music player.
+	// UI does not know about map_restart, which stops background tracks, i.e.
+	// music
+	trap_SendConsoleCommand( "wop_restartmusic\n" );
+}
+
 /*
 ===============
 CG_MapRestart
@@ -437,12 +463,14 @@ static void CG_MapRestart( void ) {
 	cg.timelimitWarnings = 0;
 
 	cg.intermissionStarted = qfalse;
+	cg.levelShot = qfalse;
 
 	cgs.voteTime = 0;
 
 	cg.mapRestart = qtrue;
 
 	CG_StartMusic();
+	CG_RestartUIMusic();
 
 	trap_S_ClearLoopingSounds(qtrue);
 
@@ -560,7 +588,7 @@ static void CG_ServerCommand( void ) {
 		// into the cg.chat buffer and we set the icon afterwards
 		// TODO: Check for valid clientid before doing anything
 		id = atoi( CG_Argv( 2 ) );
-		if ( ( id >= 0 ) && ( id < MAX_CLIENTS ) ) {
+		if ( ( id >= 0 ) && ( id < cgs.maxclients ) ) {
 			cg.chaticons[cg.lastchatmsg] = cgs.clientinfo[id].modelIcon;
 		}
 		else if ( id == -1 ) {
@@ -655,6 +683,12 @@ static void CG_ServerCommand( void ) {
 		}
 		return;
 	}
+
+	if ( !strcmp( cmd, "qc" ) ) {
+		CG_QueryCvar();
+		return;
+	}
+
 
 	CG_Printf( "Unknown client game command: %s\n", cmd );
 }

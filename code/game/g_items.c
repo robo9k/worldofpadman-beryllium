@@ -280,8 +280,6 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	if (ent->item->giTag == WP_GRAPPLING_HOOK)
 		other->client->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
 
-	/* beryllium TODO: Add AMMOLESS for WP_PUNCHY as well? */
-
 	// team deathmatch has slow weapon respawns
 	if ( g_gametype.integer == GT_TEAM ) {
 		return g_weaponTeamRespawn.integer;
@@ -398,7 +396,7 @@ void RespawnItem( gentity_t *ent ) {
 		else {
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
 		}
-		te->s.eventParm = G_SoundIndex( "sounds/items/powerup_respawn.wav" );
+		te->s.eventParm = G_SoundIndex( "sounds/items/powerup_respawn" );
 		te->r.svFlags |= SVF_BROADCAST;
 	}
 
@@ -841,7 +839,7 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 	ent->physicsBounce = 0.50;		// items are bouncy
 
 	if ( item->giType == IT_POWERUP ) {
-		G_SoundIndex( "sounds/items/powerup_respawn.wav" );
+		G_SoundIndex( "sounds/items/powerup_respawn" );
 		G_SpawnFloat( "noglobalsound", "0", &ent->speed);
 	}
 

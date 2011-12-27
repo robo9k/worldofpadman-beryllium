@@ -70,7 +70,7 @@ void UI_StartCreditMusic(void)
 void UI_StartMusic(void)
 {
 	uis.musicbool=qtrue;
-	trap_S_StartBackgroundTrack("music/22khz_menue_loop.wav", "music/22khz_menue_loop.wav");
+	trap_S_StartBackgroundTrack("music/22khz_menue_loop", "music/22khz_menue_loop");
 }
 
 void UI_StopMusic(void)
@@ -588,54 +588,77 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	UI_DrawProportionalString2( x, y, str, color, sizeScale, uis.charsetProp );
 }
 
-/*
-=================
-UI_DrawProportionalString_Wrapped
-=================
-*/
-void UI_DrawProportionalString_AutoWrapped( int x, int y, int xmax, int ystep, const char* str, int style, vec4_t color ) {
-	int width;
+int CharWidthForStringStyle( int style )
+{
+	if (style & UI_SMALLFONT)
+		return SMALLCHAR_WIDTH;
+
+	else if (style & UI_GIANTFONT)
+		return GIANTCHAR_WIDTH;
+
+	return	BIGCHAR_WIDTH;
+}
+
+int CharHeightForStringStyle( int style )
+{
+	if (style & UI_SMALLFONT)
+		return SMALLCHAR_HEIGHT;
+
+	else if (style & UI_GIANTFONT)
+		return GIANTCHAR_HEIGHT;
+
+	return	BIGCHAR_HEIGHT;
+}
+
+int UI_AutoWrappedString_LineCount( int xmax, const char* str, int style, qboolean proportional )
+{
 	char *s1,*s2,*s3;
 	char c_bcp;
 	char buf[1024];
-	float   sizeScale;
+	float sizeScale;
+	int lineCount = 0;
+	int width;
 
 	if (!str || str[0]=='\0')
-		return;
-	
+		return 0;
+
 	sizeScale = UI_ProportionalSizeScale( style );
 	
 	Q_strncpyz(buf, str, sizeof(buf));
 	s1 = s2 = s3 = buf;
 
-	while (1) {
+		while (1) {
 		do {
 			s3++;
-		} while (*s3!=' ' && *s3!='\0');
+		} while (*s3!=' ' && *s3!='\0' && *s3!='\n');
 		c_bcp = *s3;
 		*s3 = '\0';
-		width = UI_ProportionalStringWidth(s1) * sizeScale;
+
+		if( proportional )
+			width = UI_ProportionalStringWidth(s1) * sizeScale;
+		else
+			width = strlen( s1 ) * CharWidthForStringStyle( style );
+
 		*s3 = c_bcp;
-		if (width > xmax) {
+		if (width > xmax || c_bcp == '\n' ) {
 			if (s1==s2)
 			{
 				// fuck, don't have a clean cut, we'll overflow
 				s2 = s3;
 			}
-			*s2 = '\0';
-			UI_DrawProportionalString(x, y, s1, style, color);
-			y += ystep;
+			*s2 = '\0';			
+			lineCount++;
 			if (c_bcp == '\0')
-      {
-        // that was the last word
-        // we could start a new loop, but that wouldn't be much use
-        // even if the word is too long, we would overflow it (see above)
-        // so just print it now if needed
-        s2++;
-        if (*s2 != '\0') // if we are printing an overflowing line we have s2 == s3
-          UI_DrawProportionalString(x, y, s2, style, color);
+			{
+				// that was the last word
+				// we could start a new loop, but that wouldn't be much use
+				// even if the word is too long, we would overflow it (see above)
+				// so just print it now if needed
+				s2++;
+				if (*s2 != '\0') // if we are printing an overflowing line we have s2 == s3
+				  lineCount++;
 				break; 
-      }
+			}
 			s2++;
 			s1 = s2;
 			s3 = s2;
@@ -645,7 +668,107 @@ void UI_DrawProportionalString_AutoWrapped( int x, int y, int xmax, int ystep, c
 			s2 = s3;
 			if (c_bcp == '\0') // we reached the end
 			{
+				lineCount++;
+				break;
+			}
+		}
+	}
+	return lineCount;
+}
+
+/*
+=================
+UI_DrawProportionalString_Wrapped
+=================
+*/
+void UI_DrawString_AutoWrapped( int x, int y, int xmax, int ystep, const char* str, int style, vec4_t color, qboolean proportional ) {
+	int width;
+	char *s1,*s2,*s3;
+	char c_bcp;
+	char buf[1024];
+	float   sizeScale;
+
+	if (!str || str[0]=='\0')
+		return;
+	
+	
+	sizeScale = UI_ProportionalSizeScale( style );
+	
+	Q_strncpyz(buf, str, sizeof(buf));
+	s1 = s2 = s3 = buf;
+
+	while (1) {
+		do {
+			s3++;
+		} while (*s3!=' ' && *s3!='\0' && *s3!='\n');
+
+		if(*s3=='\n')
+		{
+			*s3='\0';
+
+			if( proportional )
 				UI_DrawProportionalString(x, y, s1, style, color);
+			else
+				UI_DrawString(x, y, s1, style, color);
+
+			y += ystep;
+			s3++;
+			s1=s2=s3;
+			continue;
+		}
+
+		c_bcp = *s3;
+		*s3 = '\0';
+
+		if( proportional )
+			width = UI_ProportionalStringWidth(s1) * sizeScale;
+		else
+			width = strlen(s1) * CharWidthForStringStyle( style );
+
+		*s3 = c_bcp;
+		if (width > xmax) {
+			if (s1==s2)
+			{
+				// fuck, don't have a clean cut, we'll overflow
+				s2 = s3;
+			}
+			*s2 = '\0';
+			
+			if( proportional )
+				UI_DrawProportionalString(x, y, s1, style, color);
+			else
+				UI_DrawString(x, y, s1, style, color);
+
+			y += ystep;
+			if (c_bcp == '\0')
+			{
+				// that was the last word
+				// we could start a new loop, but that wouldn't be much use
+				// even if the word is too long, we would overflow it (see above)
+				// so just print it now if needed
+				s2++;
+				if (*s2 != '\0') // if we are printing an overflowing line we have s2 == s3
+				{
+					if( proportional )
+						UI_DrawProportionalString(x, y, s2, style, color);
+					else
+						UI_DrawString(x, y, s2, style, color);
+				}
+				break; 
+			}
+			s2++;
+			s1 = s2;
+			s3 = s2;
+		}
+		else
+		{
+			s2 = s3;
+			if (c_bcp == '\0') // we reached the end
+			{
+				if( proportional )
+					UI_DrawProportionalString(x, y, s1, style, color);
+				else
+					UI_DrawString(x, y, s1, style, color);
 				break;
 			}
 		}
@@ -711,7 +834,7 @@ static void UI_DrawString2( int x, int y, const char* str, vec4_t color, int cha
 	}
 
 	trap_R_SetColor( NULL );
-}
+} 
 
 /*
 =================
@@ -735,21 +858,8 @@ void UI_DrawString( int x, int y, const char* str, int style, vec4_t color )
 	if ((style & UI_BLINK) && ((uis.realtime/BLINK_DIVISOR) & 1))
 		return;
 
-	if (style & UI_SMALLFONT)
-	{
-		charw =	SMALLCHAR_WIDTH;
-		charh =	SMALLCHAR_HEIGHT;
-	}
-	else if (style & UI_GIANTFONT)
-	{
-		charw =	GIANTCHAR_WIDTH;
-		charh =	GIANTCHAR_HEIGHT;
-	}
-	else
-	{
-		charw =	BIGCHAR_WIDTH;
-		charh =	BIGCHAR_HEIGHT;
-	}
+	charw = CharWidthForStringStyle( style );
+	charh = CharHeightForStringStyle( style );
 
 	if (style & UI_PULSE)
 	{
@@ -976,11 +1086,12 @@ void UI_MouseEvent( int dx, int dy )
 
 	// update mouse screen position
 	uis.cursorx += dx;
-	if (uis.cursorx < 0)
-		uis.cursorx = 0;
-	else if (uis.cursorx > SCREEN_WIDTH)
-		uis.cursorx = SCREEN_WIDTH;
+	if (uis.cursorx < -uis.xbias)
+		uis.cursorx = -uis.xbias;
+	else if (uis.cursorx > SCREEN_WIDTH+uis.xbias)
+		uis.cursorx = SCREEN_WIDTH+uis.xbias;
 
+	// todo: use ybias here for odd screens (and symmetry)
 	uis.cursory += dy;
 	if (uis.cursory < 0)
 		uis.cursory = 0;
@@ -1109,8 +1220,6 @@ void UI_Cache_f( void ) {
 
 }
 
-void WOPMusicNextSong(void);
-
 /*
 =================
 UI_ConsoleCommand
@@ -1118,6 +1227,9 @@ UI_ConsoleCommand
 */
 qboolean UI_ConsoleCommand( int realTime ) {
 	char	*cmd;
+
+	uis.frametime = realTime - uis.realtime;
+	uis.realtime = realTime;
 
 	cmd = UI_Argv( 0 );
 
@@ -1168,19 +1280,20 @@ qboolean UI_ConsoleCommand( int realTime ) {
 		return qtrue;
 	}
 */
-	if(Q_stricmp (cmd, "wop_music")==0)
-	{
-		WOPMusicMenu_Open();
+	if ( Q_stricmp( cmd, "wop_music" ) == 0 ) {
+		MusicMenu_Open();
 		return qtrue;
 	}
-	if(Q_stricmp (cmd, "wop_checkmusic")==0)
-	{
-		CheckInGameMusic(); // (wird nicht mehr umbedingt gebraucht) ... doch einmal zum starten von der cgame aus
+	if ( Q_stricmp( cmd, "wop_checkmusic" ) == 0 ) {
+		Music_Check();
 		return qtrue;
 	}
-	if(!Q_stricmp(cmd, "wop_nextsong"))
-	{
-		WOPMusicNextSong();
+	if ( Q_stricmp( cmd, "wop_nextsong" ) == 0 ) {
+		Music_NextTrack();
+		return qtrue;
+	}
+	if ( Q_stricmp( cmd, "wop_restartmusic" ) == 0 ) {
+		Music_TriggerRestart();
 		return qtrue;
 	}
 
@@ -1224,7 +1337,7 @@ UI_Shutdown
 void UI_Shutdown( void )
 {
 	UI_StopMusic();
-	WOPMusicMenu_Shutdown();
+	MusicMenu_Shutdown();
 }
 
 /*
@@ -1248,7 +1361,7 @@ void UI_Init( void ) {
 //		return;
 	}
 
-	WOPMusicMenu_Init();
+	MusicMenu_Init();
 
 	UI_InitGameinfo();
 
@@ -1530,7 +1643,7 @@ void UI_Refresh( int realtime )
 			UI_StartMusic();
 	}
 	else
-		CheckInGameMusic();
+		Music_Check();
 
 	UI_DrawMenu(uis.activemenu);
 
@@ -1597,7 +1710,7 @@ void UI_ModelIcon(const char *modelAndSkin, char *iconName, int SizeOfIconName)
 	char	model[MAX_QPATH];
 
 	Q_strncpyz( model, modelAndSkin, sizeof(model));
-	skin = Q_strrchr( model, '/' );
+	skin = strrchr( model, '/' );
 	if ( skin ) {
 		*skin++ = '\0';
 	}

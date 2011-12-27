@@ -300,7 +300,8 @@ static void PlayerSettings_SaveChanges( void ) {
 	trap_Cvar_Set( "name", s_playersettings.name.field.buffer );
 
 	// handicap
-	trap_Cvar_SetValue( "handicap", 100 - s_playersettings.handicap.curvalue * 5 );
+	// NOTE: We do not use this currently. Some players reported they always get handicap 5 when using the player setup menu
+	//trap_Cvar_SetValue( "handicap", 100 - s_playersettings.handicap.curvalue * 5 );
 
 	// effects color
 	trap_Cvar_SetValue( "color1", uitogamecode[s_playersettings.effects.curvalue] );
@@ -664,7 +665,7 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 	switch( tmpid ) {
 
 	case ID_HANDICAP:
-		trap_Cvar_Set( "handicap", va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
+		//trap_Cvar_Set( "handicap", va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 
 /*	case ID_MODEL:
@@ -713,7 +714,7 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 
 				Q_strncpyz(tmp,ps_playericons.modelskins[i].name,64);
 				if((chrptr=strchr(tmp,'/'))!=NULL) *chrptr='\0';
-				trap_S_StartLocalSound(trap_S_RegisterSound(va("sounds/names/players/%s.wav", Q_strlwr( tmp ) ),qfalse),CHAN_LOCAL_SOUND);
+				trap_S_StartLocalSound(trap_S_RegisterSound(va("sounds/names/players/%s", Q_strlwr( tmp ) ),qfalse),CHAN_LOCAL_SOUND);
 
 				trap_Cvar_Set("model",ps_playericons.modelskins[i].name);
 				trap_Cvar_Set("headmodel",ps_playericons.modelskins[i].name);

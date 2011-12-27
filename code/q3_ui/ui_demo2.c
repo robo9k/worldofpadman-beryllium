@@ -21,8 +21,8 @@ DEMOS MENU
 #define ART_ARROWDOWN0		"menu/demo/arrowdown0.tga"
 #define ART_ARROWDOWN1		"menu/demo/arrowdown1.tga"
 
-#define MAX_DEMOS			128
-#define NAMEBUFSIZE			( MAX_DEMOS * 16 )
+#define MAX_DEMOS			1024
+#define NAMEBUFSIZE			( MAX_DEMOS * 32 )
 
 #define ID_BACK				10
 #define ID_GO				11
@@ -44,7 +44,6 @@ typedef struct {
 	menubitmap_s		back;
 	menubitmap1024s_s	go;
 
-	int				numDemos;
 	char			names[NAMEBUFSIZE];
 	char			*demolist[MAX_DEMOS];
 } demos_t;
@@ -100,13 +99,24 @@ static sfxHandle_t UI_DemosMenu_Key( int key ) {
 }
 
 
+static int QDECL UI_SortDemos( const void *a, const void *b ) {
+	const char *ac, *bc;
+
+	ac = *(const char**)a;
+	bc = *(const char**)b;
+
+	// FIXME: NULL
+	return Q_stricmp( ac, bc );
+}
+
+
 /*
 ===============
 Demos_MenuInit
 ===============
 */
 static void Demos_MenuInit( void ) {
-	int		i;
+	int		i,j;
 	int		len, extlen;
 	char	*demoname, extension[32];
 
@@ -171,33 +181,42 @@ static void Demos_MenuInit( void ) {
 	s_demos.list.height				= 20;
 	s_demos.list.columns			= 1;
 
-	Com_sprintf(extension, sizeof(extension), "dm_%d", (int)trap_Cvar_VariableValue( "protocol" ) );
-	extlen = strlen( extension );
-	s_demos.list.numitems			= trap_FS_GetFileList( "demos", extension, s_demos.names, NAMEBUFSIZE );
-	s_demos.list.itemnames			= (const char **)s_demos.demolist;
+	demoname = s_demos.names;
+	s_demos.list.itemnames = (const char **)s_demos.demolist;	
+	
+	j=0;
+	while( demo_protocols[j] )
+	{
+		int demosToAdd;
+		Com_sprintf(extension, sizeof(extension), ".%s%d", DEMOEXT, demo_protocols[j] );
+		demosToAdd = trap_FS_GetFileList("demos", extension, demoname, ARRAY_LEN(s_demos.names) - (demoname - s_demos.names) );
 
-	if (!s_demos.list.numitems) {
-		strcpy( s_demos.names, "No Demos Found." );
+		for(i=0; i < demosToAdd; i++)
+		{		
+			s_demos.list.itemnames[ s_demos.list.numitems++ ] = demoname;		
+		
+			len = strlen(demoname);
+			demoname += len + 1;
+
+			if( s_demos.list.numitems >= MAX_DEMOS )
+				break;
+		}
+		
+		if( s_demos.list.numitems >= MAX_DEMOS )
+			break;
+		j++;
+	}
+
+	if( 0 == s_demos.list.numitems )
+	{
+		s_demos.list.itemnames[0] = "No Demos Found.";
 		s_demos.list.numitems = 1;
 
 		//degenerate case, not selectable
 		s_demos.go.generic.flags |= (QMF_INACTIVE|QMF_HIDDEN);
 	}
-	else if (s_demos.list.numitems > MAX_DEMOS)
-		s_demos.list.numitems = MAX_DEMOS;
 
-	demoname = s_demos.names;
-	for ( i = 0; i < s_demos.list.numitems; i++ ) {
-		s_demos.list.itemnames[i] = demoname;
-		
-		// strip extension (.protocol)
-		len = strlen( demoname );		
-		if ( Q_stricmp( ( demoname +  ( len - extlen ) ), extension ) == 0 ) {
-			demoname[len-(extlen+1)] = '\0';
-		}
-
-		demoname += len + 1;
-	}
+	qsort( s_demos.list.itemnames, s_demos.list.numitems, sizeof( s_demos.list.itemnames[0] ), UI_SortDemos );
 
 	Menu_AddItem( &s_demos.menu, &s_demos.list );
 	Menu_AddItem( &s_demos.menu, &s_demos.left );

@@ -122,14 +122,14 @@ static void CG_EntityEffects( centity_t *cent ) {
 	// constant light glow
 	if ( cent->currentState.constantLight ) {
 		int		cl;
-		int		i, r, g, b;
+		float	i, r, g, b;
 
 		cl = cent->currentState.constantLight;
-		r = cl & 255;
-		g = ( cl >> 8 ) & 255;
-		b = ( cl >> 16 ) & 255;
-		i = ( ( cl >> 24 ) & 255 ) * 4;
-		trap_R_AddLightToScene( cent->lerpOrigin, i, r, g, b );
+		r = (float) (cl & 0xFF) / 255.0;
+		g = (float) ((cl >> 8) & 0xFF) / 255.0;
+		b = (float) ((cl >> 16) & 0xFF) / 255.0;
+		i = (float) ((cl >> 24) & 0xFF) * 4.0;
+		trap_R_AddLightToScene(cent->lerpOrigin, i, r, g, b);
 	}
 
 }
@@ -394,7 +394,7 @@ static void CG_Missile( centity_t *cent ) {
 //	int	col;
 
 	s1 = &cent->currentState;
-	if ( s1->weapon > WP_NUM_WEAPONS ) {
+	if ( s1->weapon >= WP_NUM_WEAPONS ) {
 		s1->weapon = 0;
 	}
 	weapon = &cg_weapons[s1->weapon];
@@ -654,7 +654,7 @@ static void CG_Grapple( centity_t *cent ) {
 	const weaponInfo_t		*weapon;
 
 	s1 = &cent->currentState;
-	if ( s1->weapon > WP_NUM_WEAPONS ) {
+	if ( s1->weapon >= WP_NUM_WEAPONS ) {
 		s1->weapon = 0;
 	}
 	weapon = &cg_weapons[s1->weapon];
@@ -801,7 +801,8 @@ Also called by client movement prediction code
 void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out ) {
 	centity_t	*cent;
 	vec3_t	oldOrigin, origin, deltaOrigin;
-	vec3_t	oldAngles, angles, deltaAngles;
+	vec3_t	oldAngles, angles;
+	//vec3_t	deltaAngles;
 
 	if ( moverNum <= 0 || moverNum >= ENTITYNUM_MAX_NORMAL ) {
 		VectorCopy( in, out );
@@ -821,7 +822,7 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
 	BG_EvaluateTrajectory( &cent->currentState.apos, toTime, angles );
 
 	VectorSubtract( origin, oldOrigin, deltaOrigin );
-	VectorSubtract( angles, oldAngles, deltaAngles );
+	//VectorSubtract( angles, oldAngles, deltaAngles );
 
 	VectorAdd( in, deltaOrigin, out );
 
@@ -984,16 +985,21 @@ static void CG_Balloon( centity_t *cent ) {
 	else VectorSet( ent.shaderRGBA, 128, 128, 128 );
 	ent.shaderRGBA[3] = 255;
 
-	if(CG_GetCvarInt("r_vertexlight")) //raute: with vertexlight the balloons were gray -.-
-	{
-		VectorSet( ent.shaderRGBA, 0xff, 0xff, 0xff );
+	// NOTE: With vertex light the balloons are grey instead of team color
+	if ( CG_GetCvarInt( "r_vertexlight" ) ) {
+		VectorSet( ent.shaderRGBA, 255, 255, 255 );
 
-		if ( s1->generic1 == 1 )
-			ent.customSkin = trap_R_RegisterSkin("models/special/RedBalloon_vertex.skin");
-		else if ( s1->generic1 == 2 )
-			ent.customSkin = trap_R_RegisterSkin("models/special/BlueBalloon_vertex.skin");
-		else
-			ent.customSkin = 0;
+		switch( s1->generic1 ) {
+			case TEAM_RED:
+				ent.customSkin = trap_R_RegisterSkin( "models/special/balloon_vertex_red.skin" );
+				break;
+			case TEAM_BLUE:
+				ent.customSkin = trap_R_RegisterSkin("models/special/balloon_vertex_blue.skin");
+				break;
+			default:
+				ent.customSkin = 0;
+				break;
+		}			
 	}
 
 	// place model
@@ -1374,8 +1380,10 @@ static void CG_AddCEntity( centity_t *cent ) {
 	// calculate the current origin
 	CG_CalcEntityLerpPositions( cent );
 
-	// add automatic effects
-	CG_EntityEffects( cent );
+	// add automatic effects only if ambient is enabled
+	if( !( ( cg_ambient.integer == 0 ) && ( cent->currentState.eType == ET_SPEAKER ) ) ) {
+		CG_EntityEffects( cent );
+	}
 
 	switch ( cent->currentState.eType ) {
 	default:
@@ -1429,6 +1437,8 @@ static void CG_AddCEntity( centity_t *cent ) {
 	case ET_BOOMIES:
 		CG_DrawBoomies( cent );
 	}
+
+	CG_AddBoundingBoxEntity( cent );
 }
 
 /*

@@ -54,6 +54,8 @@ cd vm
 @if errorlevel 1 goto quit
 %compile%  ../g_combat.c
 @if errorlevel 1 goto quit
+%compile%  ../g_gameinfo.c
+@if errorlevel 1 goto quit
 %compile%  ../g_items.c
 @if errorlevel 1 goto quit
 %compile%  ../g_mem.c

@@ -450,7 +450,6 @@ typedef struct weaponInfo_s {
 
 	sfxHandle_t		readySound;
 	sfxHandle_t		firingSound;
-	qboolean		loopFireSound;
 } weaponInfo_t;
 
 
@@ -644,9 +643,6 @@ typedef struct {
 	// low ammo warning state
 	int			lowAmmoWarning;		// 1 = low, 2 = empty
 
-	// kill timers for carnage reward
-	int			lastKillTime;
-
 	// crosshair client ID
 	int			crosshairClientNum;
 	int			crosshairClientTime;
@@ -709,9 +705,6 @@ typedef struct {
 	float		v_dmg_pitch;
 	float		v_dmg_roll;
 
-	vec3_t		kick_angles;	// weapon kicks
-	vec3_t		kick_origin;
-
 	// temp working variables for player view
 	float		bobfracsin;
 	int			bobcycle;
@@ -726,6 +719,7 @@ typedef struct {
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
 
+	int				lastVoiceTime[MAX_CLIENTS];
 	// cammod
 	vec3_t			CamPos;
 	vec3_t			CamAngles;
@@ -744,10 +738,12 @@ typedef struct {
 	qhandle_t	charsetPropB;
 	qhandle_t	whiteShader;
 
+#ifdef MISSIONPACK
 	qhandle_t	redCubeModel;
 	qhandle_t	blueCubeModel;
 	qhandle_t	redCubeIcon;
 	qhandle_t	blueCubeIcon;
+#endif
 	qhandle_t	redFlagModel;
 	qhandle_t	blueFlagModel;
 	qhandle_t	neutralFlagModel;
@@ -844,6 +840,8 @@ typedef struct {
 	qhandle_t	lpsIconLead;
 
 	qhandle_t	bbBoxIcon;
+	qhandle_t	healthstationIcon;
+	qhandle_t	sprayroomIcon;
 
 	qhandle_t	neutralSpraypistolskin;
 	qhandle_t	neutralSpraypistolicon;
@@ -1024,6 +1022,7 @@ typedef struct {
 	qhandle_t	scoreboardPing;
 	qhandle_t	scoreboardScore;
 	qhandle_t	scoreboardTime;
+	qhandle_t	voiceIcon;
 
 	// medals shown during gameplay
 	qhandle_t	medalExcellent;
@@ -1388,7 +1387,6 @@ extern	vmCvar_t		cg_drawServerInfos;
 extern	vmCvar_t		cg_drawTimeLeft;
 extern	vmCvar_t		cg_thirdPersonAutoSwitch;
 extern	vmCvar_t		cg_bigScoreType;
-extern	vmCvar_t		cg_drawLPSwallhack;
 extern	vmCvar_t		cg_LPSwallhackSize;
 extern	vmCvar_t		cg_LPSwallhackAlpha;
 
@@ -1399,6 +1397,22 @@ extern	vmCvar_t		wop_storyMode;
 extern vmCvar_t			cg_glowModel;
 extern vmCvar_t			cg_glowModelTeam;
 
+extern vmCvar_t			cg_warmupReady;
+extern vmCvar_t			cg_curWarmupReady;
+
+extern vmCvar_t			cg_sky;
+extern vmCvar_t			cg_skyLensflare;
+
+extern vmCvar_t			cg_timestamps;
+
+extern vmCvar_t			cg_drawLensflare;
+extern vmCvar_t			cg_drawVoiceNames;
+
+extern vmCvar_t			cg_drawBBox;
+
+extern vmCvar_t			cg_ambient;
+
+extern vmCvar_t			cg_icons;
 
 //
 // cg_main.c
@@ -1929,6 +1943,7 @@ void		trap_startCamera(int time);
 qboolean	trap_getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
 
 qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
+void		trap_GetVoipTimes(int* times);
 
 void	CG_ClearParticles (void);
 void	CG_AddParticles (void);
@@ -1954,3 +1969,11 @@ qboolean Calculate_2DOf3D(vec3_t point,refdef_t *refdef,float *x,float *y);
 qboolean Calculate_2DOfDIR(vec3_t vec,refdef_t *refdef,float *x,float *y);
 
 //
+
+// cg_misc.c
+void CG_LimitCvars( void );
+char* CG_Timestamp( char *timestamp, unsigned int size );
+void CG_QueryCvar( void );
+void CG_AddBoundingBoxEntity( const centity_t *cent );
+void CG_AddBoundingBox( const centity_t *cent );
+

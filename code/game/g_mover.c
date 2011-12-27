@@ -297,7 +297,7 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 
 	listedEntities = trap_EntitiesInBox( totalMins, totalMaxs, entityList, MAX_GENTITIES );
 
-	// move the pusher to it's final position
+	// move the pusher to its final position
 	VectorAdd( pusher->r.currentOrigin, move, pusher->r.currentOrigin );
 	VectorAdd( pusher->r.currentAngles, amove, pusher->r.currentAngles );
 	trap_LinkEntity( pusher );
@@ -680,14 +680,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	if ( ent->moverState == MOVER_POS1 ) {
 		// start moving 50 msec later, becase if this was player
 		// triggered, level.time hasn't been advanced yet
-		/* changed beryllium */
-		/* Respect the variable nature of sv_fps */
-		/*
 		MatchTeam( ent, MOVER_1TO2, level.time + 50 );
-		*/
-
-		MatchTeam( ent, MOVER_1TO2, ( level.time + G_FrameMsec() ) );
-		/* end beryllium */
 
 		// starting sound
 		if ( ent->sound1to2 ) {
@@ -1129,8 +1122,8 @@ void SP_func_door (gentity_t *ent) {
 	vec3_t	size;
 	float	lip;
 
-	ent->sound1to2 = ent->sound2to1 = G_SoundIndex("sounds/world/doors/start.wav");
-	ent->soundPos1 = ent->soundPos2 = G_SoundIndex("sounds/world/doors/end.wav");
+	ent->sound1to2 = ent->sound2to1 = G_SoundIndex("sounds/world/doors/start");
+	ent->soundPos1 = ent->soundPos2 = G_SoundIndex("sounds/world/doors/end");
 
 	ent->blocked = Blocked_Door;
 
@@ -1222,8 +1215,8 @@ check either the X_AXIS or Y_AXIS box to change that.
 "notsingle" when set to 1, entity will not spawn in Single Player mode (bot play mode)
 */
 void SP_func_door_rotating( gentity_t *ent ) {
-	ent->sound1to2 = ent->sound2to1 = G_SoundIndex( "sounds/world/doors/start.wav" );
-	ent->soundPos1 = ent->soundPos2 = G_SoundIndex( "sounds/world/doors/end.wav" );
+	ent->sound1to2 = ent->sound2to1 = G_SoundIndex( "sounds/world/doors/start" );
+	ent->soundPos1 = ent->soundPos2 = G_SoundIndex( "sounds/world/doors/end" );
 
 	ent->blocked = Blocked_Door;
 
@@ -1412,8 +1405,8 @@ Plats are always drawn in the extended position so they will light correctly.
 void SP_func_plat (gentity_t *ent) {
 	float		lip, height;
 
-	ent->sound1to2 = ent->sound2to1 = G_SoundIndex("sounds/world/plats/start.wav");
-	ent->soundPos1 = ent->soundPos2 = G_SoundIndex("sounds/world/plats/end.wav");
+	ent->sound1to2 = ent->sound2to1 = G_SoundIndex("sounds/world/plats/start");
+	ent->soundPos1 = ent->soundPos2 = G_SoundIndex("sounds/world/plats/end");
 
 	VectorClear (ent->s.angles);
 
@@ -1472,17 +1465,6 @@ void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
-	/* added beryllium */
-	if ( be_debugSecrets.integer ) {
-		/* FIXME: G_assert ent, other? */
-		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Touching %s\n", ent->target ) );
-	}
-
-	if ( !BE_CanUseMover( ent, other ) ) {
-		return;
-	}
-	/* end beryllium */
-
 	if ( ent->moverState == MOVER_POS1 ) {
 		Use_BinaryMover( ent, other, other );
 	}
@@ -1490,7 +1472,7 @@ void Touch_Button(gentity_t *ent, gentity_t *other, trace_t *trace ) {
 
 
 /*QUAKED func_button (0 .5 .8) ?
-When a button is touched, it moves some distance in the direction of it's angle, triggers all of it's targets, waits some time, then returns to it's original position where it can be triggered again.
+When a button is touched, it moves some distance in the direction of its angle, triggers all of its targets, waits some time, then returns to its original position where it can be triggered again.
 
 "model2"	.md3 model to also draw
 "angle"		determines the opening direction
@@ -1508,7 +1490,7 @@ void SP_func_button( gentity_t *ent ) {
 	vec3_t		size;
 	float		lip;
 
-	ent->sound1to2 = G_SoundIndex("sounds/world/switches/button.wav");
+	ent->sound1to2 = G_SoundIndex("sounds/world/switches/button");
 	
 	if ( !ent->speed ) {
 		ent->speed = 40;

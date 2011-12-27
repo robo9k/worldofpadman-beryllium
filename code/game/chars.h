@@ -107,7 +107,7 @@
 #define CHARACTERISTIC_EASY_FRAGGER					45	//float [0, 1]
 //how alert the bot is (view distance)
 #define CHARACTERISTIC_ALERTNESS					46	//float [0, 1]
-//how much the bot fires it's weapon
+//how much the bot fires its weapon
 #define CHARACTERISTIC_FIRETHROTTLE					47	//float [0, 1]
 
 

@@ -838,19 +838,11 @@ void BotAddInfoLtg( bot_state_t *bs ){
 			}
 			break;
 		}
-		/* added beryllium */
 		case LTG_TEAMACCOMPANY:
-			BotAddInfo( bs, "ltg: accompany", AIDBG_ALL );
+			BotAddInfo(bs, "ltg: accompany", AIDBG_ALL );	
 			break;
-		case LTG_GO_FOR_HEALTH:
-			BotAddInfo( bs, "ltg: going for health", AIDBG_ALL );
-			break;
-		case LTG_PICKUPFLAG:
-			BotAddInfo( bs, "ltg: pickup", AIDBG_ALL );
-			break;
-		/* end beryllium */
         case LTG_RUSHBASE:
-			BotAddInfo(bs, "ltg: going for spraywall", AIDBG_ALL );	
+			BotAddInfo(bs, "ltg: going for spraywall", AIDBG_ALL );
 			break;
 		case LTG_CAPTUREFLAG:
 			BotAddInfo(bs, "ltg: bring flag to base", AIDBG_ALL );
@@ -884,6 +876,9 @@ void BotAddInfoLtg( bot_state_t *bs ){
         case LTG_GETITEM:
 			BotAddInfo(bs, "ltg: collect item", AIDBG_ALL );	
 			break;
+		case LTG_GO_FOR_HEALTH:
+			BotAddInfo(bs, "ltg: going for health", AIDBG_ALL );	
+			break;
 		case LTG_PLANTBAMBAM:
 			BotAddInfo(bs, "ltg: plant bambam", AIDBG_ALL );
 			break;
@@ -895,14 +890,12 @@ void BotAddInfoLtg( bot_state_t *bs ){
 			ClientName(bs->client, matename, 128);
 			BotAddInfo(bs, va("ltg: join mate %s",matename), AIDBG_ALL );	
 			break;
+		case LTG_PICKUPFLAG:
+			BotAddInfo(bs, "ltg: pickup", AIDBG_ALL);
+			break;
 		}
         default:
-			/* changed beryllium */
-			/*
-			BotAddInfo(bs, "ltg: unknown", AIDBG_ALL );
-			*/
-			BotAddInfo( bs, va( "ltg: %d", bs->ltgtype ), AIDBG_ALL );
-			/* end beryllium */
+			BotAddInfo(bs, va("ltg: %d", bs->ltgtype), AIDBG_ALL );
 	}
 }
 
@@ -1127,7 +1120,7 @@ void BotEntityInfo(int entnum, aas_entityinfo_t *info) {
 	{
 		memset(info,0,sizeof(aas_entityinfo_t));
 		if (bot_developer.integer)
-			BotAI_Print(PRT_ERROR, "BotEntityInfo: entnum out of range\n");
+			BotAI_Print(PRT_ERROR, "BotEntityInfo: entnum out of range: %d\n", entnum);
 	}
 	else
 		trap_AAS_EntityInfo(entnum, info);
@@ -2042,14 +2035,7 @@ int BotAIStartFrame(int time) {
 				continue;
 			}
 			// do not update missiles	// cyr, but do update ducks !
-			/* changed beryllium */
-			/*
 			if (ent->s.eType == ET_MISSILE && ent->s.weapon != WP_KILLERDUCKS) {
-			*/
-			if ( ( ET_MISSILE == ent->s.eType )
-			     && ( ent->s.weapon != WP_KILLERDUCKS )
-			     && ( ent->s.weapon != WP_GRAPPLING_HOOK ) ) {
-			/* end beryllium */
 				trap_BotLibUpdateEntity(i, NULL);
 				continue;
 			}
@@ -2201,12 +2187,6 @@ int BotInitLibrary(void) {
 	//cd directory
 	trap_Cvar_VariableStringBuffer("fs_cdpath", buf, sizeof(buf));
 	if (strlen(buf)) trap_BotLibVarSet("cddir", buf);
-
-	/* added beryllium */
-	trap_BotLibVarSet( "offhandgrapple", "0" );
-	trap_BotLibVarSet( "weapindex_grapple", va( "%d", WP_GRAPPLING_HOOK ) );
-	/* end beryllium */
-
 	//setup the bot library
 	return trap_BotLibSetup();
 }

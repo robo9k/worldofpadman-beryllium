@@ -38,10 +38,10 @@ float trap_Cvar_VariableValue( const char *var_name ) {
 
 /*
 ===============
-G_ParseInfos
+G_ParseBotInfos
 ===============
 */
-int G_ParseInfos( char *buf, int max, char *infos[] ) {
+int G_ParseBotInfos( char *buf, int max, char *infos[] ) {
 	char	*token;
 	int		count;
 	char	key[MAX_TOKEN_CHARS];
@@ -514,7 +514,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
             }
        
             if ( color ) {
-                if ( Q_strrchr( model, '/' ) ) {
+                if ( strrchr( model, '/' ) ) {
                     // model is a skin already, append colorname to skin
                     // fatpad/fatty _red
                     model = va( "%s_%s", model, color );
@@ -798,7 +798,7 @@ static void G_LoadBotsFromFile( char *filename ) {
 	buf[len] = 0;
 	trap_FS_FCloseFile( f );
 
-	g_numBots += G_ParseInfos( buf, MAX_BOTS - g_numBots, &g_botInfos[g_numBots] );
+	g_numBots += G_ParseBotInfos( buf, MAX_BOTS - g_numBots, &g_botInfos[g_numBots] );
 }
 
 /*

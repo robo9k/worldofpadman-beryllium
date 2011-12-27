@@ -136,7 +136,7 @@ static void UpdateIPBans (void)
 				Q_strcat(ip, sizeof(ip), va("%i", b[j]));
 			Q_strcat(ip, sizeof(ip), (j<3) ? "." : " ");
 		}		
-		if (strlen(iplist_final)+strlen(ip) < MAX_CVAR_VALUE_STRING)
+		if (strlen(iplist_final)+strlen(ip) < MAX_CVAR_VALUE_STRING - 1)
 		{
 			Q_strcat( iplist_final, sizeof(iplist_final), ip);
 		}
@@ -451,17 +451,12 @@ static void Svcmd_Tell_f( void ) {
 	G_Say( NULL, target, SAY_TELL, ConcatArgs( 2 ) );
 }
 
-/* changed beryllium */
-/* NOTE: beryllium also uses an enum with the same name and value names */
-/*
+
 typedef enum {
 	CCMD_MP,
 	CCMD_CP,
 	CCMD_PRINT
 } clientCommand_t;
-*/
-/* end beryllium */
-
 /*
 ===================
 Svcmd_ClientCommand_f
@@ -816,7 +811,6 @@ void Svcmd_CamCmd( void ){
 
 }
 
-
 void WaypointInit(void);
 /*
 =================
@@ -828,14 +822,6 @@ qboolean	ConsoleCommand( void ) {
 	char	cmd[MAX_TOKEN_CHARS];
 
 	trap_Argv( 0, cmd, sizeof( cmd ) );
-
-
-	/* added beryllium */
-	if ( BE_ConsoleCommand( cmd ) ) {
-		return qtrue;
-	}
-	/* end beryllium */
-
 
 	if ( Q_stricmp (cmd, "entitylist") == 0 ) {
 		Svcmd_EntityList_f();
@@ -949,15 +935,9 @@ qboolean	ConsoleCommand( void ) {
 			return qtrue;
 		}
 
-		/* changed beryllium */
-		/* This "feature" is annoying, disable say text, but still print a message */
-		/*
-		// everything else will also be printed as a say command
-		trap_SendServerCommand( -1, va("print \"server: %s\"", ConcatArgs(0) ) );
+		// everything else will also be printed to clients
+		trap_SendServerCommand( -1, va("print \"server: %s\n\"", ConcatArgs(0) ) );
 		return qtrue;
-		*/
-		G_Printf( "Unknown game command: %s\n", ConcatArgs( 0 ) );
-		/* end beryllium */
 	}
 
 	return qfalse;

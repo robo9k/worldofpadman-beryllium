@@ -236,7 +236,7 @@ void Init_SprayLogoSys(void)
 	Load_Logos();
 	Init_LogoPolyList();
 
-	menu_click_sound = trap_S_RegisterSound( "sounds/menu/mouse_click.wav", qfalse );
+	menu_click_sound = trap_S_RegisterSound( "sounds/menu/mouse_click", qfalse );
 }
 // ^^ INIT-stuff ^^
 // vv ACTIVE-stuff vv

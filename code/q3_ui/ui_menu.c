@@ -208,7 +208,7 @@ static void Main_MenuDraw( void ) {
 	}
 
 	if (strlen(s_errorMessage.errorMessage))
-		UI_DrawProportionalString_AutoWrapped( 320, 192, 600, 20, s_errorMessage.errorMessage, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+		UI_DrawString_AutoWrapped( 320, 192, 600, 20, s_errorMessage.errorMessage, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color, qtrue );
 	else
 		Menu_Draw( &s_main.menu );
 

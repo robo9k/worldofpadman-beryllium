@@ -646,7 +646,6 @@ void BotSyCSeekGoals(bot_state_t *bs){
 		return;	//
 	}
 
-
 	// outside the sprayroom
     if ( bs->ltgtype != LTG_GIVECART  && bs->ltgtype != LTG_FETCHCART) {
 		 int mate = 0;
@@ -855,21 +854,9 @@ void BotCtfSeekGoals(bot_state_t* bs){
 			}
 			else if( flagstatus == FLAG_TAKEN )
 			{
-				/* changed beryllium */
-				/*
-				if( bs->ltgtype != LTG_GETFLAG) {
-					// attack enemy flag/base
-					bs->decisionmaker = bs->client;
-					bs->ltgtype = LTG_GETFLAG; 
-					//set the time the bot will stop getting the flag
-					bs->teamgoal_time = FloatTime() + CTF_RUSHBASE_TIME;
-				}
-				return;
-				*/
 				// roam around so you get a chance to encounter the enemy
 				bs->ltgtype = 0; 
 				return;
-				/* end beryllium */
 			}
 			// flag is at base, all good
 		}
@@ -1170,7 +1157,8 @@ char *EasyClientName(int client, char *buf, int size) {
 	char *str1, *str2, *ptr, c;
 	char name[128];
 
-	strcpy(name, ClientName(client, name, sizeof(name)));
+	ClientName(client, name, sizeof(name));
+	
 	for (i = 0; name[i]; i++) name[i] &= 127;
 	//remove all spaces
 	for (ptr = strstr(name, " "); ptr; ptr = strstr(name, " ")) {
@@ -2314,11 +2302,6 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo)) {
 			continue;
 		}
-		/* added beryllium */
-		if ( g_entities[i].flags & FL_NOTARGET ) {
-			continue;
-		}
-		/* end beryllium */
 		// no fighting in the sprayroom please
 		if( ClientInSprayroom(i) ) continue;
 		//if not an easy fragger don't shoot at chatting players
@@ -3870,7 +3853,8 @@ open, which buttons to activate etc.
 */
 void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	int movetype, bspent;
-	vec3_t hordir, start, end, mins, maxs, sideward, angles, up = {0, 0, 1};
+	vec3_t hordir, sideward, angles, up = {0, 0, 1};
+	//vec3_t start, end, mins, maxs;
 	aas_entityinfo_t entinfo;
 	bot_activategoal_t activategoal;
 
@@ -3935,11 +3919,11 @@ void BotAIBlocked(bot_state_t *bs, bot_moveresult_t *moveresult, int activate) {
 	movetype = MOVE_WALK;
 	// if there's an obstacle at the bot's feet and head then
 	// the bot might be able to crouch through
-	VectorCopy(bs->origin, start);
-	start[2] += 18;
-	VectorMA(start, 5, hordir, end);
-	VectorSet(mins, -16, -16, -24);
-	VectorSet(maxs, 16, 16, 4);
+	//VectorCopy(bs->origin, start);
+	//start[2] += 18;
+	//VectorMA(start, 5, hordir, end);
+	//VectorSet(mins, -16, -16, -24);
+	//VectorSet(maxs, 16, 16, 4);
 	//
 	//bsptrace = AAS_Trace(start, mins, maxs, end, bs->entitynum, MASK_PLAYERSOLID);
 	//if (bsptrace.fraction >= 1) movetype = MOVE_CROUCH;
@@ -3975,7 +3959,7 @@ BotAIPredictObstacles
 
 Predict the route towards the goal and check if the bot
 will be blocked by certain obstacles. When the bot has obstacles
-on it's path the bot should figure out if they can be removed
+on its path the bot should figure out if they can be removed
 by activating certain entities.
 ==================
 */
@@ -4174,7 +4158,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				break;
 			}
 			trap_GetConfigstring(CS_SOUNDS + state->eventParm, buf, sizeof(buf));
-				if (!strcmp(buf, "sounds/items/powerup_respawn.wav")) {
+				if (!strcmp(buf, "sounds/items/powerup_respawn")) {
 				//powerup respawned... go get it
 				BotGoForPowerups(bs);
 			}
@@ -4234,7 +4218,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 				//check out the sound
 				trap_GetConfigstring(CS_SOUNDS + state->eventParm, buf, sizeof(buf));
 				//if falling into a death pit
-				if (!strcmp(buf, "*falling1.wav")) {
+				if (!strcmp(buf, "*falling1")) {
 					//if the bot has a personal teleporter
 					if (bs->inventory[INVENTORY_TELEPORTER] > 0) {
 						//use the holdable item
@@ -4589,12 +4573,7 @@ void BotSetupDeathmatchAI(void) {
 	maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
-	/* changed beryllium */
-	/*
 	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
-	*/
-	trap_Cvar_Register( &bot_grapple, "bot_grapple", "1", 0 );
-	/* end beryllium */
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);

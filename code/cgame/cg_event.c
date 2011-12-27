@@ -29,7 +29,7 @@ const char	*CG_PlaceString( int rank ) {
 	} else if ( rank == 2 ) {
 		s = S_COLOR_RED "2nd" S_COLOR_WHITE;		// draw in red
 	} else if ( rank == 3 ) {
-		s = S_COLOR_YELLOW "3rd" S_COLOR_WHITE;		// draw in yellow
+		s = S_COLOR_GREEN "3rd" S_COLOR_WHITE;		// draw in green
 	} else if ( rank == 11 ) {
 		s = "11th";
 	} else if ( rank == 12 ) {
@@ -93,35 +93,44 @@ static void CG_Obituary( entityState_t *ent ) {
 	message2 = "";
 
 	// check for single client messages
-
-	switch( mod ) {
-	case MOD_SUICIDE:
-		message = "suicides";
-		break;
-	case MOD_FALLING:
-		message = "cratered";
-		break;
-	case MOD_CRUSH:
-		message = "was squished";
-		break;
-	case MOD_WATER:
-		message = "sank like a rock";
-		break;
-	case MOD_SLIME:
-		message = "melted";
-		break;
-	case MOD_LAVA:
-		message = "does a back flip into the lava";
-		break;
-	case MOD_TARGET_LASER:
-		message = "saw the light";
-		break;
-	case MOD_TRIGGER_HURT:
-		message = "was in the wrong place";
-		break;
-	default:
+	if ( attacker != ENTITYNUM_WORLD ) {
 		message = NULL;
-		break;
+	}
+	else {
+		switch( mod ) {
+			case MOD_SUICIDE:
+				message = "suicides";
+				break;
+			case MOD_FALLING:
+				message = "cratered";
+				break;
+			case MOD_CRUSH:
+				message = "was squished";
+				break;
+			case MOD_WATER:
+				message = "sank like a rock";
+				break;
+			case MOD_SLIME:
+				message = "melted";
+				break;
+			case MOD_LAVA:
+				message = "does a back flip into the lava";
+				break;
+			case MOD_TARGET_LASER:
+				message = "saw the light";
+				break;
+			case MOD_TRIGGER_HURT:
+				message = "was in the wrong place";
+				break;
+			case MOD_BAMBAM:
+				// FIXME: Remove this once we got proper clients for bambam kills
+				message = "tried to hug a BamBam";
+				break;
+		
+			default:
+				message = NULL;
+				break;
+		}
 	}
 
 	if (attacker == target) {
@@ -287,6 +296,23 @@ static void CG_Obituary( entityState_t *ent ) {
 			message  = "was pricked by";
 			message2 = "'s Injector";
 			break;
+		case MOD_LAVA:
+			message = "was given a hot bath by";
+			break;
+		case MOD_SLIME:
+			message = "was given an acid bath by";
+			break;
+		case MOD_FALLING:
+			// just in case
+			message = "was given a small push by";
+			break;
+		case MOD_TRIGGER_HURT:
+			message = "was helped on the way by";
+			break;
+		case MOD_CRUSH:
+			message = "was crushed in";
+			message2 = "'s trap";
+			break;
 
 		default:
 			message = "was killed by";
@@ -415,13 +441,13 @@ void CG_PainEvent( centity_t *cent, int health ) {
 	}
 
 	if ( health < 25 ) {
-		snd = "*pain25_1.wav";
+		snd = "*pain25_1";
 	} else if ( health < 50 ) {
-		snd = "*pain50_1.wav";
+		snd = "*pain50_1";
 	} else if ( health < 75 ) {
-		snd = "*pain75_1.wav";
+		snd = "*pain75_1";
 	} else {
-		snd = "*pain100_1.wav";
+		snd = "*pain100_1";
 	}
 	trap_S_StartSound( NULL, cent->currentState.number, CHAN_VOICE, 
 		CG_CustomSound( cent->currentState.number, snd ) );
@@ -565,7 +591,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_FALL_MEDIUM:
 		DEBUGNAME("EV_FALL_MEDIUM");
 		// use normal pain sound
-		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100_1.wav" ) );
+		trap_S_StartSound( NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*pain100_1" ) );
 		if ( clientNum == cg.predictedPlayerState.clientNum ) {
 			// smooth landing z changes
 			cg.landChange = -16;
@@ -574,7 +600,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FALL_FAR:
 		DEBUGNAME("EV_FALL_FAR");
-		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*fall1" ) );
 		cent->pe.painTime = cg.time;	// don't play a pain sound right after this
 		if ( clientNum == cg.predictedPlayerState.clientNum ) {
 			// smooth landing z changes
@@ -623,11 +649,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_JUMP_PAD");
 //		CG_Printf( "EV_JUMP_PAD w/effect #%i\n", es->eventParm );
 		{
-			localEntity_t	*smoke;
 			vec3_t			up = {0, 0, 1};
 
 
-			smoke = CG_SmokePuff( cent->lerpOrigin, up, 
+			CG_SmokePuff( cent->lerpOrigin, up, 
 						  32, 
 						  1, 1, 1, 0.33f,
 						  1000, 
@@ -638,12 +663,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 		// boing sound at origin, jump sound on player
 		trap_S_StartSound ( cent->lerpOrigin, -1, CHAN_VOICE, cgs.media.jumpPadSound );
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1" ) );
 		break;
 
 	case EV_JUMP:
 		DEBUGNAME("EV_JUMP");
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1" ) );
 		if(cg_entities[es->number].currentState.powerups & ( 1<< PW_JUMPER ))
 			trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.jumperSound);
 		break;
@@ -652,15 +677,15 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		if(es->powerups & (1<<PW_SPEEDY) && VectorLengthSquared(es->pos.trDelta)>200.0f*200.0f)
 			trap_S_StartSound (NULL, es->number, CHAN_VOICE, cgs.media.speedyTaunt );
 		else
-			trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*taunt.wav" ) );
+			trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*taunt" ) );
 		break;
 	case EV_HEHE1:
 		DEBUGNAME("EV_HEHE1");
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*hehe1.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*hehe1" ) );
 		break;
 	case EV_HEHE2:
 		DEBUGNAME("EV_HEHE2");
-		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*hehe2.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*hehe2" ) );
 		break;
 	case EV_WATER_TOUCH:
 		DEBUGNAME("EV_WATER_TOUCH");
@@ -677,7 +702,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_WATER_CLEAR:
 		DEBUGNAME("EV_WATER_CLEAR");
-		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*gasp.wav" ) );
+		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*gasp" ) );
 		ci->lastWaterClearTime = cg.time; // for wet-screen effect
 		break;
 
@@ -1139,7 +1164,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DEATH3:
 		DEBUGNAME("EV_DEATHx");
 		trap_S_StartSound( NULL, es->number, CHAN_VOICE, 
-				CG_CustomSound( es->number, va("*death%i.wav", event - EV_DEATH1 + 1) ) );
+				CG_CustomSound( es->number, va("*death%i", event - EV_DEATH1 + 1) ) );
 		break;
 
 
@@ -1158,11 +1183,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			cg.powerupTime = cg.time;
 		}
 		{
-			static int lastrevivalsound=0;
-			if(lastrevivalsound+9000<=cg.time)
-			{
-				trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
-				lastrevivalsound=cg.time;
+			static int lastrevivalsound = 0;
+			if ( ( lastrevivalsound + 800 ) <= cg.time ) {
+				trap_S_StartSound( NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
+				lastrevivalsound = cg.time;
 			}
 		}
 		break;

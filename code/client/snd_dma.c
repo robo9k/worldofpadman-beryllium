@@ -77,7 +77,6 @@ int			s_numSfx = 0;
 static	sfx_t		*sfxHash[LOOP_HASH];
 
 cvar_t		*s_testsound;
-cvar_t		*s_khz;
 cvar_t		*s_show;
 cvar_t		*s_mixahead;
 cvar_t		*s_mixPreStep;
@@ -259,10 +258,10 @@ static sfx_t *S_FindName( const char *name ) {
 	sfx_t	*sfx;
 
 	if (!name) {
-		Com_Error (ERR_FATAL, "S_FindName: NULL\n");
+		Com_Error (ERR_FATAL, "S_FindName: NULL");
 	}
 	if (!name[0]) {
-		Com_Error (ERR_FATAL, "S_FindName: empty name\n");
+		Com_Error (ERR_FATAL, "S_FindName: empty name");
 	}
 
 	if (strlen(name) >= MAX_QPATH) {
@@ -391,11 +390,10 @@ void S_Base_BeginRegistration( void ) {
 	if (s_numSfx == 0) {
 		SND_setup();
 
-		s_numSfx = 0;
-		Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
-		Com_Memset(sfxHash, 0, sizeof(sfx_t *)*LOOP_HASH);
+		Com_Memset(s_knownSfx, '\0', sizeof(s_knownSfx));
+		Com_Memset(sfxHash, '\0', sizeof(sfx_t *) * LOOP_HASH);
 
-		S_Base_RegisterSound("sounds/hit.wav", qfalse);		// changed to a sound in baseq3
+		S_Base_RegisterSound("sounds/hit", qfalse);		// changed to a sound in baseq3
 	}
 }
 
@@ -917,7 +915,8 @@ S_Base_RawSamples
 Music streaming
 ============
 */
-void S_Base_RawSamples( int stream, int samples, int rate, int width, int s_channels, const byte *data, float volume ) {
+void S_Base_RawSamples( int stream, int samples, int rate, int width, int s_channels, const byte *data, float volume, int entityNum)
+{
 	int		i;
 	int		src, dst;
 	float	scale;
@@ -928,9 +927,16 @@ void S_Base_RawSamples( int stream, int samples, int rate, int width, int s_chan
 		return;
 	}
 
+	if(entityNum >= 0)
+	{
+		// FIXME: support spatialized raw streams, e.g. for VoIP
+		return;
+	}
+
 	if ( (stream < 0) || (stream >= MAX_RAW_STREAMS) ) {
 		return;
 	}
+	
 	rawsamples = s_rawsamples[stream];
 
 	if(s_muted->integer)
@@ -1399,8 +1405,8 @@ void S_UpdateBackgroundTrack( void ) {
 		if(r > 0)
 		{
 			// add to raw buffer
-			S_Base_RawSamples( 0, fileSamples, s_backgroundStream->info.rate,
-				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value );
+			S_Base_RawSamples(0, fileSamples, s_backgroundStream->info.rate,
+				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value, -1);
 		}
 		else
 		{
@@ -1470,8 +1476,10 @@ void S_Base_Shutdown( void ) {
 	}
 
 	SNDDMA_Shutdown();
+	SND_shutdown();
 
 	s_soundStarted = 0;
+	s_numSfx = 0;
 
 	Cmd_RemoveCommand("s_info");
 }
@@ -1488,8 +1496,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		return qfalse;
 	}
 
-	s_khz = Cvar_Get ("s_khz", "22", CVAR_ARCHIVE);
-	Cvar_Get("s_compression","0",CVAR_ARCHIVE); // show highquality in menu
 	s_mixahead = Cvar_Get ("s_mixahead", "0.2", CVAR_ARCHIVE);
 	s_mixPreStep = Cvar_Get ("s_mixPreStep", "0.05", CVAR_ARCHIVE);
 	s_show = Cvar_Get ("s_show", "0", CVAR_CHEAT);

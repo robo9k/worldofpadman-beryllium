@@ -34,7 +34,6 @@ char *svc_strings[256] = {
 	"svc_download",
 	"svc_snapshot",
 	"svc_EOF",
-	"svc_extension",
 	"svc_voip",
 };
 
@@ -265,7 +264,7 @@ void CL_ParseSnapshot( msg_t *msg ) {
 	
 	if(len > sizeof(newSnap.areamask))
 	{
-		Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask.", len);
+		Com_Error (ERR_DROP,"CL_ParseSnapshot: Invalid size %d for areamask", len);
 		return;
 	}
 	
@@ -330,10 +329,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 int cl_connectedToPureServer;
 int cl_connectedToCheatServer;
 
-#ifdef USE_VOIP
-int cl_connectedToVoipServer;
-#endif
-
 /*
 ==================
 CL_SystemInfoChanged
@@ -363,14 +358,18 @@ void CL_SystemInfoChanged( void ) {
 	}
 
 #ifdef USE_VOIP
-	// in the future, (val) will be a protocol version string, so only
-	//  accept explicitly 1, not generally non-zero.
-	s = Info_ValueForKey( systemInfo, "sv_voip" );
-	if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive"))
-		cl_connectedToVoipServer = qfalse;
+#ifdef LEGACY_PROTOCOL
+	if(clc.compat)
+		clc.voipEnabled = qfalse;
 	else
-		cl_connectedToVoipServer = (atoi( s ) == 1);
-
+#endif
+	{
+		s = Info_ValueForKey( systemInfo, "sv_voip" );
+		if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive"))
+			clc.voipEnabled = qfalse;
+		else
+			clc.voipEnabled = atoi(s);
+	}
 #endif
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
@@ -416,13 +415,19 @@ void CL_SystemInfoChanged( void ) {
 		else
 		{
 			// If this cvar may not be modified by a server discard the value.
-			if(!(cvar_flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED)))
+			if(!(cvar_flags & (CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED)))
 			{
-				Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value);
-				continue;
+#ifndef STANDALONE
+				if(Q_stricmp(key, "g_synchronousClients") && Q_stricmp(key, "pmove_fixed") &&
+				   Q_stricmp(key, "pmove_msec"))
+#endif
+				{
+					Com_Printf(S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value);
+					continue;
+				}
 			}
 
-			Cvar_Set(key, value);
+			Cvar_SetSafe(key, value);
 		}
 	}
 	// if game folder should not be set and it is set at the client side
@@ -463,6 +468,7 @@ void CL_ParseGamestate( msg_t *msg ) {
 	entityState_t	nullstate;
 	int				cmd;
 	char			*s;
+	char oldGame[MAX_QPATH];
 
 	Con_Close();
 
@@ -518,6 +524,9 @@ void CL_ParseGamestate( msg_t *msg ) {
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );
 
+	// save old gamedir
+	Cvar_VariableStringBuffer("fs_game", oldGame, sizeof(oldGame));
+
 	// parse useful values out of CS_SERVERINFO
 	CL_ParseServerInfo();
 
@@ -529,7 +538,11 @@ void CL_ParseGamestate( msg_t *msg ) {
 		CL_StopRecord_f();
 	
 	// reinitialize the filesystem if the game directory has changed
-	FS_ConditionalRestart( clc.checksumFeed );
+	if(FS_ConditionalRestart(clc.checksumFeed, qfalse) && !cls.oldGameSet)
+	{
+		cls.oldGameSet = qtrue;
+		Q_strncpyz(cls.oldGame, oldGame, sizeof(cls.oldGame));
+	}
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
 	// cgame
@@ -552,7 +565,7 @@ A download message has been received from the server
 void CL_ParseDownload ( msg_t *msg ) {
 	int		size;
 	unsigned char data[MAX_MSGLEN];
-	int block;
+	uint16_t block;
 
 	if (!*clc.downloadTempName) {
 		Com_Printf("Server sending download, but no download was requested\n");
@@ -563,7 +576,7 @@ void CL_ParseDownload ( msg_t *msg ) {
 	// read the data
 	block = MSG_ReadShort ( msg );
 
-	if ( !block )
+	if(!block && !clc.downloadBlock)
 	{
 		// block zero is special, contains file size
 		clc.downloadSize = MSG_ReadLong ( msg );
@@ -580,14 +593,15 @@ void CL_ParseDownload ( msg_t *msg ) {
 	size = MSG_ReadShort ( msg );
 	if (size < 0 || size > sizeof(data))
 	{
-		Com_Error(ERR_DROP, "CL_ParseDownload: Invalid size %d for download chunk.", size);
+		Com_Error(ERR_DROP, "CL_ParseDownload: Invalid size %d for download chunk", size);
 		return;
 	}
 	
 	MSG_ReadData(msg, data, size);
 
-	if (clc.downloadBlock != block) {
-		Com_DPrintf( "CL_ParseDownload: Expected block %d, got %d\n", clc.downloadBlock, block);
+	if((clc.downloadBlock & 0xFFFF) != block)
+	{
+		Com_DPrintf( "CL_ParseDownload: Expected block %d, got %d\n", (clc.downloadBlock & 0xFFFF), block);
 		return;
 	}
 
@@ -657,6 +671,29 @@ qboolean CL_ShouldIgnoreVoipSender(int sender)
 
 /*
 =====================
+CL_PlayVoip
+
+Play raw data
+=====================
+*/
+
+static void CL_PlayVoip(int sender, int samplecnt, const byte *data, int flags)
+{
+	if(flags & VOIP_DIRECT)
+	{
+		S_RawSamples(sender + 1, samplecnt, clc.speexSampleRate, 2, 1,
+	             data, clc.voipGain[sender], -1);
+	}
+
+	if(flags & VOIP_SPATIAL)
+	{
+		S_RawSamples(sender + MAX_CLIENTS + 1, samplecnt, clc.speexSampleRate, 2, 1,
+	             data, 1.0f, sender);
+	}
+}
+
+/*
+=====================
 CL_ParseVoip
 
 A VoIP message has been received from the server
@@ -671,6 +708,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 	const int sequence = MSG_ReadLong(msg);
 	const int frames = MSG_ReadByte(msg);
 	const int packetsize = MSG_ReadShort(msg);
+	const int flags = MSG_ReadBits(msg, VOIP_FLAGCNT);
 	char encoded[1024];
 	int seqdiff = sequence - clc.voipIncomingSequence[sender];
 	int written = 0;
@@ -761,8 +799,8 @@ void CL_ParseVoip ( msg_t *msg ) {
 		if ((written + clc.speexFrameSize) * 2 > sizeof (decoded)) {
 			Com_DPrintf("VoIP: playback %d bytes, %d samples, %d frames\n",
 			            written * 2, written, i);
-			S_RawSamples(sender + 1, written, clc.speexSampleRate, 2, 1,
-			             (const byte *) decoded, clc.voipGain[sender]);
+			
+			CL_PlayVoip(sender, written, (const byte *) decoded, flags);
 			written = 0;
 		}
 
@@ -785,12 +823,11 @@ void CL_ParseVoip ( msg_t *msg ) {
 	Com_DPrintf("VoIP: playback %d bytes, %d samples, %d frames\n",
 	            written * 2, written, i);
 
-	if (written > 0) {
-		S_RawSamples(sender + 1, written, clc.speexSampleRate, 2, 1,
-		             (const byte *) decoded, clc.voipGain[sender]);
-	}
+	if(written > 0)
+		CL_PlayVoip(sender, written, (const byte *) decoded, flags);
 
 	clc.voipIncomingSequence[sender] = sequence + frames;
+	clc.voipLastPacket[sender] = cl.serverTime;
 }
 #endif
 
@@ -856,19 +893,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 
 		cmd = MSG_ReadByte( msg );
 
-		// See if this is an extension command after the EOF, which means we
-		//  got data that a legacy client should ignore.
-		if ((cmd == svc_EOF) && (MSG_LookaheadByte( msg ) == svc_extension)) {
-			SHOWNET( msg, "EXTENSION" );
-			MSG_ReadByte( msg );  // throw the svc_extension byte away.
-			cmd = MSG_ReadByte( msg );  // something legacy clients can't do!
-			// sometimes you get a svc_extension at end of stream...dangling
-			//  bits in the huffman decoder giving a bogus value?
-			if (cmd == -1) {
-				cmd = svc_EOF;
-			}
-		}
-
 		if (cmd == svc_EOF) {
 			SHOWNET( msg, "END OF MESSAGE" );
 			break;
@@ -885,7 +909,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 	// other commands
 		switch ( cmd ) {
 		default:
-			Com_Error (ERR_DROP,"CL_ParseServerMessage: Illegible server message\n");
+			Com_Error (ERR_DROP,"CL_ParseServerMessage: Illegible server message");
 			break;			
 		case svc_nop:
 			break;

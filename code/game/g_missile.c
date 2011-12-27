@@ -4,15 +4,6 @@
 
 #define	MISSILE_PRESTEP_TIME	50
 
-/* added beryllium */
-/* In order to fix bugs with hardcoded MISSILE_PRESTEP_TIME ( 1000 / sv_fps )
-   we introduced a new function. Hopefully this covers all sv_fps dependant
-   behaviour (or at least related bugs).
-*/
-#undef MISSILE_PRESTEP_TIME
-#define MISSILE_PRESTEP_TIME G_FrameMsec()
-/* end beryllium */
-
 /*
 ================
 G_BounceMissile
@@ -40,6 +31,7 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 		// check for stop
 		if ( trace->plane.normal[2] > 0.2 && VectorLength( ent->s.pos.trDelta ) < 40 ) {
 			G_SetOrigin( ent, trace->endpos );
+			ent->s.time = level.time / 4;	//https://bugzilla.icculus.org/show_bug.cgi?id=5053
 			return;
 		}
 		if ( ent->s.eFlags & EF_BOUNCE && ent->s.eFlags & EF_BOUNCE_HALF ) {
@@ -308,11 +300,6 @@ void move_killerducks(gentity_t *ent)
 		if( ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( &level.clients[i] ) ) {
 			continue;
 		}
-		/* added beryllium */
-		if ( g_entities[i].flags & FL_NOTARGET ) {
-			continue;
-		}
-		/* end beryllium */
 		
 		tmpv3[0]=level.clients[i].ps.origin[0]-ent->r.currentOrigin[0];
 		tmpv3[1]=level.clients[i].ps.origin[1]-ent->r.currentOrigin[1];
@@ -336,19 +323,11 @@ void move_killerducks(gentity_t *ent)
 
 		tmpv3[0]=tmpv3[0]*tmpv3[0]+tmpv3[1]*tmpv3[1]+tmpv3[2]*tmpv3[2];
 
-		/* changed beryllium */
-		/*
 		if(tmpv3[0]<opferlenght)
 		{
 			opfer=ownerNum;//r.ownerNum;
 			opferlenght=tmpv3[0];
 		}
-		*/
-		if ( ( tmpv3[0] < opferlenght ) && !( g_entities[ownerNum].flags & FL_NOTARGET ) ) {
-			opfer = ownerNum;
-			opferlenght = tmpv3[0];
-		}
-		/* end beryllium */
 	}
 
 	if(opfer!=-1 && (level.time-(ent->nextthink - 10000))>500)// in die ersten 1/2 sek. sollen die opfer egal sein
@@ -537,7 +516,7 @@ void move_killerducks(gentity_t *ent)
 //	}
 
 	if ( ( tr.entityNum == opfer ) && ( ent->s.time2 <= level.time ) ) {
-		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( "sounds/weapons/killerducks/bite.wav" ) );
+		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex( "sounds/weapons/killerducks/bite" ) );
 		// TODO: Add dir
 		G_Damage( &g_entities[opfer], NULL, ent->parent, NULL, NULL, DAMAGE_KILLERDUCKS_BITE , 0, ent->methodOfDeath );
 		ent->s.time2 = ( level.time + 1000 );
@@ -630,12 +609,7 @@ void G_RunMissile( gentity_t *ent ) {
 		passent = ent->r.ownerNum;
 	}
 	// trace a line from the previous position to the current position
-	/* changed beryllium */
-	/*
 	if ( level.time - ent->s.pos.trTime > 50 )
-	*/
-	if ( ( level.time - ent->s.pos.trTime ) > MISSILE_PRESTEP_TIME )
-	/* end beryllium */
 		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask );
 	else
 		trap_Trace( &tr, ent->r.currentOrigin, vec3_origin, vec3_origin, origin, passent, ent->clipmask );
@@ -883,19 +857,13 @@ gentity_t *fire_bambamMissile(gentity_t *self, vec3_t start, vec3_t dir, float v
 	bolt->s.pos.trTime = level.time;
 	VectorCopy( start, bolt->s.pos.trBase );
 
-	/* changed beryllium */
-	/*
-	bolt->r.ownerNum = ENTITYNUM_WORLD;
-	*/
 	bolt->parent = self; // BamBam missile parent is BamBam. Or should it be player?
 	bolt->r.ownerNum = self->parent->s.number;
-	/* end beryllium */
 
 	// add random spread
 	vectoangles(dir, angles);
-	// FIXME: Use SPREAD_BAMBAM when final value is found..
-	angles[PITCH] += g_bambamSpread.integer *  crandom();
-	angles[YAW]   += g_bambamSpread.integer *  crandom();
+	angles[PITCH] += ( SPREAD_BAMBAM *  crandom() );
+	angles[YAW]   += ( SPREAD_BAMBAM *  crandom() );
 	AngleVectors(angles, forward, NULL, NULL);
 	VectorNormalize(forward);
 

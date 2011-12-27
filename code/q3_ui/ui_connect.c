@@ -75,7 +75,7 @@ static void UI_DisplayDownloadInfo( const char *downloadName ) {
 	fprintf( stderr, "DB: UI frametime:  %16d\n", uis.frametime );	// bk
 #endif
 
-	leftWidth = width = UI_ProportionalStringWidth( dlText ) * UI_ProportionalSizeScale( style );
+	leftWidth = UI_ProportionalStringWidth( dlText ) * UI_ProportionalSizeScale( style );
 	width = UI_ProportionalStringWidth( etaText ) * UI_ProportionalSizeScale( style );
 	if (width > leftWidth) leftWidth = width;
 	width = UI_ProportionalStringWidth( xferText ) * UI_ProportionalSizeScale( style );
@@ -258,7 +258,7 @@ void UI_DrawConnectScreen( qboolean overlay ) {
 	
 	// print any server info (server full, bad version, etc)
 	if ( cstate.connState < CA_CONNECTED ) {
-		UI_DrawProportionalString_AutoWrapped( 320, 192, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color );
+		UI_DrawString_AutoWrapped( 320, 192, 630, 20, cstate.messageString, UI_CENTER|UI_SMALLFONT|UI_DROPSHADOW, menu_text_color, qtrue );
 	}
 
 #if 0

@@ -6,10 +6,10 @@
 // Weapons
 
 #define ADDTIME_WEAPONCHANGE_BEGIN	150
-#define ADDTIME_WEAPONCHANGE_FINISH	200	
+#define ADDTIME_WEAPONCHANGE_FINISH	200
 #define ADDTIME_WEAPON_NOAMMO		200
 
-// TODO: Addtime killerducks, boomies		
+// TODO: Addtime killerducks, boomies
 
 #define MAXAMMO_WEAPON		200
 
@@ -44,7 +44,7 @@
 #define DURATION_BETTY		15000
 #define ADDTIME_BETTY		800
 
-#define DAMAGE_BOASTER		5
+#define DAMAGE_BOASTER		3
 #define DAMAGE_DOT_BOASTER	3
 #define SPEED_BOASTER		1250
 #define DURATION_BOASTER	1500
@@ -92,16 +92,14 @@
 #define DAMAGE_BAMBAM		20
 #define SPEED_BAMBAM		1800
 #define DURATION_BAMBAM		10000
-#define SPREAD_BAMBAM
+#define SPREAD_BAMBAM		5
 #define HEALTH_BAMBAM		300
 #define RANGE_BAMBAM_WIDTH	2000
 #define RANGE_BAMBAM_HEIGHT	1000
+#define RANGE_BAMBAM_VISIONLESS	320.0f // rather magical constant
 #define FIREDELAY_BAMBAM	1000
 #define FIRESTART_BAMBAM	1000
 #define MAX_TEAM_BAMBAMS	5
-/* added beryllium */
-#define RANGE_BAMBAM_VISIONLESS	320.0f // rather magical constant
-/* end beryllium */
 
 // Not a real weapon ..
 #define SPLASHDMG_BOOMIE	200
@@ -120,7 +118,5 @@
 #define MAX_BOOMIES			3
 #define MAX_BAMBAMS			1
 
-/* added beryllium */
 #define	DROP_DELAY_LOLLY	5000
-/* end beryllium */
 

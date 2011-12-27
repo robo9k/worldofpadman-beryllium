@@ -415,6 +415,11 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 			return;
 		}
 
+		if ( ( cgs.gametype == GT_LPS ) && !( cgs.lpsflags & LPSF_PPOINTLIMIT ) ) {
+			// There are no sounds suited for this gametype, since we do not have a pointlimit
+			return;
+		}
+
 		if ( !( cg.fraglimitWarnings & 4 ) && highScore == (cgs.fraglimit - 1) ) {
 			cg.fraglimitWarnings |= 1 | 2 | 4;
 			CG_AddBufferedSound(cgs.media.oneFragSound);

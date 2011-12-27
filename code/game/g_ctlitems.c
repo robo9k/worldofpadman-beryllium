@@ -84,6 +84,120 @@ qboolean CantDamageTeamitem( gentity_t *target, gentity_t *attacker ) {
 	return qfalse;
 }
 
+qboolean IsBambamBoomieSpotClean( vec3_t spot, gentity_t *pEnt, char* pickupName )
+{
+	int i;
+	int numBoxEnts;
+	int boxEnts[10];
+	vec3_t boxMins = {-128, -128, -30};
+	vec3_t boxMaxs = {128, 128, 64};
+
+	VectorAdd( spot, boxMins, boxMins );
+	VectorAdd( spot, boxMaxs, boxMaxs );
+
+	numBoxEnts = trap_EntitiesInBox( boxMins, boxMaxs, boxEnts, 10);
+
+	for(i=0; i<numBoxEnts; i++)
+	{
+		gentity_t* otherEnt = &g_entities[boxEnts[i]];
+		if(	otherEnt->s.eType == ET_BOOMIES )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if( distSqr < Square(64) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), "cp \"Too close to BOOMiE\"" );
+				return qfalse;
+			}
+		}
+		else if( otherEnt->s.eType == ET_ITEM && otherEnt->item->giType == IT_WEAPON )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if ( ( distSqr < Square( 64 ) ) && !( otherEnt->flags & FL_DROPPED_ITEM ) ) {
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to weapon spawnpoint\"" ) );
+				return qfalse;
+			}
+		}
+		else if( otherEnt->s.eType == ET_STATION )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to health station\"" ) );
+				return qfalse;
+			}
+		}
+		else if( otherEnt->s.eType == ET_ITEM && 
+			( otherEnt->item->giTag == PW_REDFLAG || otherEnt->item->giTag == PW_BLUEFLAG ) )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if( distSqr < Square(256) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to lolly base\"" ) );
+				return qfalse;
+			}			
+		}
+		else if( otherEnt->s.eType == ET_PUSH_TRIGGER )
+		{
+			// triggers have no origin \o/
+			vec3_t origin;
+			float distSqr;
+
+			VectorAdd( otherEnt->r.mins, otherEnt->r.maxs, origin);
+			VectorScale(origin, 0.5, origin);
+			distSqr = DistanceSquared( origin, spot  ); 
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to jump pad\"" ) );
+				return qfalse;
+			}
+		}
+		else if( !Q_stricmp( otherEnt->classname, "target_push" ) ){
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot  ); 
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to jump pad\"" ) );
+				return qfalse;
+			}
+		}
+		else if( !Q_stricmp( otherEnt->classname, "target_position" ) 
+				|| !Q_stricmp( otherEnt->classname, "misc_teleporter_dest" ) )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to teleporter exit\"" ) );
+				return qfalse;
+			}
+		}
+		else if ( !Q_stricmp( otherEnt->classname, "info_player_start" ) 
+				|| !Q_stricmp( otherEnt->classname, "info_player_deathmatch" ) )
+		{
+			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to spawn point\"" ) );
+				return qfalse;
+			}
+		}
+		else if( !Q_stricmp( otherEnt->classname, "trigger_balloonzone" ) )
+		{
+			// triggers have no origin \o/
+			vec3_t origin;
+			float distSqr;
+
+			VectorAdd( otherEnt->r.mins, otherEnt->r.maxs, origin);
+			VectorScale(origin, 0.5, origin);
+			distSqr = DistanceSquared( origin, spot );
+			if( distSqr < Square(128) )
+			{
+				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to balloon\"" ) );
+				return qfalse;
+			}
+		}
+	}
+	return qtrue;
+}
+
 /*
 ####################### ####################### #######################
 
@@ -104,16 +218,8 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if(!other->client) return;
 	if(!ent->team) return;
 
-	/* added beryllium */
-	if ( other->flags & FL_NOTARGET ) {
-		return;
-	}
-	/* end beryllium */
-
-	if(((ent->team[0] == 'b' && other->client->sess.sessionTeam == TEAM_RED) ||
-		(ent->team[0] == 'r' && other->client->sess.sessionTeam == TEAM_BLUE))
-		&& (ent->timestamp==0 || (level.time - ent->timestamp)>100 ))
-	{
+	if ( !IsItemSameTeam( ent, other ) && 
+	     ( ent->timestamp == 0 || ( level.time - ent->timestamp ) > 100 ) ) {
 		trace_t tr;
 		vec3_t start;
 		vec3_t end;
@@ -127,14 +233,11 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		VectorSubtract(other->s.pos.trBase,start,end); // 'end' temporary used for distance calculation
 		tmpLen = VectorLength(end);
 
-		/* added beryllium */
 		if ( other->client->ps.powerups[PW_VISIONLESS] && ( tmpLen > RANGE_BAMBAM_VISIONLESS ) ) {
-			/* I'm the invisible man I'm the invisible man
-			   Incredible how you can see right through me
-			*/
+			// I'm the invisible man I'm the invisible man
+			// Incredible how you can see right through me
 			return;
 		}
-		/* end beryllium */
 
 		VectorMA(other->s.pos.trBase, (tmpLen/missileVelocity), other->s.pos.trDelta, end);
 		trap_Trace(&tr,start,NULL,NULL,end,ent - g_entities,MASK_SHOT);
@@ -165,7 +268,7 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 				VectorScale(dir,1/tmpLen,dir);
 				m = fire_bambamMissile( ent, start, dir, missileVelocity );
 //				m->damage /= 20; // reduce dmg for testing
-				G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/bambam/shoot.wav") );
+				G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/bambam/shoot") );
 
 				ent->timestamp = level.time;
 			}
@@ -234,7 +337,7 @@ static void bambam_think( gentity_t *ent ) {
 	}
 
 	if(ent->s.generic1==BBS_ZZZ) {
-		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/bambam/zzz.wav") );
+		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/bambam/zzz") );
 	}
 }
 
@@ -261,6 +364,7 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 	int boxEnts[10];
 	int numBoxEnts;
 	int i;
+	gentity_t* entBam;
 
 	if( MAX_TEAM_BAMBAMS <= level.numBambams[ pEnt->client->sess.sessionTeam ] )
 	{
@@ -277,20 +381,17 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 	VectorMA( start, 64.0, forward, end );
 
 	trap_Trace( &tr, start, bambamMin, bambamMax, end, ( pEnt - g_entities ), MASK_SHOT );
-
 	if ( tr.allsolid || tr.startsolid ) {
 		trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Can't build %s here\"", pickupName ) );
 		return qfalse;
 	}
 
-	/* added beryllium */
 	// Make a trace without bbox, since there are problems with bbox size/curves and wrong startsolid results
 	trap_Trace( &tr, start, NULL, NULL, tr.endpos, ( pEnt - g_entities ), MASK_SHOT );
 	if ( tr.fraction != 1.0 ) {
 		trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Can't build %s here\"", pickupName ) );
 		return qfalse;
 	}
-	/* end beryllium */
 
 	VectorCopy( tr.endpos, start );
 	VectorCopy( tr.endpos, end );
@@ -298,95 +399,63 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 
 	trap_Trace( &tr, start, bambamMin, bambamMax, end, ENTITYNUM_NONE, MASK_SHOT );
 
-	if ( !tr.allsolid && !tr.startsolid && 
-		 tr.fraction < 1.0 && tr.entityNum == ENTITYNUM_WORLD  ) 
-	{
-		gentity_t* entBam;
-
-		// check for nearby teleporter exits
-		VectorAdd( tr.endpos, boxMins, boxMins );
-		VectorAdd( tr.endpos, boxMaxs, boxMaxs );
-		numBoxEnts = trap_EntitiesInBox( boxMins, boxMaxs, boxEnts, 10);
-		for(i=0; i<numBoxEnts; i++)
-		{
-			gentity_t* otherEnt = &g_entities[boxEnts[i]];
-			if( !Q_stricmp( otherEnt->classname, "target_position" ) 
-					|| !Q_stricmp( otherEnt->classname, "misc_teleporter_dest" ) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to teleporter exit\"" ) );
-				return qfalse;
-			}
-			else if ( !Q_stricmp( otherEnt->classname, "info_player_start" ) 
-					|| !Q_stricmp( otherEnt->classname, "info_player_deathmatch" ) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to spawn point\"" ) );
-				return qfalse;
-			}
-		}
-
-		// all good, build it
-
-		entBam = G_Spawn();
-		entBam->classname = "BamBam";
-		entBam->s.eType = ET_BAMBAM;
-		
-		if ( pEnt->client->sess.sessionTeam == TEAM_BLUE ) {
-			entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_blue.md3" );
-			entBam->team = "b";
-			/* added beryllium */
-			/* modkuh compat */
-			entBam->s.time2 = TEAM_BLUE;
-			/* end beryllium */
-		}
-		else {
-			entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_red.md3" );
-			entBam->team = "r";
-			/* added beryllium */
-			/* modkuh compat */
-			entBam->s.time2 = TEAM_RED;
-			/* end beryllium */
-		}
-
-		entBam->s.angles[1] = pEnt->s.apos.trBase[1];
-		entBam->r.svFlags = SVF_USE_CURRENT_ORIGIN;
-		G_SetOrigin( entBam, tr.endpos );
-
-		VectorCopy( bambamMin, entBam->r.mins );
-		VectorCopy( bambamMax, entBam->r.maxs );
-		entBam->r.contents = CONTENTS_BODY;
-
-		entBam->die = bambam_die;
-		entBam->takedamage = qtrue;
-		entBam->health = HEALTH_BAMBAM;
-
-		/* added beryllium */
-		entBam->parent = pEnt;
-		/* end added */
-
-		// Needed for clientside bambam health bar, abuse some vars
-		entBam->s.angles2[2] = (float)( (float)entBam->health / HEALTH_BAMBAM );
-		entBam->pain = bambam_pain;
-
-		entBam->think = bambam_think;
-		entBam->nextthink = ( level.time + FRAMETIME );
-
-		entBam->touch = bambam_touch;
-		entBam->nextTrain = createTrigger( entBam, RANGE_BAMBAM_WIDTH, RANGE_BAMBAM_HEIGHT );
-
-		trap_LinkEntity( entBam );
-
-		G_AddEvent( entBam, EV_GENERAL_SOUND, G_SoundIndex( "sounds/items/bambam/start.wav" ) );
-
-		level.numBambams[ pEnt->client->sess.sessionTeam ]++;
-
-		AI_AddBambam(pEnt, entBam);
-
-		return qtrue;
+	if(  tr.allsolid || tr.startsolid || tr.fraction >= 1.f || tr.entityNum != ENTITYNUM_WORLD ){
+		trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Can't build %s here\"", pickupName ) );
+		return qfalse;
 	}
 
-	trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Can't build %s here\"", pickupName ) );	// should be item->pickup_name
+	if( !IsBambamBoomieSpotClean( tr.endpos, pEnt, pickupName ) )
+		return qfalse;
 
-	return qfalse;
+	// all good, build it
+	entBam = G_Spawn();
+	entBam->classname = "BamBam";
+	entBam->s.eType = ET_BAMBAM;
+	
+	if ( pEnt->client->sess.sessionTeam == TEAM_BLUE ) {
+		entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_blue.md3" );
+		entBam->team = "b";
+		entBam->s.time2 = TEAM_BLUE;
+	}
+	else {
+		entBam->s.modelindex = G_ModelIndex( "models/weapons2/bambam/bambam_red.md3" );
+		entBam->team = "r";
+		entBam->s.time2 = TEAM_RED;
+	}
+
+	entBam->s.angles[1] = pEnt->s.apos.trBase[1];
+	entBam->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	G_SetOrigin( entBam, tr.endpos );
+
+	VectorCopy( bambamMin, entBam->r.mins );
+	VectorCopy( bambamMax, entBam->r.maxs );
+	entBam->r.contents = CONTENTS_BODY;
+
+	entBam->die = bambam_die;
+	entBam->takedamage = qtrue;
+	entBam->health = HEALTH_BAMBAM;
+
+	entBam->parent = pEnt;
+
+	// Needed for clientside bambam health bar, abuse some vars
+	entBam->s.angles2[2] = (float)( (float)entBam->health / HEALTH_BAMBAM );
+	entBam->pain = bambam_pain;
+
+	entBam->think = bambam_think;
+	entBam->nextthink = ( level.time + FRAMETIME );
+
+	entBam->touch = bambam_touch;
+	entBam->nextTrain = createTrigger( entBam, RANGE_BAMBAM_WIDTH, RANGE_BAMBAM_HEIGHT );
+
+	trap_LinkEntity( entBam );
+
+	G_AddEvent( entBam, EV_GENERAL_SOUND, G_SoundIndex( "sounds/items/bambam/start" ) );
+
+	level.numBambams[ pEnt->client->sess.sessionTeam ]++;
+
+	AI_AddBambam(pEnt, entBam);
+
+	return qtrue;
 }
 
 /*
@@ -428,126 +497,10 @@ static void boomies_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
-	/* added beryllium */
-	if ( other->flags & FL_NOTARGET ) {
-		return;
-	}
-	/* end beryllium */
-
 	if ( !IsItemSameTeam( ent, other ) ) {
 		// EXPLODE! goes the wiesel
 		boomies_die( ent, other, other, 999, MOD_SUICIDE );
 	}
-}
-
-vec_t DistanceSquared2D( const vec3_t p1, const vec3_t p2 )
-{
-	vec2_t	v;
-	v[0] = p2[0] - p1[0];
-	v[1] = p2[1] - p1[1];
-	return v[0]*v[0] + v[1]*v[1];
-}
-
-qboolean BoomieSpotClean( vec3_t spot, gentity_t *pEnt, char* pickupName )
-{
-	int i;
-	int numBoxEnts;
-	int boxEnts[10];
-	vec3_t boxMins = {-128, -128, -30};
-	vec3_t boxMaxs = {128, 128, 64};
-
-	VectorAdd( spot, boxMins, boxMins );
-	VectorAdd( spot, boxMaxs, boxMaxs );
-
-	numBoxEnts = trap_EntitiesInBox( boxMins, boxMaxs, boxEnts, 10);
-
-	for(i=0; i<numBoxEnts; i++)
-	{
-		gentity_t* otherEnt = &g_entities[boxEnts[i]];
-		if(	otherEnt->s.eType == ET_BOOMIES )
-		{
-			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
-			if( distSqr < Square(40) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to other %s\"", pickupName ) );
-				return qfalse;
-			}
-		}
-		else if( otherEnt->s.eType == ET_ITEM && otherEnt->item->giType == IT_WEAPON )
-		{
-			float distSqr = DistanceSquared2D( otherEnt->s.pos.trBase, spot );
-			/* changed beryllium */
-			/*
-			if( distSqr < Square(50) )
-			{
-			*/
-			if ( ( distSqr < Square( 50 ) ) && !( otherEnt->flags & FL_DROPPED_ITEM ) ) {
-			/* end beryllium */
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to weapon spawnpoint\"" ) );
-				return qfalse;
-			}
-		}
-		else if( otherEnt->s.eType == ET_STATION )
-		{
-			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
-			if( distSqr < Square(75) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to health station\"" ) );
-				return qfalse;
-			}
-		}
-		else if( otherEnt->s.eType == ET_PUSH_TRIGGER )
-		{
-			// triggers have no origin \o/
-			vec3_t origin;
-			float distSqr;
-
-			VectorAdd( otherEnt->r.mins, otherEnt->r.maxs, origin);
-			VectorScale(origin, 0.5, origin);
-			distSqr = DistanceSquared2D( origin, spot  ); 
-			if( distSqr < Square(70) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to jump pad\"" ) );
-				return qfalse;
-			}
-		}
-		else if( !Q_stricmp( otherEnt->classname, "target_position" ) 
-				|| !Q_stricmp( otherEnt->classname, "misc_teleporter_dest" ) )
-		{
-			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
-			if( distSqr < Square(120) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to teleporter exit\"" ) );
-				return qfalse;
-			}
-		}
-		else if ( !Q_stricmp( otherEnt->classname, "info_player_start" ) 
-				|| !Q_stricmp( otherEnt->classname, "info_player_deathmatch" ) )
-		{
-			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
-			if( distSqr < Square(120) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to spawn point\"" ) );
-				return qfalse;
-			}
-		}
-		else if( !Q_stricmp( otherEnt->classname, "trigger_balloonzone" ) )
-		{
-			// triggers have no origin \o/
-			vec3_t origin;
-			float distSqr;
-
-			VectorAdd( otherEnt->r.mins, otherEnt->r.maxs, origin);
-			VectorScale(origin, 0.5, origin);
-			distSqr = DistanceSquared2D( origin, spot );
-			if( distSqr < Square(50) )
-			{
-				trap_SendServerCommand( ( pEnt - g_entities ), va( "cp \"Too close to balloon\"" ) );
-				return qfalse;
-			}
-		}
-	}
-	return qtrue;
 }
 
 /*
@@ -582,7 +535,7 @@ qboolean boomies_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 		return qfalse;
 	}
 
-	if( !BoomieSpotClean( tr.endpos, pEnt, pickupName ) )
+	if( !IsBambamBoomieSpotClean( tr.endpos, pEnt, pickupName ) )
 		return qfalse;
 
 	if(tr.fraction<1.0f && tr.entityNum==ENTITYNUM_WORLD) {
@@ -628,7 +581,7 @@ qboolean boomies_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 
 		trap_LinkEntity(ent);
 
-		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/boomies/start.wav") );
+		G_AddEvent( ent, EV_GENERAL_SOUND, G_SoundIndex("sounds/items/boomies/start") );
 
 		level.numBoomies[ pEnt->client->sess.sessionTeam ]++;
 

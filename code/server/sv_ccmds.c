@@ -142,99 +142,6 @@ static client_t *SV_GetPlayerByNum( void ) {
 
 //=========================================================
 
-char* checkMapRedirect(const char* map)
-{
-static char newMap[MAX_QPATH];
-	char	expanded[MAX_QPATH];
-	int		len;
-	char*	f;
-	char*	p;
-
-	Q_strncpyz(newMap, map, sizeof(newMap));
-
-	len = FS_ReadFile( "scripts/MapGametypeRedirect.dat", (void **)&f);
-
-	if(f)
-	{
-		char* token;
-		int i=0;
-		int gt=-1;
-		int uGT=-1;
-		qboolean changed=qfalse;
-		if(sv_gametype->latchedString)
-			uGT=atoi(sv_gametype->latchedString);
-		else
-			uGT=sv_gametype->integer;
-		p=f;
-
-//		Com_Printf ("loading scripts/MapGametypeRedirect.dat\n");
-		while(token = COM_Parse(&p),token[0] && !changed)
-		{
-			++i;
-			if(i==1)
-				gt=atoi(token);
-			else if(i==2)
-			{
-				int extLen = strlen(token);
-				int mapLen = strlen(map);
-				qboolean hasExt = qfalse;
-
-				if(extLen<mapLen && !Q_stricmp(map+(mapLen-extLen),token))
-					hasExt = qtrue;
-
-				Com_Printf("%s <-> %d\n",token,gt);
-
-				if(uGT == gt)
-				{
-/*					if(hasExt)
-						Com_Printf("N... %s\n",map);
-					else
-						Com_Printf("C... %s%s\n",map,token);
-*/
-					if(!hasExt)
-					{
-						Com_sprintf(newMap,sizeof(newMap),"%s%s",map,token);
-						changed=qtrue;
-					}
-				}
-				else
-				{
-/*					if(hasExt)
-						Com_Printf("C... %s REMOVE EXT(%s)\n",map,token);
-					else
-						Com_Printf("N... %s\n",map,token);
-*/
-					if(hasExt)
-					{
-						newMap[(mapLen-extLen)] = '\0';
-						changed=qtrue;
-					}
-
-				}
-
-				if(changed)
-				{
-					Com_sprintf (expanded, sizeof(expanded), "maps/%s.bsp", newMap);
-					if ( FS_ReadFile (expanded, NULL) == -1 )
-					{
-						Com_Printf ("Can't find map %s (REDIRECT CODE)\n", expanded);
-						// make a different redirect possible
-						Q_strncpyz(newMap, map, sizeof(newMap));
-						changed=qfalse;
-					}
-				}
-
-				i=0;
-			}
-		}
-
-		FS_FreeFile (f);
-	}
-	else
-		Com_Printf ("couldn't load scripts/MapGametypeRedirect.dat\n");
-
-	return newMap;
-}
 
 /*
 ==================
@@ -254,8 +161,6 @@ static void SV_Map_f( void ) {
 	if ( !map ) {
 		return;
 	}
-
-	map = checkMapRedirect(map);
 
 	// make sure the level exists before trying to change, so that
 	// a typo at the server console won't end the game
@@ -362,8 +267,7 @@ static void SV_MapRestart_f( void ) {
 
 		Com_Printf( "variable change -- restarting.\n" );
 		// restart the map the slow way
-//		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
-		Q_strncpyz( mapname, checkMapRedirect(Cvar_VariableString("mapname")), sizeof(mapname) );
+		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
 		SV_SpawnServer( mapname, qfalse );
 		return;
@@ -524,8 +428,6 @@ server
 ==================
 */
 static void SV_Ban_f( void ) {
-	Com_Printf("This ban-cmd is inactive in WoP (because it's connected with the Q3-CDKey-System)\n");
-/* ... nonCDKEY
 	client_t	*cl;
 
 	// make sure server is running
@@ -571,7 +473,6 @@ static void SV_Ban_f( void ) {
 								   cl->netchan.remoteAddress.ip[2], cl->netchan.remoteAddress.ip[3] );
 		Com_Printf("%s was banned from coming back\n", cl->name);
 	}
-*/
 }
 
 /*
@@ -583,8 +484,6 @@ server
 ==================
 */
 static void SV_BanNum_f( void ) {
-	Com_Printf("This ban-cmd is inactive in WoP (because it's connected with the Q3-CDKey-System)\n");
-/* ... nonCDKEY
 	client_t	*cl;
 
 	// make sure server is running
@@ -628,7 +527,6 @@ static void SV_BanNum_f( void ) {
 								   cl->netchan.remoteAddress.ip[2], cl->netchan.remoteAddress.ip[3] );
 		Com_Printf("%s was banned from coming back\n", cl->name);
 	}
-*/
 }
 #endif
 
@@ -651,10 +549,7 @@ static void SV_RehashBans_f(void)
 	if(!sv_banFile->string || !*sv_banFile->string)
 		return;
 
-	if(!(curpos = Cvar_VariableString("fs_game")) || !*curpos)
-		curpos = BASEGAME;
-	
-	Com_sprintf(filepath, sizeof(filepath), "%s/%s", curpos, sv_banFile->string);
+	Com_sprintf(filepath, sizeof(filepath), "%s/%s", FS_GetCurrentGameDir(), sv_banFile->string);
 
 	if((filelen = FS_SV_FOpenFileRead(filepath, &readfrom)) >= 0)
 	{
@@ -728,15 +623,12 @@ static void SV_WriteBans(void)
 {
 	int index;
 	fileHandle_t writeto;
-	char *curpos, filepath[MAX_QPATH];
+	char filepath[MAX_QPATH];
 	
 	if(!sv_banFile->string || !*sv_banFile->string)
 		return;
 	
-	if(!(curpos = Cvar_VariableString("fs_game")) || !*curpos)
-		curpos = BASEGAME;
-	
-	Com_sprintf(filepath, sizeof(filepath), "%s/%s", curpos, sv_banFile->string);
+	Com_sprintf(filepath, sizeof(filepath), "%s/%s", FS_GetCurrentGameDir(), sv_banFile->string);
 
 	if((writeto = FS_SV_FOpenFileWrite(filepath)))
 	{
@@ -768,7 +660,7 @@ static qboolean SV_DelBanEntryFromList(int index)
 {
 	if(index == serverBansCount - 1)
 		serverBansCount--;
-	else if(index < sizeof(serverBans) / sizeof(*serverBans) - 1)
+	else if(index < ARRAY_LEN(serverBans) - 1)
 	{
 		memmove(serverBans + index, serverBans + index + 1, (serverBansCount - index - 1) * sizeof(*serverBans));
 		serverBansCount--;
@@ -848,7 +740,7 @@ static void SV_AddBanToList(qboolean isexception)
 		return;
 	}
 
-	if(serverBansCount > sizeof(serverBans) / sizeof(*serverBans))
+	if(serverBansCount > ARRAY_LEN(serverBans))
 	{
 		Com_Printf ("Error: Maximum number of bans/exceptions exceeded.\n");
 		return;
@@ -1310,7 +1202,7 @@ Examine or change the serverinfo string
 */
 static void SV_Systeminfo_f( void ) {
 	Com_Printf ("System info settings:\n");
-	Info_Print ( Cvar_InfoString( CVAR_SYSTEMINFO ) );
+	Info_Print ( Cvar_InfoString_Big( CVAR_SYSTEMINFO ) );
 }
 
 
@@ -1331,7 +1223,7 @@ static void SV_DumpUser_f( void ) {
 	}
 
 	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("Usage: info <userid>\n");
+		Com_Printf ("Usage: dumpuser <userid>\n");
 		return;
 	}
 
@@ -1364,7 +1256,7 @@ SV_CompleteMapName
 */
 static void SV_CompleteMapName( char *args, int argNum ) {
 	if( argNum == 2 ) {
-		Field_CompleteFilename( "maps", "bsp", qtrue );
+		Field_CompleteFilename( "maps", "bsp", qtrue, qfalse );
 	}
 }
 
@@ -1384,7 +1276,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
 	Cmd_AddCommand ("kick", SV_Kick_f);
 #ifndef STANDALONE
-	if(!Cvar_VariableIntegerValue("com_standalone"))
+	if(!com_standalone->integer)
 	{
 		Cmd_AddCommand ("banUser", SV_Ban_f);
 		Cmd_AddCommand ("banClient", SV_BanNum_f);

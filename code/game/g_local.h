@@ -80,6 +80,11 @@
 #define BOOMIES_TRIGGERBOX		RANGE_BOOMIE_WIDTH // == RANGE_BOOMIE_HEIGHT
 
 
+#define PLAYERINFO_TEAM		"Players_Team"
+#define PLAYERINFO_BOT		"Players_Bot"
+#define PLAYERINFO_NONE		"(None)"
+
+
 // movers are things like doors, plats, buttons, etc
 typedef enum {
 	MOVER_POS1,
@@ -261,7 +266,7 @@ typedef struct {
 // MUST be dealt with in G_InitSessionData() / G_ReadSessionData() / G_WriteSessionData()
 typedef struct {
 	team_t		sessionTeam;
-	int			spectatorTime;		// for determining next-in-line to play
+	int			spectatorNum;		// for determining next-in-line to play
 	spectatorState_t	spectatorState;
 	int			spectatorClient;	// for chasecam and follow mode
 	int			wins, losses;		// tournament stats
@@ -274,25 +279,6 @@ typedef struct {
 //
 #define MAX_NETNAME			36
 #define	MAX_VOTE_COUNT		3
-
-
-/* added beryllium */
-/* FIXME: This should go into be_vote.h, which is included too late */
-typedef enum {
-	VOTE_NONE,
-	VOTE_YES,
-	VOTE_NO,
-	VOTE_DONTCARE
-} vote_t;
-
-/* FIXME: These should go into berylliums headers, which are included too late */
-#define NET_ADDRSTRMAXLEN		48 			/* NOTE: Must match NET_ADDRSTRMAXLEN in qcommon.h */
-#define GUIDSTRMAXLEN			33			/* NOTE: Length must match max result of Com_MD5File() / cl_guid */
-
-/* unlagged - true ping */
-#define NUM_PING_SAMPLES 64
-/* end beryllium */
-
 
 // client data that stays across multiple respawns, but is cleared
 // on each level change or team change at ClientBegin()
@@ -310,49 +296,7 @@ typedef struct {
 	int			voteCount;			// to prevent people from constantly calling votes
 	int			teamVoteCount;		// to prevent people from constantly calling votes
 	qboolean	teamInfo;			// send team overlay updates?
-
-
-	/* added beryllium */
-	/* FIXME: Use unsigned int? */
-	int			voteTime;
-	vote_t		voted;
-
-	int			nameChanges;
-	int			nameChangeTime;
-
-	char		guid[GUIDSTRMAXLEN];				
-	char		ip[NET_ADDRSTRMAXLEN];
-
-	int			campCounter;
-	vec3_t		campPosition;
-
-	int			connectionCounter;
-
-	int 		lifeShards;
-
-	int			inactivityTime;
-	qboolean	inactivityWarning;
-
-	/* unlagged - true ping */
-	int			realPing;
-	int			pingsamples[NUM_PING_SAMPLES];
-	int			samplehead;
-	/* end beryllium */
 } clientPersistant_t;
-
-
-/* added beryllium */
-
-/* FIXME: This should be in beryllium's headers, which are included too late */
-/* NOTE: This data remains over nextmap/map_restart and different gametypes. It's
-         basically an extension of clientSession_t.
-*/
-typedef struct {
-	qboolean	ignoreList[MAX_CLIENTS];
-	qboolean	firstTime;
-} clientStorage_t;
-
-/* end beryllium */
 
 
 // this structure is cleared on each ClientSpawn(),
@@ -417,13 +361,8 @@ struct gclient_s {
 
 	// timers
 	int			respawnTime;		// can respawn when time > this, force after g_forcerespwan
-	/* changed beryllium */
-	/* These are cleared on each spawn, moved to clientPersistant_t */
-	/*
 	int			inactivityTime;		// kick players when time > this
 	qboolean	inactivityWarning;	// qtrue if the five seoond warning has been given
-	*/
-	/* end beryllium */
 	int			rewardTime;			// clear the EF_AWARD_IMPRESSIVE, etc when time > this
 
 	int			airOutTime;
@@ -441,16 +380,12 @@ struct gclient_s {
 
 	char		*areabits;
 
-
-	/* added beryllium */
-	clientStorage_t	storage;
+	int			lastSentFlying;		// last client that sent the player flying
+	int			lastSentFlyingTime;
 
 	int			dropTime;
 
-	/* unlagged - backward reconciliation #1 */
-	/* NOTE: We don't do any backward reconciliation, this is needed for g_truePing */
-	int			frameOffset;
-	/* end beryllium */
+	int			powerupsBackpack[MAX_POWERUPS];
 };
 
 //
@@ -464,7 +399,7 @@ typedef struct {
 
 	struct gentity_s	*gentities;
 	int			gentitySize;
-	int			num_entities;		// current number, <= MAX_GENTITIES
+	int			num_entities;		// MAX_CLIENTS <= num_entities <= ENTITYNUM_MAX_NORMAL
 
 	int			warmupTime;			// restart match at this time
 
@@ -553,21 +488,6 @@ typedef struct {
 	vec3_t		cam_spawnangles;
 	int			numBambams[TEAM_NUM_TEAMS];
 	int			numBoomies[TEAM_NUM_TEAMS];
-
-
-	/* added beryllium */
-	int			voteDuration;
-	int			voteEnd;
-
-	/* FIXME: len is a bit too much */
-	char		mapname[MAX_INFO_VALUE];
-
-	qboolean	teamLocked[TEAM_NUM_TEAMS];
-
-	/* unlagged - backward reconciliation #4 */
-	/* actual time this server frame started */
-	int			frameStartTime;
-	/* end beryllium */
 } level_locals_t;
 
 
@@ -656,6 +576,9 @@ int DebugLine(vec3_t start, vec3_t end, int color);
 void DebugLineDouble(vec3_t start, vec3_t end, int color);
 void DeleteDebugLines(void);
 
+void G_BackupPowerups( gclient_t *cl );
+void G_RestorePowerups( gclient_t *cl );
+
 // Simply matches EF_AWARD_ flags in bg_public.h
 typedef enum {
 	AWARD_EXCELLENT		= EF_AWARD_EXCELLENT,
@@ -671,10 +594,10 @@ typedef enum {
 
 void SetAward( gclient_t *client, award_t award );
 
-/* added beryllium */
-qboolean IsItemSameTeam( gentity_t *item, gentity_t *player );
 void RemoveOwnedItems( gentity_t *client );
-/* end added */
+
+const char *GametypeName( gametype_t gametype );
+const char *GametypeNameShort( gametype_t gametype );
 
 //
 // g_combat.c
@@ -810,6 +733,7 @@ void FindIntermissionPoint( void );
 void SetLeader(int team, int client);
 void CheckTeamLeader( int team );
 void G_RunThink (gentity_t *ent);
+void AddTournamentQueue(gclient_t *client);
 void QDECL G_LogPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void SendScoreboardMessageToAllClients( void );
 void QDECL G_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
@@ -875,6 +799,7 @@ qboolean Instagib_canSpawnEntity( gentity_t *ent );
 //
 // g_ctlitems.c
 //
+qboolean IsItemSameTeam( gentity_t *item, gentity_t *player );
 qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName );
 qboolean boomies_createByPlayer( gentity_t *pEnt, char* pickupName );
 qboolean CantDamageTeamitem( gentity_t *target, gentity_t *attacker );
@@ -924,6 +849,13 @@ int BotAIShutdownClient( int client, qboolean restart );
 int BotAIStartFrame( int time );
 void BotTestAAS(vec3_t origin);
 
+
+// g_gameinfo.c
+void G_InitGameinfo( void );
+const char *G_GetArenaInfoByMap( const char *map );
+qboolean MapSupportsGametype( const char *mapname, gametype_t gametype );
+
+
 #include "g_team.h" // teamplay specific stuff
 
 
@@ -961,6 +893,8 @@ extern	vmCvar_t	g_synchronousClients;
 extern	vmCvar_t	g_motd;
 extern	vmCvar_t	g_warmup;
 extern	vmCvar_t	g_doWarmup;
+extern	vmCvar_t	g_warmupReady;
+extern	vmCvar_t	g_curWarmupReady;
 extern	vmCvar_t	g_allowVote;
 extern	vmCvar_t	g_teamAutoJoin;
 extern	vmCvar_t	g_teamForceBalance;
@@ -980,17 +914,14 @@ extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 
-extern	vmCvar_t	g_WarmupReady;
-extern	vmCvar_t	g_curWarmupReady;
 extern	vmCvar_t	g_q3Items;
-extern	vmCvar_t	g_skylensflare;//[max 128 name]/[dir(%1.3f %1.3f %1.3f)] -> 160
+extern	vmCvar_t	g_sky;
+extern	vmCvar_t	g_skyLensflare;
 extern	vmCvar_t	g_LPS_startlives;
 extern	vmCvar_t	g_LPS_flags;
-extern	vmCvar_t	wopSky;
 extern	vmCvar_t	g_KillerduckHealth;
 extern	vmCvar_t	g_transmitSVboastermissiles;
 extern	vmCvar_t	wop_storyMode; // no weapon, no 2D, no gamelogic, ...
-extern	vmCvar_t	g_bambamSpread;
 
 // Game Stats
 extern	vmCvar_t	g_trackGameStats;
@@ -999,9 +930,11 @@ extern	vmCvar_t	g_trackGameStats;
 extern	vmCvar_t	g_modInstagib;
 extern	vmCvar_t	g_modInstagib_WeaponJump;
 
+extern	vmCvar_t	g_logDamage;
+
 
 void	trap_Printf( const char *fmt );
-void	trap_Error( const char *fmt );
+void	trap_Error( const char *fmt ) __attribute__((noreturn));
 int		trap_Milliseconds( void );
 int		trap_Argc( void );
 void	trap_Argv( int n, char *buffer, int bufferLength );
@@ -1205,18 +1138,4 @@ int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *paren
 
 void	trap_SnapVector( float *v );
 int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t goalorigin);
-
-
-/* added beryllium */
-
-/* Included here, because of dependencies */
-#include "g_beryllium.h"
-#include "be_util.h"
-#include "be_vote.h"
-#include "be_cmds.h"
-#include "be_svcmds.h"
-#include "be_storage.h"
-#include "be_alloc.h"
-
-/* end beryllium */
 

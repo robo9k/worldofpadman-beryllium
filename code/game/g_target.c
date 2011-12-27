@@ -187,7 +187,6 @@ void Use_Target_Speaker (gentity_t *ent, gentity_t *other, gentity_t *activator)
 }
 
 void SP_target_speaker( gentity_t *ent ) {
-	char	buffer[MAX_QPATH];
 	char	*s;
 
 	G_SpawnFloat( "wait", "0", &ent->wait );
@@ -203,14 +202,7 @@ void SP_target_speaker( gentity_t *ent ) {
 		ent->spawnflags |= 8;
 	}
 
-	// FIXME: Loop through supported formats (ogg, mp3) Should this  be done in engine?
-	//        Or should we simply not add an extension if it's missing?
-	if (!strstr( s, ".wav" )) {
-		Com_sprintf (buffer, sizeof(buffer), "%s.wav", s );
-	} else {
-		Q_strncpyz( buffer, s, sizeof(buffer) );
-	}
-	ent->noise_index = G_SoundIndex(buffer);
+	ent->noise_index = G_SoundIndex( s );
 
 	// a repeating speaker can be done completely client side
 	ent->s.eType = ET_SPEAKER;
@@ -470,7 +462,13 @@ void SP_target_balloon( gentity_t *self ) {
 	// load the model
 	self->s.eType = ET_BALLOON;
 	self->r.svFlags |= SVF_BROADCAST;	// for rendering the wallhack icons
-	self->s.modelindex = G_ModelIndex( self->model );
+	
+	//self->s.modelindex = G_ModelIndex( self->model );
+	// new code uses a fixed model as well as fixed bounds
+	self->s.modelindex = G_ModelIndex( "models/special/ballon.md3" );
+	VectorSet( self->r.mins, -16, -16, -16 );
+	VectorSet( self->r.maxs,  16,  16,  8 );
+	self->r.contents = CONTENTS_BODY;
 
 	// init
 	G_SetOrigin( self, self->s.origin );

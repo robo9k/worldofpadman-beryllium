@@ -57,14 +57,9 @@ qboolean	G_SpawnVector( const char *key, const char *defaultString, float *out )
 typedef enum {
 	F_INT, 
 	F_FLOAT,
-	F_LSTRING,			// string on disk, pointer in memory, TAG_LEVEL
-	F_GSTRING,			// string on disk, pointer in memory, TAG_GAME
+	F_STRING,
 	F_VECTOR,
-	F_ANGLEHACK,
-	F_ENTITY,			// index on disk, pointer in memory
-	F_ITEM,				// index on disk, pointer in memory
-	F_CLIENT,			// index on disk, pointer in memory
-	F_IGNORE
+	F_ANGLEHACK
 } fieldtype_t;
 
 typedef struct
@@ -75,26 +70,25 @@ typedef struct
 } field_t;
 
 field_t fields[] = {
-	{"classname", FOFS(classname), F_LSTRING},
+	{"classname", FOFS(classname), F_STRING},
 	{"origin", FOFS(s.origin), F_VECTOR},
-	{"model", FOFS(model), F_LSTRING},
-	{"model2", FOFS(model2), F_LSTRING},
+	{"model", FOFS(model), F_STRING},
+	{"model2", FOFS(model2), F_STRING},
 	{"spawnflags", FOFS(spawnflags), F_INT},
 	{"speed", FOFS(speed), F_FLOAT},
-	{"target", FOFS(target), F_LSTRING},
-	{"targetname", FOFS(targetname), F_LSTRING},
-	{"message", FOFS(message), F_LSTRING},
-	{"team", FOFS(team), F_LSTRING},
+	{"target", FOFS(target), F_STRING},
+	{"targetname", FOFS(targetname), F_STRING},
+	{"message", FOFS(message), F_STRING},
+	{"team", FOFS(team), F_STRING},
 	{"wait", FOFS(wait), F_FLOAT},
 	{"random", FOFS(random), F_FLOAT},
 	{"count", FOFS(count), F_INT},
 	{"health", FOFS(health), F_INT},
-	{"light", 0, F_IGNORE},
 	{"dmg", FOFS(damage), F_INT},
 	{"angles", FOFS(s.angles), F_VECTOR},
 	{"angle", FOFS(s.angles), F_ANGLEHACK},
-	{"targetShaderName", FOFS(targetShaderName), F_LSTRING},
-	{"targetShaderNewName", FOFS(targetShaderNewName), F_LSTRING},
+	{"targetShaderName", FOFS(targetShaderName), F_STRING},
+	{"targetShaderNewName", FOFS(targetShaderNewName), F_STRING},
 	{"animationStart",FOFS(animationStart),F_INT},
 	{"animationEnd",  FOFS(animationEnd),F_INT},
 	{"animationFPS",  FOFS(animationFPS),F_FLOAT},
@@ -111,10 +105,6 @@ typedef struct {
 void SP_info_player_start (gentity_t *ent);
 void SP_info_player_deathmatch (gentity_t *ent);
 void SP_info_player_intermission (gentity_t *ent);
-void SP_info_firstplace(gentity_t *ent);
-void SP_info_secondplace(gentity_t *ent);
-void SP_info_thirdplace(gentity_t *ent);
-void SP_info_podium(gentity_t *ent);
 
 void SP_func_plat (gentity_t *ent);
 void SP_func_static (gentity_t *ent);
@@ -150,7 +140,6 @@ void SP_target_speaker (gentity_t *ent);
 void SP_target_print (gentity_t *ent);
 void SP_target_script(gentity_t* ent);
 void SP_target_laser (gentity_t *self);
-void SP_target_character (gentity_t *ent);
 void SP_target_score( gentity_t *ent );
 void SP_target_teleporter( gentity_t *ent );
 void SP_target_relay (gentity_t *ent);
@@ -367,7 +356,7 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 			b = (byte *)ent;
 
 			switch( f->type ) {
-			case F_LSTRING:
+			case F_STRING:
 				*(char **)(b+f->ofs) = G_NewString (value);
 				break;
 			case F_VECTOR:
@@ -387,9 +376,6 @@ void G_ParseField( const char *key, const char *value, gentity_t *ent ) {
 				((float *)(b+f->ofs))[0] = 0;
 				((float *)(b+f->ofs))[1] = v;
 				((float *)(b+f->ofs))[2] = 0;
-				break;
-			default:
-			case F_IGNORE:
 				break;
 			}
 			return;
@@ -424,13 +410,8 @@ replacePair_t q3ToWopItems[] = {
 	{ "ammo_bfg",		"ammo_imperius"	},
 			
 	{ "item_quad",		"item_padpower"			},
-	/* changed beryllium */
-	/*
 	{ "item_enviro",	"item_climber"			},
 	{ "item_hast",		"item_speedy"			},
-	*/
-	{ "item_haste",		"item_speedy"			},
-	/* end beryllium */
 	{ "item_flight",	"item_jump"				},
 	{ "item_invis",		"item_visionless"		},
 	{ "item_regen",		"item_revival"			},
@@ -462,47 +443,6 @@ replacePair_t spawnpointReplacements[] = {
 	{ NULL,					NULL }
 };
 
-
-/* added beryllium */
-
-/*
-	Returns whether value includes gametype.
-	If g_q3Items is enabled, will also check against Q3 gametype names.
-*/
-static qboolean G_ValueIncludesGametype( const char *value, gametype_t gametype ) {
-	const char *gametypeName;
-	char *s;
-
-	// Order needs to match gametype_t of WoP
-	static const char *gametypeNames[] =	{ "ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"	};
-	static const char *gametypeNamesQ3[] =	{ "ffa", "tournament", "single", NULL,    NULL,  "team", "ctf", NULL,   NULL		};
-
-	if ( ( gametype < GT_FFA ) || ( gametype >= GT_MAX_GAME_TYPE ) ) {
-		return qfalse;
-	}
-	gametypeName = gametypeNames[gametype];
-
-	s = strstr( value, gametypeName );
-	if ( !s ) {
-		if ( g_q3Items.integer ) {
-			gametypeName = gametypeNamesQ3[gametype];
-			if ( NULL == gametypeName ) {
-				return qfalse;
-			}
-
-			s = strstr( value, gametypeName );
-			if ( s ) {
-				return qtrue;
-			}
-		}
-
-		return qfalse;
-	}
-
-	return qtrue;
-}
-/* end beryllium */
-
 /*
 ===================
 G_SpawnGEntityFromSpawnVars
@@ -514,15 +454,11 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*value;
-	gitem_t		*item;
-	/* changed beryllium */
-	/*
-	char		*s;
+	char		*s, *value;
 	const char	*gametypeName;
+	gitem_t		*item;
+
 	static const char *gametypeNames[] = {"ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"};
-	*/
-	/* end beryllium */
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -535,10 +471,6 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	if ( g_q3Items.integer ) {
 		for ( i = 0; q3ToWopItems[i].s; i++ ) {
 			if ( Q_stricmp( ent->classname, q3ToWopItems[i].s ) == 0 ) {
-				/* added beryllium */
-				G_DPrintf( "spawning (q3 items): Replacing entity "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" with "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT".\n",
-				           ent->classname, q3ToWopItems[i].r );
-				/* end beryllium */
 				ent->classname = (char*)q3ToWopItems[i].r;
 				break;
 			}
@@ -619,8 +551,6 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		return;
 	}
 
-	/* changed beryllium */
-	/*
 	if( G_SpawnString( "gametype", NULL, &value ) ) {
 		if( g_gametype.integer >= GT_FFA && g_gametype.integer < GT_MAX_GAME_TYPE ) {
 			gametypeName = gametypeNames[g_gametype.integer];
@@ -644,23 +574,6 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 			}
 		}
 	}
-	*/
-	if ( G_SpawnString( "gametype", NULL, &value ) ) {
-		if ( !G_ValueIncludesGametype( value, g_gametype.integer ) ) {
-			G_DPrintf( "spawning: Not spawning "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" due to gametype key.\n", ent->classname );
-			G_FreeEntity( ent );
-			return;
-		}
-	}
-
-	if ( G_SpawnString( "notGametype", NULL, &value ) ) {
-		if ( G_ValueIncludesGametype( value, g_gametype.integer ) ) {
-			G_DPrintf( "spawning: Not spawning "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" due to notGametype key.\n", ent->classname );
-			G_FreeEntity( ent );
-			return;
-		}
-	}
-	/* end beryllium */
 
 
 	for ( item = ( bg_itemlist + 1 ); item->classname; item++ ) {
@@ -774,12 +687,7 @@ qboolean G_ParseSpawnVars( void ) {
 	level.numSpawnVarChars = 0;
 
 	// parse the opening brace
-	/* changed beryllium */
-	/*
 	if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
-	*/
-	if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
-	/* end beryllium */
 		// end of spawn string
 		return qfalse;
 	}
@@ -790,12 +698,7 @@ qboolean G_ParseSpawnVars( void ) {
 	// go through all the key / value pairs
 	while ( 1 ) {	
 		// parse key
-		/* changed beryllium */
-		/*
 		if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
-		*/
-		if ( !BE_GetEntityToken( keyname, sizeof( keyname ) ) ) {
-		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -803,13 +706,8 @@ qboolean G_ParseSpawnVars( void ) {
 			break;
 		}
 		
-		// parse value
-		/* changed beryllium */
-		/*	
+		// parse value	
 		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
-		*/
-		if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
-		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -878,14 +776,19 @@ void SP_worldspawn( void ) {
 		G_SpawnString("skylensflare","", &s);
 		Com_sprintf(tmpstr, 256, "%1.3f %1.3f %1.3f >%.128s",tmpv3[0],tmpv3[1],tmpv3[2],s);
 
-		trap_Cvar_Set("g_skylensflare",tmpstr);
+		trap_Cvar_Set( "g_skyLensflare", tmpstr );
 	}
 
-	G_SpawnString("wopSky","", &s);
-	trap_Cvar_Set("wopSky",s);
+	G_SpawnString( "wopSky", "", &s );
+	trap_Cvar_Set( "g_sky", s );
 
 	g_entities[ENTITYNUM_WORLD].s.number = ENTITYNUM_WORLD;
+	g_entities[ENTITYNUM_WORLD].r.ownerNum = ENTITYNUM_NONE;
 	g_entities[ENTITYNUM_WORLD].classname = "worldspawn";
+
+	g_entities[ENTITYNUM_NONE].s.number = ENTITYNUM_NONE;
+	g_entities[ENTITYNUM_NONE].r.ownerNum = ENTITYNUM_NONE;
+	g_entities[ENTITYNUM_NONE].classname = "nothing";
 
 	// see if we want a warmup time
 	trap_SetConfigstring( CS_WARMUP, "" );
@@ -926,10 +829,6 @@ void G_SpawnEntitiesFromString( void ) {
 	level.numSpawnVars = 0;
 	level.sr_tl_tele = NULL;
 
-	/* added beryllium */
-	BE_PreSpawnEntities();
-	/* end beryllium */
-
 	// the worldspawn is not an actual entity, but it still
 	// has a "spawn" function to perform any global setup
 	// needed by a level (setting configstrings or cvars, etc)
@@ -942,10 +841,6 @@ void G_SpawnEntitiesFromString( void ) {
 	while( G_ParseSpawnVars() ) {
 		G_SpawnGEntityFromSpawnVars();
 	}	
-
-	/* added beryllium */
-	BE_PostSpawnEntities();
-	/* end beryllium */
 
 	level.spawning = qfalse;			// any future calls to G_Spawn*() will be errors
 }

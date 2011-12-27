@@ -1194,7 +1194,7 @@ qboolean UI_RegisterClientModelname( playerInfo_t *pi, const char *modelSkinName
 		color = ColorIndex( buff[0] );
 
 		Q_strncpyz( subSkinName, skinName, sizeof( subSkinName ) );
-		ptr = Q_strrchr( subSkinName, '_' );
+		ptr = strrchr( subSkinName, '_' );
 		if ( ptr ) {
 			*ptr++ = '\0';
 		}

@@ -193,6 +193,7 @@ typedef struct
 {
 	int type;
 	const char *name;
+	const char *toolTip;
 	int	id;
 	int x, y;
 	int left;
@@ -373,7 +374,7 @@ extern sfxHandle_t	MenuField_Key( menufield_s* m, int* key );
 //
 extern void UI_RegisterCvars( void );
 extern void UI_UpdateCvars( void );
-extern int UI_GetCvarInt(const char *cvar);
+#define UI_GetCvarInt( cv ) (int)trap_Cvar_VariableValue( cv )
 
 //
 // ui_menu.c
@@ -414,12 +415,13 @@ extern void UI_CallVoteMenu(void);
 //
 // ui_music.c
 //
-void WOPMusicMenu_Init(void);
-void WOPMusicMenu_Shutdown(void);
-void WOPMusicMenu_Open(void);
-void WOPMusicMenu_Cache(void);
-void CheckInGameMusic(void);
-void TriggerInGameMusicRestart(void);
+void MusicMenu_Init( void );
+void MusicMenu_Shutdown( void );
+void MusicMenu_Open( void );
+void MusicMenu_Cache( void );
+void Music_Check( void );
+void Music_TriggerRestart( void );
+void Music_NextTrack( void );
 
 //
 // ui_confirm.c
@@ -712,7 +714,8 @@ extern void			UI_LerpColor(vec4_t a, vec4_t b, vec4_t c, float t);
 extern void			UI_DrawBannerString( int x, int y, const char* str, int style, vec4_t color );
 extern float		UI_ProportionalSizeScale( int style );
 extern void			UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t color );
-extern void			UI_DrawProportionalString_AutoWrapped( int x, int ystart, int xmax, int ystep, const char* str, int style, vec4_t color );
+extern void			UI_DrawString_AutoWrapped( int x, int ystart, int xmax, int ystep, const char* str, int style, vec4_t color, qboolean proportinal );
+extern int			UI_AutoWrappedString_LineCount( int width, const char* str, int style, qboolean proportional );
 
 extern void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t color, float sizeScale, qhandle_t charset );
 
@@ -766,7 +769,7 @@ void UI_SPSkillMenu_Cache( void );
 // ui_syscalls.c
 //
 void			trap_Print( const char *string );
-void			trap_Error( const char *string );
+void			trap_Error( const char *string ) __attribute__((noreturn));
 int				trap_Milliseconds( void );
 void			trap_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
 void			trap_Cvar_Update( vmCvar_t *vmCvar );

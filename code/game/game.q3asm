@@ -19,6 +19,7 @@ g_bot
 g_client
 g_cmds
 g_combat
+g_gameinfo
 g_items
 g_mem
 g_misc

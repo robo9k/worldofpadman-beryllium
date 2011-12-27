@@ -506,9 +506,11 @@ void AAS_CalculateAreaTravelTimes(void)
 	aas_reversedlink_t *revlink;
 	aas_reachability_t *reach;
 	aas_areasettings_t *settings;
+#ifdef DEBUG
 	int starttime;
 
 	starttime = Sys_MilliSeconds();
+#endif
 	//if there are still area travel times, free the memory
 	if (aasworld.areatraveltimes) FreeMemory(aasworld.areatraveltimes);
 	//get the total size of all the area travel times
@@ -873,15 +875,15 @@ void AAS_InitRoutingUpdate(void)
 	//allocate memory for the routing update fields
 	aasworld.areaupdate = (aas_routingupdate_t *) GetClearedMemory(
 									maxreachabilityareas * sizeof(aas_routingupdate_t));
+
+	aasworld.clusterCacheHeap = (aas_routingupdate_t **) GetClearedMemory(
+                            maxreachabilityareas * sizeof(aas_routingupdate_t*));
+	aasworld.clusterCacheHeapMaxSize = maxreachabilityareas;
 	//
 	if (aasworld.portalupdate) FreeMemory(aasworld.portalupdate);
 	//allocate memory for the portal update fields
 	aasworld.portalupdate = (aas_routingupdate_t *) GetClearedMemory(
 									(aasworld.numportals+1) * sizeof(aas_routingupdate_t));
-	// cyr: alloc fib array A
-    if (aasworld.fibA) FreeMemory(aasworld.fibA);
-    aasworld.fibA = (aas_routingupdate_t **) GetClearedMemory(
-                            maxreachabilityareas * sizeof(aas_routingupdate_t*));
 } //end of the function AAS_InitRoutingUpdate
 //===========================================================================
 //
@@ -891,7 +893,8 @@ void AAS_InitRoutingUpdate(void)
 //===========================================================================
 void AAS_CreateAllRoutingCache(void)
 {
-	int i, j, t;
+	int i, j;
+	//int t;
 
 	aasworld.initialized = qtrue;
 	botimport.Print(PRT_MESSAGE, "AAS_CreateAllRoutingCache\n");
@@ -902,7 +905,8 @@ void AAS_CreateAllRoutingCache(void)
 		{
 			if (i == j) continue;
 			if (!AAS_AreaReachability(j)) continue;
-			t = AAS_AreaTravelTimeToGoalArea(i, aasworld.areas[i].center, j, TFL_DEFAULT);
+			AAS_AreaTravelTimeToGoalArea(i, aasworld.areas[i].center, j, TFL_DEFAULT);
+			//t = AAS_AreaTravelTimeToGoalArea(i, aasworld.areas[i].center, j, TFL_DEFAULT);
 			//Log_Write("traveltime from %d to %d is %d", i, j, t);
 		} //end for
 	} //end for
@@ -1069,7 +1073,7 @@ int AAS_ReadRouteCache(void)
 	botimport.FS_Read(&routecacheheader, sizeof(routecacheheader_t), fp );
 	if (routecacheheader.ident != RCID)
 	{
-		AAS_Error("%s is not a route cache dump\n");
+		AAS_Error("%s is not a route cache dump\n", filename);
 		return qfalse;
 	} //end if
 	if (routecacheheader.version != RCVERSION)
@@ -1273,8 +1277,9 @@ void AAS_FreeRoutingCaches(void)
 	aasworld.areaupdate = NULL;
 	if (aasworld.portalupdate) FreeMemory(aasworld.portalupdate);
 	aasworld.portalupdate = NULL;
-	if (aasworld.fibA) FreeMemory(aasworld.fibA);   // cyr
-    aasworld.fibA = NULL;                           // cyr
+	if (aasworld.clusterCacheHeap) FreeMemory(aasworld.clusterCacheHeap); 
+    aasworld.clusterCacheHeap = NULL;
+	aasworld.clusterCacheHeapMaxSize = 0;
 	// free lists with areas the reachabilities go through
 	if (aasworld.reachabilityareas) FreeMemory(aasworld.reachabilityareas);
 	aasworld.reachabilityareas = NULL;
@@ -1292,198 +1297,156 @@ void AAS_FreeRoutingCaches(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-// cyr{
-void InsertAfter( aas_routingupdate_t* a, aas_routingupdate_t* b){
-    if (a == a->fib_right) {
-        a->fib_right = b;
-        a->fib_left = b;
-        b->fib_right = a;
-        b->fib_left = a;
-    } else {
-        b->fib_right = a->fib_right;
-        a->fib_right->fib_left = b;
-        a->fib_right = b;
-        b->fib_left = a;
-    }
+
+
+void ClusterCacheHeapPrint( void )
+{
+	int i;
+	Log_Write("Heap( ");
+	for(i=0; i < aasworld.clusterCacheHeapSize; i++ )
+		Log_Write("%ld->%d ", aasworld.clusterCacheHeap[i] - aasworld.areaupdate, aasworld.clusterCacheHeap[i]->tmptraveltime );
+	Log_Write(")[%d]\n", aasworld.clusterCacheHeapSize);
 }
 
-void InsertToRoot( MyQueue_t* Q, aas_routingupdate_t* cur){
-    if (Q->proot == NULL)
-        Q->proot = cur->fib_left = cur->fib_right = cur;
-    else
-        InsertAfter(Q->proot, cur);
+int ClusterCacheHeapLeftChild( int nodeID )
+{
+	return 2*nodeID + 1;
 }
 
-void Insert(MyQueue_t* Q, aas_routingupdate_t* cur){
-    InsertToRoot(Q, cur);
-    // update min pointer
-    if( Q->pmin==NULL || Q->pmin->tmptraveltime > cur->tmptraveltime)
-        Q->pmin = cur;
-    Q->size++;
+int ClusterCacheHeapRightChild( int nodeID )
+{
+	return 2*nodeID + 2;
 }
 
-void AddToQueue(MyQueue_t* Q, aas_routingupdate_t* cur){ // tmptraveltime muss vorher gesetzt werden !
-    cur->fib_parent = NULL;
-    cur->fib_child = NULL;
-    cur->fib_degree = 0;
-    cur->fib_mark = qfalse;
-    Insert(Q,cur);
+int ClusterCacheHeapParent( int nodeID )
+{
+	return( (nodeID-1) /2 );
 }
 
-aas_routingupdate_t* UnlinkFromQueue( aas_routingupdate_t* cur ){
-    aas_routingupdate_t* ret;   // left sibling
-
-    if (cur == cur->fib_left)
-        ret = NULL;
-    else
-        ret = cur->fib_left;
-
-    // if parents son pointer is on me, redirect to left sibling
-    if (cur->fib_parent != NULL && cur->fib_parent->fib_child == cur)
-        cur->fib_parent->fib_child = ret;
-
-    cur->fib_right->fib_left = cur->fib_left;
-    cur->fib_left->fib_right = cur->fib_right;
-
-    return ret; //(aas_routingupdate_t*)
+qboolean ClusterCacheHeapEmpty( void )
+{
+	return ( aasworld.clusterCacheHeapSize <= 0 );
 }
 
-void Queue_Cut( MyQueue_t* Q, aas_routingupdate_t* cur, aas_routingupdate_t* mother){
-    // entferne x aus der sohnliste von y
-    UnlinkFromQueue(cur);
-    mother->fib_degree--;
-    InsertToRoot(Q, cur);
-    cur->fib_parent = NULL;     // better put this into InsertToRoot ? TODO
-    cur->fib_mark = qfalse;
+void ClusterCacheHeapUpdatePos( int nodeID )
+{
+	aasworld.clusterCacheHeap[nodeID]->heapPos = nodeID;
 }
 
-void Queue_Cascading_Cut( MyQueue_t* Q, aas_routingupdate_t* y){
-    aas_routingupdate_t* z = y->fib_parent;
-    while( z != NULL ){
-        if( y->fib_mark == qtrue ){
-            Queue_Cut(Q, y, z);
-            // bubble up
-            y = z;
-            z = y->fib_parent;
-        }
-        else{
-            y->fib_mark = qtrue;
-            return;
-        }
-    }
+void ClusterCacheHeapSiftDown( int nodeID )
+{
+	int leftChildID, rightChildID, minChildID;
+	aas_routingupdate_t* tmp;
+
+	leftChildID = ClusterCacheHeapLeftChild( nodeID );
+	rightChildID = ClusterCacheHeapRightChild( nodeID );
+
+	// assign the smaller child to minChildID
+	if( rightChildID >= aasworld.clusterCacheHeapSize )
+	{
+		if( leftChildID >= aasworld.clusterCacheHeapSize )
+			return;
+		minChildID = leftChildID;
+	}
+	else
+	{
+		if( aasworld.clusterCacheHeap[leftChildID]->tmptraveltime < 
+			aasworld.clusterCacheHeap[rightChildID]->tmptraveltime )
+		{
+			minChildID = leftChildID;
+		}else
+		{
+			minChildID = rightChildID;
+		}
+	}
+
+	// swap and go further down if needed
+	if( aasworld.clusterCacheHeap[nodeID]->tmptraveltime > 
+		aasworld.clusterCacheHeap[minChildID]->tmptraveltime )
+	{
+		tmp = aasworld.clusterCacheHeap[nodeID];
+		aasworld.clusterCacheHeap[nodeID] = aasworld.clusterCacheHeap[minChildID];
+		aasworld.clusterCacheHeap[minChildID] = tmp;
+
+		// update positions
+		ClusterCacheHeapUpdatePos( nodeID );
+		ClusterCacheHeapUpdatePos( minChildID );
+
+		// move down
+		ClusterCacheHeapSiftDown( minChildID );
+	}
 }
 
-qboolean Queue_DecreaseKey( MyQueue_t* Q, aas_routingupdate_t* cur){
-    aas_routingupdate_t* tmp;
+aas_routingupdate_t* ClusterCacheHeapExtractMin( void )
+{
+	aas_routingupdate_t* min;
 
-    // tmptraveltime is updated and quaranteed to be smaller than former value
-    tmp = cur->fib_parent;
-    // bubble up if smaller than parent
-    if(tmp!=NULL && cur->tmptraveltime < tmp->tmptraveltime){
-        Queue_Cut(Q, cur, tmp);
-        Queue_Cascading_Cut(Q, tmp);
-    }
-    // update global minimum
-    if(cur->tmptraveltime < Q->pmin->tmptraveltime)
-        Q->pmin = cur;
+	if( aasworld.clusterCacheHeapSize <= 0 )
+		return NULL;
 
-    return qtrue;
+	min = aasworld.clusterCacheHeap[0];
+	min->heapPos = -1;
+
+	// remove min and repair the heap
+	aasworld.clusterCacheHeap[0] = aasworld.clusterCacheHeap[ aasworld.clusterCacheHeapSize-1 ];
+	aasworld.clusterCacheHeap[0]->heapPos = 0;
+
+	aasworld.clusterCacheHeapSize--;
+	if( aasworld.clusterCacheHeapSize > 1 )
+		ClusterCacheHeapSiftDown( 0 );
+
+	return min;
+}
+qboolean ClusterCacheHeapSiftUp( int nodeID )
+{
+	int parentID;
+	aas_routingupdate_t* tmp;
+
+	if( nodeID != 0 )
+	{
+		parentID = ClusterCacheHeapParent( nodeID );
+		if( aasworld.clusterCacheHeap[parentID]->tmptraveltime > 
+			aasworld.clusterCacheHeap[nodeID]->tmptraveltime )
+		{
+			// swap
+			tmp = aasworld.clusterCacheHeap[parentID];
+			aasworld.clusterCacheHeap[parentID] = aasworld.clusterCacheHeap[nodeID];
+			aasworld.clusterCacheHeap[nodeID] = tmp;
+			
+			// update positions
+			ClusterCacheHeapUpdatePos( nodeID );
+			ClusterCacheHeapUpdatePos( parentID );
+
+			// move up
+			ClusterCacheHeapSiftUp( parentID );
+			return qtrue;
+		}
+	}
+
+	return qfalse;
 }
 
+void ClusterCacheHeapInsert( aas_routingupdate_t* item )
+{
+	if( aasworld.clusterCacheHeapSize >= aasworld.clusterCacheHeapMaxSize )
+		return;
 
-void QueueLink(aas_routingupdate_t* mother, aas_routingupdate_t* kid){
-    // make y a child of x
-    if (mother->fib_child == NULL){
-        mother->fib_child = kid;
-        kid->fib_left = kid->fib_right = kid;
-    }
-    else
-        InsertAfter(mother->fib_child->fib_left, kid);  // == InsertBefore
-    kid->fib_parent = mother;
-    mother->fib_degree++;
-    kid->fib_mark = qfalse;
+	aasworld.clusterCacheHeapSize++;
+	aasworld.clusterCacheHeap[ aasworld.clusterCacheHeapSize-1 ] = item;
+	ClusterCacheHeapUpdatePos( aasworld.clusterCacheHeapSize-1 );
+
+	ClusterCacheHeapSiftUp( aasworld.clusterCacheHeapSize-1 );
 }
 
-void Queue_CleanUp(MyQueue_t* Q, qboolean logme){
-    int deg;
-    int i;
-    aas_routingupdate_t* tmp1;
-    aas_routingupdate_t* tmp2;
-    aas_routingupdate_t* tmp3;
+void ClusterCacheHeapDecreaseKey( aas_routingupdate_t* item )
+{
+	// key has been decreased already, just sort the heap
 
-    // array A null setzen
-    memset(aasworld.fibA, 0, sizeof(aas_routingupdate_t*) * Q->size );
+	if( ClusterCacheHeapSiftUp( item->heapPos ) )
+		return;
 
-    // main loop
-    //iteriere über elemente it der wurzelliste
-    while(Q->proot != NULL){
-        tmp1 = Q->proot;
-        deg = Q->proot->fib_degree;
-        // entferne proot aus wurzelliste
-        if (Q->proot->fib_left == Q->proot)
-             Q->proot = NULL;
-        else{
-            Q->proot = UnlinkFromQueue(Q->proot);
-        }
-        // es sitzt schon ein entferntes listenelement auf der gewünschten position...
-        // -> füge das element mit dem grösseren schlüssel zu den childs des anderen..
-        // dadurch ändert sich der grad -> wieder pos prüfen
-        while( aasworld.fibA[deg] != NULL){
-            tmp2 = aasworld.fibA[deg];
-            // make tmp1 the smaller traveltime
-            if( tmp2->tmptraveltime < tmp1->tmptraveltime){ // swap
-                tmp3=tmp1;  tmp1=tmp2;  tmp2=tmp3;
-            }
-            // füge tmp2 zu den söhnen von tmp1
-            QueueLink(tmp1, tmp2);
-            aasworld.fibA[deg] = NULL;
-            deg++;
-        }
-        // füge entferntes listenelement in array ein
-        aasworld.fibA[deg] = tmp1;
-    }
-    // create new root list from aasworld.fibA
-    Q->pmin = NULL;
-    for(i=0; i < Q->size;i++){
-        if(aasworld.fibA[i]!=NULL){
-            //füge aasworld.fibA[i] zur wurzelliste
-            InsertToRoot(Q, aasworld.fibA[i]);
-            // min updaten
-            if(Q->pmin == NULL || aasworld.fibA[i]->tmptraveltime < Q->pmin->tmptraveltime )
-                    Q->pmin = aasworld.fibA[i];
-        }
-    }
-}
-
-aas_routingupdate_t* QueueExtractMin( MyQueue_t* Q, qboolean logme){
-    aas_routingupdate_t* ret = Q->pmin;
-    aas_routingupdate_t* son = NULL;
-    aas_routingupdate_t* it;    // iterator
-    aas_routingupdate_t* next;
-
-    if(ret != NULL){
-        // add all min's childs to  the root list
-        for(it= ret->fib_child; it!=son && it != NULL;){
-            if(son==NULL) son = it; // init son at cycle start point
-            next = it->fib_right;
-            InsertToRoot(Q, it);
-            it->fib_parent = NULL;
-            it = next;
-        }
-        // entferne ret aus wurzelliste
-        if (ret->fib_left == ret) Q->proot = NULL;
-        else Q->proot = UnlinkFromQueue(ret);
-
-        // update min and recalc
-        if(ret == ret->fib_right)   // ret is the only element Q
-            Q->pmin = NULL;
-        else{
-            Q->pmin = ret->fib_right;
-            Queue_CleanUp(Q, logme);
-        }
-        Q->size--;
-    }
-    return ret;
+	if( ClusterCacheHeapLeftChild( item->heapPos ) < aasworld.clusterCacheHeapSize )
+		ClusterCacheHeapSiftDown( item->heapPos );
 }
 
 #define TT_INF 32767    // unsigned short max
@@ -1495,9 +1458,11 @@ void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache){
     aas_reachability_t *reach;
     aas_reversedreachability_t *revreach;
     aas_reversedlink_t *revlink;
-    MyQueue_t Q;
 
     numreachabilityareas = aasworld.clusters[areacache->cluster].numreachabilityareas;
+
+	// reset the heap
+	aasworld.clusterCacheHeapSize = 0;
 
     // sanity check
     clusterareanum = AAS_ClusterAreaNum(areacache->cluster, areacache->areanum);
@@ -1514,18 +1479,15 @@ void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache){
     // traveltimes inside goal area
     Com_Memset(startareatraveltimes, 0, sizeof(startareatraveltimes));
 
-    // init Q
-    Q.proot = NULL; Q.pmin = NULL;  Q.size = 0;
-
     // add goal area to the list
     aasworld.areaupdate[clusterareanum].areanum = areacache->areanum;
     aasworld.areaupdate[clusterareanum].areatraveltimes = startareatraveltimes;
     aasworld.areaupdate[clusterareanum].tmptraveltime = areacache->starttraveltime;
-    AddToQueue( &Q, &aasworld.areaupdate[clusterareanum] ); // inlist true setzen Q_INQUEUE
-
-    while( Q.size ){    // nonempty
+    ClusterCacheHeapInsert( &aasworld.areaupdate[clusterareanum] );
+    
+	while( !ClusterCacheHeapEmpty() ){
         // get pointer to nearest area, take it out of the queue
-        curupdate = QueueExtractMin(&Q,qtrue);
+        curupdate = ClusterCacheHeapExtractMin();
         // iterate over all reachabilities, update traveltimes
         revreach = &aasworld.reversedreachability[curupdate->areanum];
         //
@@ -1560,7 +1522,7 @@ void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache){
                 aasworld.areaupdate[clusterareanum].tmptraveltime = t;
                 aasworld.areaupdate[clusterareanum].areatraveltimes = aasworld.areatraveltimes[nextareanum][linknum -
                                                     aasworld.areasettings[nextareanum].firstreachablearea];
-                AddToQueue( &Q, &aasworld.areaupdate[clusterareanum] );
+                ClusterCacheHeapInsert( &aasworld.areaupdate[clusterareanum] );
                 // store new best values
                 areacache->traveltimes[clusterareanum] = t;
                 areacache->reachabilities[clusterareanum] = linknum - aasworld.areasettings[nextareanum].firstreachablearea;
@@ -1571,7 +1533,7 @@ void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache){
                 aasworld.areaupdate[clusterareanum].tmptraveltime = t;
                 aasworld.areaupdate[clusterareanum].areatraveltimes = aasworld.areatraveltimes[nextareanum][linknum -
                                                     aasworld.areasettings[nextareanum].firstreachablearea];
-                Queue_DecreaseKey( &Q, &aasworld.areaupdate[clusterareanum]);
+                ClusterCacheHeapDecreaseKey( &aasworld.areaupdate[clusterareanum] );
                 // store new best values
                 areacache->traveltimes[clusterareanum] = t;
                 areacache->reachabilities[clusterareanum] = linknum - aasworld.areasettings[nextareanum].firstreachablearea;
@@ -1659,8 +1621,8 @@ void AAS_UpdatePortalRoutingCache(aas_routingcache_t *portalcache)
         portalcache->traveltimes[-clusternum] = portalcache->starttraveltime;
     } //end if
     //put the area to start with in the current read list
-    curupdate->fib_left = NULL;
-    curupdate->fib_right = NULL;
+    curupdate->next = NULL;
+    curupdate->prev = NULL;
     updateliststart = curupdate;
     updatelistend = curupdate;
     //while there are updates in the current list
@@ -1668,9 +1630,9 @@ void AAS_UpdatePortalRoutingCache(aas_routingcache_t *portalcache)
     {
         curupdate = updateliststart;
         //remove the current update from the list
-        if (curupdate->fib_left) curupdate->fib_left->fib_right = NULL;
+        if (curupdate->next) curupdate->next->prev = NULL;
         else updatelistend = NULL;
-        updateliststart = curupdate->fib_left;
+        updateliststart = curupdate->next;
         //current update is removed from the list
         curupdate->inlist = qfalse;
         //
@@ -1714,9 +1676,9 @@ void AAS_UpdatePortalRoutingCache(aas_routingcache_t *portalcache)
                     // we add the update to the end of the list
                     // we could also use a B+ tree to have a real sorted list
                     // on travel time which makes for faster routing updates
-                    nextupdate->fib_left = NULL;
-                    nextupdate->fib_right = updatelistend;
-                    if (updatelistend) updatelistend->fib_left = nextupdate;
+                    nextupdate->next = NULL;
+                    nextupdate->prev = updatelistend;
+                    if (updatelistend) updatelistend->next = nextupdate;
                     else updateliststart = nextupdate;
                     updatelistend = nextupdate;
                     nextupdate->inlist = qtrue;

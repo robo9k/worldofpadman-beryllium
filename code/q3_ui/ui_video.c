@@ -47,7 +47,6 @@ typedef struct {
 	menulist_s		mode;
 	menulist_s		tq;
 	menulist_s  	fs;
-	menulist_s  	lighting;
 	menulist_s  	texturebits;
 	menulist_s  	colordepth;
 	menulist_s  	geometry;
@@ -65,7 +64,6 @@ typedef struct
 	int mode;
 	qboolean fullscreen;
 	int tq;
-	int lighting;
 	int colordepth;
 	int texturebits;
 	int geometry;
@@ -81,23 +79,23 @@ static graphicsoptions_t		s_graphicsoptions;
 static InitialVideoOptions_s s_ivo_templates[] =
 {
 	{
-		2, qtrue, 3, 0, 2, 2, 2, 1, qfalse, 4, 2
+		2, qtrue, 3, 2, 2, 2, 1, qfalse, 4, 2
 	},
 	{
-		2, qtrue, 3, 0, 0, 0, 1, 0, qfalse, 3, 0
+		2, qtrue, 3, 0, 0, 1, 0, qfalse, 3, 0
 	},
 	{
-		1, qtrue, 2, 0, 1, 0, 0, 0, qfalse, 2, 0
+		1, qtrue, 2, 1, 0, 0, 0, qfalse, 2, 0
 	},
 	{
-		0, qtrue, 1, 1, 1, 0, 0, 0, qtrue, 0, 0
+		0, qtrue, 1, 1, 0, 0, 0, qtrue, 0, 0
 	},
 	{
-		2, qtrue, 1, 0, 0, 0, 0, 0, qtrue, 0, 0 // "custom" placeholder
+		2, qtrue, 1, 0, 0, 0, 0, qtrue, 0, 0 // "custom" placeholder
 	}
 };
 
-#define NUM_IVO_TEMPLATES ( sizeof( s_ivo_templates ) / sizeof( s_ivo_templates[0] ) )
+#define NUM_IVO_TEMPLATES ( ARRAY_LEN( s_ivo_templates ) )
 
 // x^y
 // FIXME: Overflow!
@@ -254,7 +252,7 @@ static void GraphicsOptions_GetResolutions( void )
 	{
 		char* s = resbuf;
 		unsigned int i = 0;
-		while( s && i < sizeof(detectedResolutions)/sizeof(detectedResolutions[0])-1)
+		while( s && i < ARRAY_LEN(detectedResolutions)-1 )
 		{
 			detectedResolutions[i++] = s;
 			s = strchr(s, ' ');
@@ -284,7 +282,6 @@ static void GraphicsOptions_GetInitialVideo( void )
 	s_ivo.mode        = s_graphicsoptions.mode.curvalue;
 	s_ivo.fullscreen  = s_graphicsoptions.fs.curvalue;
 	s_ivo.tq          = s_graphicsoptions.tq.curvalue;
-	s_ivo.lighting    = s_graphicsoptions.lighting.curvalue;
 	s_ivo.geometry    = s_graphicsoptions.geometry.curvalue;
 	s_ivo.filter      = s_graphicsoptions.filter.curvalue;
 	s_ivo.texturebits = s_graphicsoptions.texturebits.curvalue;
@@ -311,8 +308,6 @@ static void GraphicsOptions_CheckConfig( void )
 		if ( s_ivo_templates[i].fullscreen != s_graphicsoptions.fs.curvalue )
 			continue;
 		if ( s_ivo_templates[i].tq != s_graphicsoptions.tq.curvalue )
-			continue;
-		if ( s_ivo_templates[i].lighting != s_graphicsoptions.lighting.curvalue )
 			continue;
 		if ( s_ivo_templates[i].geometry != s_graphicsoptions.geometry.curvalue )
 			continue;
@@ -352,10 +347,6 @@ static void GraphicsOptions_UpdateMenuItems( void )
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
 	if ( s_ivo.tq != s_graphicsoptions.tq.curvalue )
-	{
-		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
-	}
-	if ( s_ivo.lighting != s_graphicsoptions.lighting.curvalue )
 	{
 		s_graphicsoptions.apply.generic.flags &= ~(QMF_HIDDEN|QMF_INACTIVE);
 	}
@@ -429,7 +420,6 @@ static void GraphicsOptions_ApplyChanges( void *unused, int notification )
 		trap_Cvar_SetValue( "r_depthbits", 24 );
 		break;
 	}
-	trap_Cvar_SetValue( "r_vertexLight", s_graphicsoptions.lighting.curvalue );
 
 	if ( s_graphicsoptions.geometry.curvalue == 2 )
 	{
@@ -519,7 +509,6 @@ static void GraphicsOptions_Event( void* ptr, int event ) {
 		ivo = &s_ivo_templates[s_graphicsoptions.list.curvalue];
 		s_graphicsoptions.mode.curvalue        = ivo->mode;
 		s_graphicsoptions.tq.curvalue          = ivo->tq;
-		s_graphicsoptions.lighting.curvalue    = ivo->lighting;
 		s_graphicsoptions.colordepth.curvalue  = ivo->colordepth;
 		s_graphicsoptions.texturebits.curvalue = ivo->texturebits;
 		s_graphicsoptions.geometry.curvalue    = ivo->geometry;
@@ -617,7 +606,6 @@ static void GraphicsOptions_SetMenuItems( void )
 		s_graphicsoptions.tq.curvalue = 3;
 	}
 
-	s_graphicsoptions.lighting.curvalue = trap_Cvar_VariableValue( "r_vertexLight" ) != 0;
 	switch ( ( int ) trap_Cvar_VariableValue( "r_texturebits" ) )
 	{
 	default:
@@ -712,13 +700,6 @@ void GraphicsOptions_MenuInit( void )
 		"Fast",
 		"Faster",
 		"Custom",
-		0
-	};
-
-	static const char *lighting_names[] =
-	{
-		"Lightmap",
-		"Vertex",
 		0
 	};
 
@@ -877,16 +858,8 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.fs.generic.flags		= QMF_SMALLFONT;
 	s_graphicsoptions.fs.generic.x		= X_OFMAINPART;
 	s_graphicsoptions.fs.generic.y		= y;
+	s_graphicsoptions.fs.generic.toolTip = "On: Uses entire display for game, ensure correct resolution is set to match your physical display for best graphic results. \nOff: Play the game in a window, change resolution to change size of window. (Not recommended).";
 	y += ( BIGCHAR_HEIGHT + 2 );
-
-	// references/modifies "r_vertexLight"
-	s_graphicsoptions.lighting.generic.type  = MTYPE_SPINCONTROL;
-	s_graphicsoptions.lighting.generic.name	 = "Lighting:";
-	s_graphicsoptions.lighting.generic.flags = QMF_SMALLFONT;
-	s_graphicsoptions.lighting.generic.x	 = X_OFMAINPART;
-	s_graphicsoptions.lighting.generic.y	 = y;
-	s_graphicsoptions.lighting.itemnames     = lighting_names;
-	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_lodBias" & "subdivisions"
 	s_graphicsoptions.geometry.generic.type  = MTYPE_SPINCONTROL;
@@ -904,6 +877,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.tq.generic.x		= X_OFMAINPART;
 	s_graphicsoptions.tq.generic.y		= y;
 	s_graphicsoptions.tq.itemnames		= td_names;
+	s_graphicsoptions.tq.generic.toolTip = "Adjust overall texture detail levels based on graphics card performance.";
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_textureBits"
@@ -913,6 +887,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.texturebits.generic.x	    = X_OFMAINPART;
 	s_graphicsoptions.texturebits.generic.y	    = y;
 	s_graphicsoptions.texturebits.itemnames     = tq_names;
+	s_graphicsoptions.texturebits.generic.toolTip = "Adjust texture detail based on graphics card performance.";
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_textureMode"
@@ -922,6 +897,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.filter.generic.x	    = X_OFMAINPART;
 	s_graphicsoptions.filter.generic.y	    = y;
 	s_graphicsoptions.filter.itemnames      = filter_names;
+	s_graphicsoptions.filter.generic.toolTip = "A graphic sharpness filter. Use bilinear for lower end graphics cards. Use Trilinear for mid to higher range graphics cards.";
 	y += BIGCHAR_HEIGHT+2;
 
 	// references/modifies "r_ext_compressed_textures"
@@ -932,6 +908,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.ct.generic.flags	= QMF_SMALLFONT;
 	s_graphicsoptions.ct.generic.x	= X_OFMAINPART;
 	s_graphicsoptions.ct.generic.y	= y;
+	s_graphicsoptions.ct.generic.toolTip = "Switch on to allow your graphics card to store texture data compressed if supported (most graphics card regardless of type will support this).";
 	y += BIGCHAR_HEIGHT + 2;
 
 	// references/modifies "r_ext_max_anisotropy"
@@ -941,6 +918,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.af.generic.x	= X_OFMAINPART;
 	s_graphicsoptions.af.generic.y	= y;
 	s_graphicsoptions.af.itemnames	= af_names;
+	s_graphicsoptions.af.generic.toolTip = "Sharpens game textures. Not recommended for low end graphics cards. Requires high graphics card performance and memory!";
 	y += ( BIGCHAR_HEIGHT + 2 );
  
 	// references/modifies "r_ext_max_multisampling"
@@ -950,6 +928,7 @@ void GraphicsOptions_MenuInit( void )
 	s_graphicsoptions.aa.generic.x	= X_OFMAINPART;
 	s_graphicsoptions.aa.generic.y	= y;
 	s_graphicsoptions.aa.itemnames	= aa_names;
+	s_graphicsoptions.aa.generic.toolTip = "Smooth out rough edges. Not recommended for low end graphics cards. Requires high graphics card performance and memory!";
 	y += ( BIGCHAR_HEIGHT + 2 );
 
 	s_graphicsoptions.back.generic.type	    = MTYPE_BITMAP;
@@ -984,7 +963,6 @@ void GraphicsOptions_MenuInit( void )
 
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.colordepth );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.fs );
-	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.lighting );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.geometry );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.tq );
 	Menu_AddItem( &s_graphicsoptions.menu, ( void * ) &s_graphicsoptions.texturebits );

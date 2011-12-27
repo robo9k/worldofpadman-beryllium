@@ -76,6 +76,8 @@ cvar_t *r_allowResize; // make window resizable
 cvar_t *r_centerWindow;
 cvar_t *r_sdlDriver;
 
+qboolean haveMultiSample = qfalse; 
+
 void (APIENTRYP qglActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglClientActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat t);
@@ -90,7 +92,7 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( void )
 {
-	IN_Shutdown();
+	ri.IN_Shutdown();
 
 	SDL_QuitSubSystem( SDL_INIT_VIDEO );
 	screen = NULL;
@@ -98,6 +100,19 @@ void GLimp_Shutdown( void )
 	Com_Memset( &glConfig, 0, sizeof( glConfig ) );
 	Com_Memset( &glState, 0, sizeof( glState ) );
 }
+
+/*
+===============
+GLimp_Minimize
+
+Minimize the game so that user is back at the desktop
+===============
+*/
+void GLimp_Minimize(void)
+{
+	SDL_WM_IconifyWindow();
+}
+
 
 /*
 ===============
@@ -342,13 +357,15 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder)
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, tdepthbits );
 		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, tstencilbits );
 
-		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, samples ? 1 : 0 );
-		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, samples );
+		if( haveMultiSample )
+		{
+			SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, samples ? 1 : 0 );
+			SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, samples );
+		}
 
 		if(r_stereoEnabled->integer)
 		{
-			glConfig.stereoEnabled = qtrue;
-			SDL_GL_SetAttribute(SDL_GL_STEREO, 1);
+			glConfig.stereoEnabled = ( SDL_GL_SetAttribute(SDL_GL_STEREO, 1) == 0 );
 		}
 		else
 		{
@@ -451,10 +468,10 @@ static qboolean GLimp_StartDriverAndSetMode(int mode, qboolean fullscreen, qbool
 
 		SDL_VideoDriverName( driverName, sizeof( driverName ) - 1 );
 		ri.Printf( PRINT_ALL, "SDL using driver \"%s\"\n", driverName );
-		Cvar_Set( "r_sdlDriver", driverName );
+		ri.Cvar_Set( "r_sdlDriver", driverName );
 	}
 
-	if (fullscreen && Cvar_VariableIntegerValue( "in_nograb" ) )
+	if (fullscreen && ri.Cvar_VariableIntegerValue( "in_nograb" ) )
 	{
 		ri.Printf( PRINT_ALL, "Fullscreen not allowed with in_nograb 1\n");
 		ri.Cvar_Set( "r_fullscreen", "0" );
@@ -630,6 +647,17 @@ static void GLimp_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n" );
 	}
 
+	if( GLimp_HaveExtension( "GL_ARB_multisample" ) )
+	{
+		haveMultiSample = qtrue;
+		if( r_ext_multisample->value )
+			ri.Printf( PRINT_ALL, "...using GL_ARB_multisample\n");
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "...GL_ARB_multisample not found\n");
+	}
+
 	textureFilterAnisotropic = qfalse;
 	if ( GLimp_HaveExtension( "GL_EXT_texture_filter_anisotropic" ) )
 	{
@@ -673,7 +701,7 @@ void GLimp_Init( void )
 	r_allowResize = ri.Cvar_Get( "r_allowResize", "0", CVAR_ARCHIVE );
 	r_centerWindow = ri.Cvar_Get( "r_centerWindow", "0", CVAR_ARCHIVE );
 
-	if( Cvar_VariableIntegerValue( "com_abnormalExit" ) )
+	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
 	{
 		ri.Cvar_Set( "r_mode", va( "%d", R_MODE_FALLBACK ) );
 		ri.Cvar_Set( "r_fullscreen", "0" );
@@ -681,16 +709,16 @@ void GLimp_Init( void )
 		ri.Cvar_Set( "com_abnormalExit", "0" );
 	}
 
-	Sys_SetEnv( "SDL_VIDEO_CENTERED", r_centerWindow->integer ? "1" : "" );
+	ri.Sys_SetEnv( "SDL_VIDEO_CENTERED", r_centerWindow->integer ? "1" : "" );
 
-	Sys_GLimpInit( );
+	ri.Sys_GLimpInit( );
 
 	// Create the window and set up the context
 	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, r_noborder->integer))
 		goto success;
 
 	// Try again, this time in a platform specific "safe mode"
-	Sys_GLimpSafeInit( );
+	ri.Sys_GLimpSafeInit( );
 
 	if(GLimp_StartDriverAndSetMode(r_mode->integer, r_fullscreen->integer, qfalse))
 		goto success;
@@ -706,7 +734,7 @@ void GLimp_Init( void )
 	}
 
 	// Nothing worked, give up
-	ri.Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem\n" );
+	ri.Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
 
 success:
 	// This values force the UI to disable driver selection
@@ -734,7 +762,7 @@ success:
 	ri.Cvar_Get( "r_availableModes", "", CVAR_ROM );
 
 	// This depends on SDL_INIT_VIDEO, hence having it here
-	IN_Init( );
+	ri.IN_Init( );
 }
 
 
@@ -765,7 +793,7 @@ void GLimp_EndFrame( void )
 			// Find out the current state
 			fullscreen = !!( s->flags & SDL_FULLSCREEN );
 				
-			if( r_fullscreen->integer && Cvar_VariableIntegerValue( "in_nograb" ) )
+			if( r_fullscreen->integer && ri.Cvar_VariableIntegerValue( "in_nograb" ) )
 			{
 				ri.Printf( PRINT_ALL, "Fullscreen not allowed with in_nograb 1\n");
 				ri.Cvar_Set( "r_fullscreen", "0" );
@@ -783,9 +811,9 @@ void GLimp_EndFrame( void )
 		{
 			// SDL_WM_ToggleFullScreen didn't work, so do it the slow way
 			if( !sdlToggled )
-				Cbuf_AddText( "vid_restart" );
+				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart");
 
-			IN_Restart( );
+			ri.IN_Restart( );
 		}
 
 		r_fullscreen->modified = qfalse;

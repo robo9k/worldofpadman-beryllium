@@ -206,10 +206,12 @@ static void StartServer_Update( void ) {
 		if (top+i >= s_startserver.nummaps)
 			break;
 
-		Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%sA", s_startserver.maplist[top+i] );
-		if(!trap_R_RegisterShaderNoMip(picname[i]))
-			Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", s_startserver.maplist[top+i] );
-		Com_sprintf( focuspicnames[i], sizeof(focuspicnames[i]), "levelshots/%sB", s_startserver.maplist[top+i] );
+		// try to load special levelshot first, fallback to default
+		Com_sprintf( picname[i], sizeof( picname[i] ), "levelshots/%sA", s_startserver.maplist[top+i] );
+		if ( !trap_R_RegisterShaderNoMip( picname[i] ) ) {
+			Com_sprintf( picname[i], sizeof( picname[i] ), "levelshots/%s", s_startserver.maplist[top+i] );
+		}
+		Com_sprintf( focuspicnames[i], sizeof( focuspicnames[i] ), "levelshots/%sB", s_startserver.maplist[top+i] );
 
 		s_startserver.mappics[i].generic.flags &= ~(QMF_HIGHLIGHT|QMF_INACTIVE|QMF_HIDDEN);
 		s_startserver.mappics[i].generic.name   = picname[i];
@@ -512,7 +514,7 @@ static void StartServer_MenuEvent( void* ptr, int event ) {
 			trap_Cvar_SetValue ("pointlimit", Com_Clamp( 0, fraglimit, fraglimit ) );
 //			trap_Cvar_SetValue ("capturelimit", Com_Clamp( 0, flaglimit, flaglimit ) );
 			trap_Cvar_SetValue( "g_friendlyfire", friendlyfire );
-			trap_Cvar_SetValue( "g_modInstagib", instagib );
+			trap_Cvar_SetValue( "g_instaPad", instagib );
 			if(gametype==GT_LPS)
 				trap_Cvar_Set("g_LPS_startlives",s_startserver.StartLives.field.buffer);
 			trap_Cvar_SetValue( "sv_pure", pure );
@@ -656,20 +658,6 @@ static void StartServer_LevelshotDraw( void *self ) {
 
 static void StartServer_Draw( void )
 {
-//	qhandle_t	curshader;
-
-	// Com_sprintf( picname[i], sizeof(picname[i]), "levelshots/%s", s_startserver.maplist[top+i] );
-/*	if(s_startserver.currentmap!=-1)
-	{
-		curshader=trap_R_RegisterShaderNoMip(va("levelshots/%s", s_startserver.maplist[s_startserver.currentmap]));
-		if(!curshader) curshader=trap_R_RegisterShaderNoMip(GAMESERVER_UNKNOWNMAP);
-
-		UI_DrawHandlePic(438,108,128,96,curshader);
-
-	//	UI_DrawStringNS(502,212,s_startserver.longnamemaplist[s_startserver.currentmap],UI_CENTER,14.0f,color_white);
-		UI_DrawStringNS(502,212,s_startserver.maplist[s_startserver.currentmap],UI_CENTER,14.0f,color_white);
-	}
-*/
 	// standard menu drawing
 	Menu_Draw( &s_startserver.menu );
 }
@@ -949,7 +937,7 @@ void StartServer_Cache( void )
 {
 	int				i;
 	const char		*info;
-	char			picname[64];
+	char			picname[MAX_QPATH];
 
 	trap_R_RegisterShaderNoMip( STARTSERVER_FIGHT0 );
 	trap_R_RegisterShaderNoMip( STARTSERVER_FIGHT1 );
@@ -968,21 +956,21 @@ void StartServer_Cache( void )
 
 	s_startserver.nummaps = UI_GetNumArenas();
 
-	for( i = 0; i < s_startserver.nummaps; i++ ) {
+	for ( i = 0; i < s_startserver.nummaps; i++ ) {
 		info = UI_GetArenaInfoByNumber( i );
 
-		Q_strncpyz( s_startserver.maplist[i], Info_ValueForKey( info, "map"), MAX_NAMELENGTH );
-		//Q_strupr( s_startserver.maplist[i] );
-		s_startserver.mapGamebits[i] = GametypeBits( Info_ValueForKey( info, "type") );
+		Q_strncpyz( s_startserver.maplist[i], Info_ValueForKey( info, "map" ), sizeof( s_startserver.maplist[i] ) );
+		s_startserver.mapGamebits[i] = GametypeBits( Info_ValueForKey( info, "type" ) );
 
-		//TODO: maybe we could remove this completely
-		Com_sprintf( picname, sizeof(picname), "levelshots/%sA", s_startserver.maplist[i] );
-		if(!trap_R_RegisterShaderNoMip(picname)) {
-			Com_sprintf( picname, sizeof(picname), "levelshots/%s", s_startserver.maplist[i] );
-			trap_R_RegisterShaderNoMip(picname);
+		Com_sprintf( picname, sizeof( picname ), "levelshots/%sA", s_startserver.maplist[i] );
+		if ( !trap_R_RegisterShaderNoMip( picname ) ) {
+			Com_sprintf( picname, sizeof( picname ), "levelshots/%s", s_startserver.maplist[i] );
+			trap_R_RegisterShaderNoMip( picname );
 		}
+		Com_sprintf( picname, sizeof( picname ), "levelshots/%sB", s_startserver.maplist[i] );
+		trap_R_RegisterShaderNoMip( picname );
 	}
-	s_startserver.maxpages = (s_startserver.nummaps + MAX_MAPSPERPAGE-1)/MAX_MAPSPERPAGE;
+	s_startserver.maxpages = ( ( s_startserver.nummaps + MAX_MAPSPERPAGE - 1 ) / MAX_MAPSPERPAGE );
 }
 
 
@@ -1101,7 +1089,7 @@ static void ServerPlayerIcon( const char *modelAndSkin, char *iconName, int icon
 	char	model[MAX_QPATH];
 
 	Q_strncpyz( model, modelAndSkin, sizeof(model));
-	skin = Q_strrchr( model, '/' );
+	skin = strrchr( model, '/' );
 	if ( skin ) {
 		*skin++ = '\0';
 	}

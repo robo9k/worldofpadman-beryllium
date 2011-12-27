@@ -17,7 +17,7 @@
 
 //setup the deathmatch AI
 void BotSetupDeathmatchAI(void);
-//let the bot live within it's deathmatch AI net
+//let the bot live within its deathmatch AI net
 void BotDeathmatchAI(bot_state_t *bs, float thinktime);
 
 //choose a weapon

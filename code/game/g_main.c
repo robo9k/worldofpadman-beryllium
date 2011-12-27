@@ -46,6 +46,8 @@ vmCvar_t	g_motd;
 vmCvar_t	g_synchronousClients;
 vmCvar_t	g_warmup;
 vmCvar_t	g_doWarmup;
+vmCvar_t	g_warmupReady;
+vmCvar_t	g_curWarmupReady;
 vmCvar_t	g_restarted;
 vmCvar_t	g_log;
 vmCvar_t	g_logSync;
@@ -62,18 +64,16 @@ vmCvar_t	pmove_msec;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
 
-vmCvar_t	g_WarmupReady;
-vmCvar_t	g_curWarmupReady;
 vmCvar_t	g_q3Items;
-vmCvar_t	g_skylensflare;
+vmCvar_t	g_sky;
+vmCvar_t	g_skyLensflare;
 vmCvar_t	g_LPS_startlives;
 vmCvar_t	g_LPS_flags;
-vmCvar_t	wopSky;
 vmCvar_t	g_KillerduckHealth;
 vmCvar_t	nextmapBackUp;
 vmCvar_t	g_transmitSVboastermissiles;
 vmCvar_t	wop_storyMode;
-vmCvar_t	g_bambamSpread;
+vmCvar_t	g_suddenDeath;
 
 // Modifiers
 vmCvar_t	g_modInstagib;
@@ -82,50 +82,7 @@ vmCvar_t	g_modInstagib_WeaponJump;
 // Game Stats
 vmCvar_t	g_trackGameStats;
 
-
-/* added beryllium */
-
-vmCvar_t	be_version;
-vmCvar_t	g_version;
-
-vmCvar_t	be_voteDuration;
-vmCvar_t	be_allowedVotes;
-vmCvar_t	be_votePause;
-vmCvar_t	be_voteRate;
-vmCvar_t	be_votePass;
-vmCvar_t	be_maxVotes;
-
-vmCvar_t	be_respawnProtect;
-
-vmCvar_t	be_switchTeamTime;
-
-vmCvar_t	be_maxNameChanges;
-
-vmCvar_t	be_checkGUIDs;
-
-vmCvar_t	be_maxConnections;
-
-vmCvar_t	be_campDistance;
-
-vmCvar_t	be_checkPings;
-
-/* FIXME: Merge this into wop codebase as g_oneUp */
-vmCvar_t	be_oneUp;
-
-vmCvar_t	be_noSecrets;
-vmCvar_t	be_debugSecrets;
-
-vmCvar_t	be_hideChat;
-
-vmCvar_t	be_banFile;
-
-vmCvar_t	g_truePing;
-
-vmCvar_t	be_chatFlags;
-
-vmCvar_t	be_overrideEntities;
-
-/* end beryllium */
+vmCvar_t	g_logDamage;
 
 
 // bk001129 - made static to avoid aliasing
@@ -160,7 +117,10 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_teamForceBalance, "g_teamForceBalance", "1", CVAR_ARCHIVE  },
 
 	{ &g_warmup, "g_warmup", "20", CVAR_ARCHIVE|CVAR_SERVERINFO, 0, qtrue  },
-	{ &g_doWarmup, "g_doWarmup", "0", CVAR_SERVERINFO, 0, qtrue  },
+	{ &g_doWarmup, "g_doWarmup", "0", CVAR_SERVERINFO|CVAR_ARCHIVE, 0, qtrue  },
+	// TODO: Remove g_doWarmup and simply use g_warmup > 0 ?
+	{ &g_warmupReady,		"g_warmupReady",	"0.0",	( CVAR_SYSTEMINFO | CVAR_ARCHIVE | CVAR_LATCH ),	0, qtrue },
+	{ &g_curWarmupReady,	"g_curWarmupReady",	"0.0",	( CVAR_SYSTEMINFO | CVAR_ROM ),						0, qfalse },
 	{ &g_log, "g_log", "games.log", CVAR_ARCHIVE, 0, qfalse  },
 	{ &g_logSync, "g_logSync", "0", CVAR_ARCHIVE, 0, qfalse  },
 
@@ -170,13 +130,13 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_filterBan, "g_filterBan", "1", CVAR_ARCHIVE, 0, qfalse  },
 
 	{ &g_needpass, "g_needpass", "0", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse },
-	
+
 	{ &g_dedicated, "dedicated", "0", 0, 0, qfalse  },
 
 	{ &g_speed, "g_speed", DEFAULT_GSPEED_STR, 0, 0, qtrue  }, // q3: 320, ef?: 250 ... new wop 280?
 	{ &g_gravity, "g_gravity", "800", 0, 0, qtrue  },
 	{ &g_knockback, "g_knockback", "1000", 0, 0, qtrue  },
-	{ &g_quadfactor, "g_quadfactor", "3", 0, 0, qtrue  },
+	{ &g_quadfactor, "g_quadfactor", "2", 0, 0, qtrue  },
 	{ &g_weaponRespawn, "g_weaponrespawn", "5", 0, 0, qtrue  },
 	{ &g_weaponTeamRespawn, "g_weaponTeamRespawn", "5", 0, 0, qtrue }, // q3: 30
 	{ &g_forcerespawn, "g_forcerespawn", "20", 0, 0, qtrue },
@@ -193,84 +153,38 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_listEntity, "g_listEntity", "0", 0, 0, qfalse },
 
 	{ &g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse},
+	/* Still causing issues, maybe use pmove_float from OpenArena instead */
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
 	{ &g_KillerduckHealth, "g_KillerduckHealth", "-1",CVAR_ARCHIVE,0,qfalse },
-	// TODO: Remove extended warmup code entirely or make it work without these cvars clientside
-	//       Make g_doWarmup a bitflag for normal/allready?
-	{ &g_WarmupReady, "g_warmupReady", "0", CVAR_SERVERINFO|CVAR_ARCHIVE, 0, qtrue},
-	{ &g_curWarmupReady, "g_curWarmupReady", "0", CVAR_SERVERINFO|CVAR_ROM, 0, qfalse},
 
 	{ &g_q3Items, "g_q3Items", "0", CVAR_ARCHIVE|CVAR_LATCH, 0, qfalse},
 	{ &wop_storyMode, "wop_storyMode", "",CVAR_ROM, 0, qfalse},
-	{ &g_skylensflare, "g_skylensflare", "", CVAR_SERVERINFO|CVAR_ROM, 0, qfalse}, // FIXME: CVAR_SYSTEMINFO
-	{ &g_LPS_startlives, "g_LPS_startlives", "10", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_LATCH, 0, qfalse}, // TODO: Rename this and below to more generic names for future use?
+	{ &g_sky,			"g_sky",			"", ( CVAR_SYSTEMINFO | CVAR_ROM ),	0,	qfalse },
+	{ &g_skyLensflare,	"g_skyLensflare",	"",	( CVAR_SYSTEMINFO | CVAR_ROM ),	0,	qfalse },
+	{ &g_LPS_startlives, "g_LPS_startlives", "10", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_LATCH, 0, qfalse},
+	// TODO: Remove g_LPS_flags and use dmflags instead, at least as cvarname
 	{ &g_LPS_flags, "g_LPS_flags", "0", CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_LATCH, 0, qfalse},
-	{ &wopSky, "wopSky", "", CVAR_SERVERINFO|CVAR_ROM,0,qfalse}, // FIXME: CVAR_SYSTEMINFO
 	{ &nextmapBackUp, "nextmapBackUp", "", 0,0,qfalse},
 	{ &g_transmitSVboastermissiles,"g_transmitSVboastermissiles","0",0,0,qtrue},
+	{ &g_suddenDeath, "g_suddenDeath", "1", CVAR_ARCHIVE, 0, qfalse },
 
 	// Modifiers
-	{ &g_modInstagib, "g_modInstagib", "0", CVAR_SERVERINFO | CVAR_LATCH, 0, qtrue },
-	{ &g_modInstagib_WeaponJump, "g_modInstagib_WeaponJump", "1", CVAR_SERVERINFO, 0, qtrue },
-	
+	{ &g_modInstagib, "g_instaPad", "0", CVAR_SERVERINFO | CVAR_LATCH | CVAR_ARCHIVE, 0, qtrue },
+	// TODO: Either rename again or allow instapad-weaponjump in non-instapad gameplay :)
+	{ &g_modInstagib_WeaponJump, "g_weaponJump", "1", CVAR_ARCHIVE, 0, qtrue },
+
 	{ &g_trackGameStats, "g_trackGameStats", "1", 0, 0, qfalse },
 	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse},
-	{ &g_bambamSpread, "g_bambamSpread", "5", 0, 0, qfalse},
 
+	{ NULL, PLAYERINFO_TEAM,	PLAYERINFO_NONE, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+	{ NULL, PLAYERINFO_BOT,		PLAYERINFO_NONE, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 
-	/* added beryllium */
-
-	{ &be_version, "g_beryllium", "v"BERYLLIUM_VERSION_S, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
-	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
-	{ &g_version, "g_version", G_VERSION_S, CVAR_ROM, 0, qfalse },
-
-	/* FIXME: Use proper g_ instead of be_ prefix? */
-	{ &be_voteDuration, "be_voteDuration", "30", CVAR_ARCHIVE, 0, qfalse },
-	/* FIXME: Keep in sync with vote command handler string array? */
-	{ &be_allowedVotes, "be_allowedVotes", "/nextmap/map/map_restart/kick/clientkick/timelimit/pointlimit"
-	                                       "/g_gametype/setgametype/shuffleteams/",
-	                                       CVAR_ARCHIVE, 0, qtrue },
-	{ &be_votePause, "be_votePause", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &be_voteRate, "be_voteRate", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &be_votePass, "be_votePass", "0.5", CVAR_ARCHIVE, 0, qfalse },
-	{ &be_maxVotes, "be_maxVotes", "3", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_respawnProtect, "be_respawnProtect", "0", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_switchTeamTime, "be_switchTeamTime", "5", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_maxNameChanges, "be_maxNameChanges", "-1", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_checkGUIDs, "be_checkGUIDs", "0", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_maxConnections, "be_maxConnections", "0", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_campDistance, "be_campDistance", "0", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_checkPings, "be_checkPings", "0", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_oneUp, "be_oneUp", "0", CVAR_ARCHIVE, 0, qtrue },
-
-	{ &be_noSecrets, "be_noSecrets", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qtrue },
-	{ &be_debugSecrets, "be_debugSecrets", "0", CVAR_CHEAT, 0, qfalse },
-
-	{ &be_hideChat, "be_hideChat", "", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse },
-
-	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue },
-
-	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue },
-
-	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue }
-
-	/* end beryllium */
+	{ &g_logDamage, "g_logDamage", "0", CVAR_ARCHIVE, 0, qfalse }
 };
 
-// bk001129 - made static to avoid aliasing
-static int gameCvarTableSize = sizeof( gameCvarTable ) / sizeof( gameCvarTable[0] );
+static int gameCvarTableSize = ARRAY_LEN( gameCvarTable );
 
 
 void G_InitGame( int levelTime, int randomSeed, int restart );
@@ -459,20 +373,9 @@ void G_UpdateCvars( void ) {
 				cv->modificationCount = cv->vmCvar->modificationCount;
 
 				if ( cv->trackChange ) {
-					/* changed beryllium */
-					/*
-					trap_SendServerCommand( -1, va("print \"Server: %s changed to %s\n\"", 
+					// FIXME: This will display the current value instead of the latched one
+					trap_SendServerCommand( -1, va("print \"Server: %s changed to %s\n\"",
 						cv->cvarName, cv->vmCvar->string ) );
-					*/
-					if ( cv->cvarFlags & CVAR_LATCH ) {
-						/* game code is unaware of the new latched value, so just don't print it */
-						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed.\n", cv->cvarName ) );
-					}
-					else {
-						/* FIXME: Don't print the new value at all? */
-						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed to "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT".\n", cv->cvarName, cv->vmCvar->string ) );
-					}
-					/* end beryllium */
 					G_LogPrintf( "CvarChange: %s %s\n", cv->cvarName, cv->vmCvar->string );
 				}
 
@@ -504,9 +407,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	G_ProcessIPBans();
 
 	G_InitMemory();
-	/* added beryllium */
-	BE_InitMemory();
-	/* end beryllium */
 
 	// set some level globals
 	memset( &level, 0, sizeof( level ) );
@@ -516,9 +416,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// the wrong vote-cs-info hasn't disrupted the game<->cgame infos because the info in cgs is also cleaned up
 	// ... in wop we use this CS directly from the UI
 	trap_SetConfigstring( CS_VOTE_TIME, "" );
-	trap_SetConfigstring( CS_VOTE_STRING, "" );	
+	trap_SetConfigstring( CS_VOTE_STRING, "" );
 
-	level.snd_fry = G_SoundIndex("sounds/player/fry.wav");	// FIXME standing in lava / slime
+	level.snd_fry = G_SoundIndex("sounds/player/fry");	// FIXME standing in lava / slime
 
 	if ( g_gametype.integer != GT_SINGLE_PLAYER && g_log.string[0] ) {
 		if ( g_logSync.integer ) {
@@ -546,10 +446,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_InitWorldSession();
 
-	/* added beryllium */
-	BE_InitWorldStorage();
-	/* end beryllium */
-
 	// initialize all entities for this game
 	memset( g_entities, 0, MAX_GENTITIES * sizeof(g_entities[0]) );
 	level.gentities = g_entities;
@@ -569,8 +465,12 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	// range are NEVER anything but clients
 	level.num_entities = MAX_CLIENTS;
 
+	for ( i=0 ; i<MAX_CLIENTS ; i++ ) {
+		g_entities[i].classname = "clientslot";
+	}
+
 	// let the server system know where the entites are
-	trap_LocateGameData( level.gentities, level.num_entities, sizeof( gentity_t ), 
+	trap_LocateGameData( level.gentities, level.num_entities, sizeof( gentity_t ),
 		&level.clients[0].ps, sizeof( level.clients[0] ) );
 
 	// reserve some spots for dead player bodies
@@ -607,9 +507,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		trap_Cvar_Set("nextmapBackUp","");
 	}
 
-	/* added beryllium */
-	BE_InitBeryllium();
-	/* end beryllium */
+	G_InitGameinfo();
 }
 
 /*
@@ -633,17 +531,11 @@ void G_ShutdownGame( int restart ) {
 		G_LogPrintf("ShutdownGame:\n" );
 		G_LogPrintf("------------------------------------------------------------\n" );
 		trap_FS_FCloseFile( level.logFile );
-		/* added beryllium */
 		level.logFile = 0;
-		/* end added */
 	}
 
 	// write all the client session data so we can get it back
 	G_WriteSessionData();
-
-	/* added beryllium */
-	BE_WriteStorageData();
-	/* end beryllium */
 
 	if ( trap_Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
@@ -722,14 +614,13 @@ void AddTournamentPlayer( void ) {
 			continue;
 		}
 		// never select the dedicated follow or scoreboard clients
-		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD || 
+		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ||
 			client->sess.spectatorClient < 0  ) {
 			continue;
 		}
 
-		if ( !nextInLine || client->sess.spectatorTime < nextInLine->sess.spectatorTime ) {
+		if(!nextInLine || client->sess.spectatorNum > nextInLine->sess.spectatorNum)
 			nextInLine = client;
-		}
 	}
 
 	if ( !nextInLine ) {
@@ -740,6 +631,33 @@ void AddTournamentPlayer( void ) {
 
 	// set them to free-for-all team
 	SetTeam( &g_entities[ nextInLine - level.clients ], "f" );
+}
+
+/*
+=======================
+AddTournamentQueue
+
+Add client to end of tournament queue
+=======================
+*/
+
+void AddTournamentQueue(gclient_t *client)
+{
+	int index;
+	gclient_t *curclient;
+	
+	for(index = 0; index < level.maxclients; index++)
+	{
+		curclient = &level.clients[index];
+		
+		if(curclient->pers.connected != CON_DISCONNECTED)
+		{
+			if(curclient == client)
+				curclient->sess.spectatorNum = 0;
+			else if(curclient->sess.sessionTeam == TEAM_SPECTATOR)
+				curclient->sess.spectatorNum++;
+		}
+	}
 }
 
 /*
@@ -841,10 +759,10 @@ int QDECL SortRanks( const void *a, const void *b ) {
 
 	// then spectators
 	if ( ca->sess.sessionTeam == TEAM_SPECTATOR && cb->sess.sessionTeam == TEAM_SPECTATOR ) {
-		if ( ca->sess.spectatorTime < cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum > cb->sess.spectatorNum ) {
 			return -1;
 		}
-		if ( ca->sess.spectatorTime > cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum < cb->sess.spectatorNum ) {
 			return 1;
 		}
 		return 0;
@@ -856,12 +774,10 @@ int QDECL SortRanks( const void *a, const void *b ) {
 		return -1;
 	}
 
-	/* added beryllium */
 	if ( ( GT_LPS == g_gametype.integer ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
-		/* NOTE: PERS_SCORE already equals livesleft, see fix in WoP_RunFrame */
+		// PERS_SCORE already equals livesleft, see fix in WoP_RunFrame
 		goto LPS_NOPOINTS;
 	}
-	/* end beryllium */
 
 	// then sort by score
 	if ( ca->ps.persistant[PERS_SCORE]
@@ -872,10 +788,8 @@ int QDECL SortRanks( const void *a, const void *b ) {
 		< cb->ps.persistant[PERS_SCORE] ) {
 		return 1;
 	}
-	
-	/* added beryllium */
+
 LPS_NOPOINTS:
-	/* end beryllium */
 
 	if ( g_gametype.integer == GT_LPS ) {
 		if ( ca->sess.livesleft
@@ -886,7 +800,7 @@ LPS_NOPOINTS:
 			< cb->sess.livesleft ) {
 			return 1;
 		}
-		
+
 		// same amount of lives, check for none
 		if ( ca->sess.livesleft <= 0 ) {
 			if ( ca->lastDeathTime
@@ -929,10 +843,10 @@ static int QDECL SortRanksLPS( const void *a, const void *b ) {
 
 	// then spectators
 	if ( ca->sess.sessionTeam == TEAM_SPECTATOR && cb->sess.sessionTeam == TEAM_SPECTATOR ) {
-		if ( ca->sess.spectatorTime < cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum < cb->sess.spectatorNum ) {
 			return -1;
 		}
-		if ( ca->sess.spectatorTime > cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum > cb->sess.spectatorNum ) {
 			return 1;
 		}
 		return 0;
@@ -953,7 +867,7 @@ static int QDECL SortRanksLPS( const void *a, const void *b ) {
 		< cb->sess.livesleft ) {
 		return 1;
 	}
-		
+
 	// same amount of lives, check for none
 	if ( ca->sess.livesleft <= 0 ) {
 		if ( ca->lastDeathTime
@@ -985,6 +899,8 @@ void CalculateRanks( void ) {
 	int		score;
 	int		newScore;
 	gclient_t	*cl;
+	char teaminfo[MAX_CVAR_VALUE_STRING];
+	char botinfo[MAX_CVAR_VALUE_STRING];
 
 	level.follow1 = -1;
 	level.follow2 = -1;
@@ -993,30 +909,34 @@ void CalculateRanks( void ) {
 	level.numPlayingClients = 0;
 	level.numVotingClients = 0;		// don't count bots
 
-	/* changed beryllium */
-	/*
-	for ( i = 0; i < TEAM_NUM_TEAMS; i++ ) {
-	*/
-	for ( i = 0; i < ARRAY_LEN( level.numteamVotingClients ); ++i ) {
-	/* end beryllium */
+	teaminfo[0] = '\0';
+	botinfo[0] = '\0';
+
+	for (i = 0; i < ARRAY_LEN(level.numteamVotingClients); i++)
 		level.numteamVotingClients[i] = 0;
-	}
+
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( level.clients[i].pers.connected != CON_DISCONNECTED ) {
+			int team = level.clients[i].sess.sessionTeam;
 			level.sortedClients[level.numConnectedClients] = i;
 			level.numConnectedClients++;
 
-			if ( level.clients[i].sess.sessionTeam != TEAM_SPECTATOR ) {
+			// TODO: Use bot skill level instead of qtrue/qfalse?
+			Q_strcat( botinfo, sizeof( botinfo ), va( "%d ", ( ( g_entities[i].r.svFlags & SVF_BOT ) ? 1 : 0 ) ) );
+			// TODO: Special "team" for connecting players?
+			Q_strcat( teaminfo, sizeof( teaminfo ), va( "%d ", team ) );
+
+			if ( TEAM_SPECTATOR != team ) {
 				level.numNonSpectatorClients++;
-			
+
 				// decide if this should be auto-followed
 				if ( level.clients[i].pers.connected == CON_CONNECTED ) {
 					level.numPlayingClients++;
 					if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
 						level.numVotingClients++;
-						if ( level.clients[i].sess.sessionTeam == TEAM_RED )
+						if ( TEAM_RED == team )
 							level.numteamVotingClients[0]++;
-						else if ( level.clients[i].sess.sessionTeam == TEAM_BLUE )
+						else if ( TEAM_BLUE == team )
 							level.numteamVotingClients[1]++;
 					}
 					if ( level.follow1 == -1 ) {
@@ -1029,7 +949,17 @@ void CalculateRanks( void ) {
 		}
 	}
 
-	qsort( level.sortedClients, level.numConnectedClients, 
+	if ( '\0' == teaminfo[0] ) {
+		Q_strncpyz( teaminfo, PLAYERINFO_NONE, sizeof( teaminfo ) );
+	}
+	if ( '\0' == botinfo[0] ) {
+		Q_strncpyz( botinfo, PLAYERINFO_NONE, sizeof( botinfo ) );
+	}
+
+	trap_Cvar_Set( PLAYERINFO_TEAM,	teaminfo );
+	trap_Cvar_Set( PLAYERINFO_BOT,	botinfo );
+
+	qsort( level.sortedClients, level.numConnectedClients,
 		sizeof(level.sortedClients[0]), SortRanks );
 
 	// set the rank value for all clients that are connected and not spectators
@@ -1045,22 +975,17 @@ void CalculateRanks( void ) {
 				cl->ps.persistant[PERS_RANK] = 1;
 			}
 		}
-	} else {	
+	} else {
 		rank = -1;
 		score = 0;
 		for ( i = 0;  i < level.numPlayingClients; i++ ) {
 			cl = &level.clients[ level.sortedClients[i] ];
 			newScore = cl->ps.persistant[PERS_SCORE];
-			/* changed beryllium */
-			/*
-			if ( i == 0 || newScore != score || (g_gametype.integer==GT_LPS && level.clients[ level.sortedClients[i-1] ].sess.livesleft!=level.clients[ level.sortedClients[i] ].sess.livesleft)) {
-			*/
 			if ( ( GT_LPS == g_gametype.integer ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
 				newScore = cl->sess.livesleft;
 			}
-			
-			if ( ( 0 == i ) || ( newScore != score ) ) {
-			/* end beryllium */
+
+			if ( i == 0 || newScore != score ) {
 				rank = i;
 				// assume we aren't tied until the next client is checked
 				level.clients[ level.sortedClients[i] ].ps.persistant[PERS_RANK] = rank;
@@ -1260,7 +1185,7 @@ void BeginIntermission( void ) {
 ExitLevel
 
 When the intermission has been exited, the server is either killed
-or moved to a new level based on the "nextmap" cvar 
+or moved to a new level based on the "nextmap" cvar
 
 =============
 */
@@ -1285,7 +1210,7 @@ void ExitLevel (void) {
 				level.changemap = NULL;
 				level.intermissiontime = 0;
 			}
-			return;	
+			return;
 		}
 
 
@@ -1309,10 +1234,6 @@ void ExitLevel (void) {
 	// we need to do this here before chaning to CON_CONNECTING
 	G_WriteSessionData();
 
-	/* added beryllium */
-	BE_WriteStorageData();
-	/* end beryllium */
-
 	// change all client states to connecting, so the early players into the
 	// next level will know the others aren't done reconnecting
 	for (i=0 ; i< g_maxclients.integer ; i++) {
@@ -1335,13 +1256,7 @@ void QDECL G_LogPrintf( const char *fmt, ... ) {
 	char		string[1024];
 	int			min, tens, sec;
 
-
-	/* changed beryllium */
-	/*
-	sec = level.time / 1000;
-	*/
-	sec = ( ( level.time - level.startTime ) / 1000 );
-	/* end beryllium */
+	sec = ( level.time - level.startTime ) / 1000;
 
 	min = sec / 60;
 	sec -= min * 60;
@@ -1525,7 +1440,7 @@ qboolean ScoreIsTied( void ) {
 	if ( g_gametype.integer == GT_LPS ) {
 		return qfalse;
 	}
-	
+
 	if ( g_gametype.integer >= GT_TEAM ) {
 		return level.teamScores[TEAM_RED] == level.teamScores[TEAM_BLUE];
 	}
@@ -1567,7 +1482,7 @@ void CheckExitRules( void ) {
 		return;
 
 	// check for sudden death
-	if ( ScoreIsTied() ) {
+	if ( g_suddenDeath.integer && ScoreIsTied() ) {
 		// always wait for sudden death
 		return;
 	}
@@ -1580,20 +1495,18 @@ void CheckExitRules( void ) {
 		}
 	}
 
-	/* changed beryllium */
-	/* "Is this a feature? At least causes a bug in BigBalloon" */
+	/* Is this a feature? At least causes a bug in BigBalloon */
 	/*
 	if ( level.numPlayingClients < 2 ) {
 		return;
 	}
 	*/
-	/* end beryllium */
 
 	if ( ( g_gametype.integer == GT_LPS ) && !( g_LPS_flags.integer & LPSF_PPOINTLIMIT ) ) {
 		int	playersWithLivesLeft = 0;
 		gclient_t* tmpcl = NULL;
 
-		for ( i = 0 ; i< g_maxclients.integer ; i++ ) {
+		for ( i = 0 ; i< level.maxclients ; i++ ) {
 			cl = ( level.clients + i );
 			if ( cl->pers.connected != CON_CONNECTED ) {
 				continue;
@@ -1608,15 +1521,9 @@ void CheckExitRules( void ) {
 			}
 		}
 
-		/* changed beryllium */
-		/*
-		if ( playersWithLivesLeft <= 1 ) {
-		*/
-		/* After warmup, i.e. map_restart, no clients are connected, which
-		   causes above logic to yield 0 playersWithLivesLeft.
-		*/
-		if ( ( playersWithLivesLeft <= 1 ) && ( playersWithLivesLeft < level.numPlayingClients ) ) {
-		/* end beryllium */
+		// After warmup, i.e. map_restart, no clients are connected, which
+		// causes above logic to yield 0 playersWithLivesLeft.
+		if ( playersWithLivesLeft <= 1 && ( playersWithLivesLeft < level.numPlayingClients ) ) {
 			if ( tmpcl ) {
 				trap_SendServerCommand( -1, va( "print \"%s"S_COLOR_WHITE" is the Last Standing Pad!\n\"", tmpcl->pers.netname ) );
 			}
@@ -1997,7 +1904,7 @@ void G_RunThink (gentity_t *ent) {
 	if (thinktime > level.time) {
 		return;
 	}
-	
+
 	ent->nextthink = 0;
 	if (!ent->think) {
 		G_Error ( "NULL ent->think");
@@ -2029,7 +1936,7 @@ void WoP_RunFrame(void)
 	{
 		gentity_t	*ent;
 		int			tmptime;
-		
+
 		ent = g_entities + i;
 
 		if(!ent->inuse)
@@ -2052,14 +1959,15 @@ void WoP_RunFrame(void)
 			ent->r.svFlags |= SVF_BROADCAST;
 		else
 			ent->r.svFlags &= ~SVF_BROADCAST;
-		
 
-		if(level.warmupTime>0 && g_WarmupReady.value>0.0f && level.clients[i].sess.sessionTeam!=TEAM_SPECTATOR
-			&& !(ent->r.svFlags & SVF_BOT) )
-		{
+
+		if ( ( level.warmupTime > 0 ) && ( g_warmupReady.value > 0.0f ) &&
+		     ( TEAM_SPECTATOR != level.clients[i].sess.sessionTeam ) &&
+		     !( ent->r.svFlags & SVF_BOT) ) {
 			maxReady++;
-			if(level.clients[i].readyToFight)
+			if ( level.clients[i].readyToFight ) {
 				curReady++;
+			}
 		}
 
 		if ( ent->client->sess.sessionTeam != TEAM_SPECTATOR ) {
@@ -2158,7 +2066,7 @@ void WoP_RunFrame(void)
 			if ( InSprayroom( ent->client ) ) {
 				tmptime = ( ent->client->sprayroomleavetime - level.time );
 				ent->client->ps.stats[STAT_SPRAYROOMSECS] = ( 1 + (int)( tmptime / 1000 ) );
-				
+
 
 				if ( tmptime <= 0 ) {
 					if ( level.sr_tl_tele ) {
@@ -2201,7 +2109,7 @@ void WoP_RunFrame(void)
 		int			nextpoints;
 		qboolean	player0done = qfalse;
 		int			roundSorted[MAX_CLIENTS];
-		
+
 
 		if ( playersWithLives[0] != NULL ) {
 			// NOTE: We need another list of sorted clients, which is sorted by livesleft
@@ -2237,7 +2145,7 @@ void WoP_RunFrame(void)
 				if ( level.clients[cNum].sess.sessionTeam == TEAM_SPECTATOR ) {
 					continue;
 				}
-				
+
 				if ( nextpoints > 0 ) {
 					AddScore( ( g_entities + cNum ), ( g_entities + cNum )->s.origin, nextpoints, SCORE_SURVIVE_S );
 					nextpoints--;
@@ -2270,7 +2178,7 @@ void WoP_RunFrame(void)
 
 
 	if ( level.warmupTime && maxReady ) {
-		if ( ( curReady / maxReady ) < g_WarmupReady.value ) {
+		if ( ( curReady / maxReady ) < g_warmupReady.value ) {
 			// We've got enough ready players, stop warmup
 			level.warmupTime = -1;
 		}
@@ -2290,8 +2198,6 @@ Advances the non-player objects in the world
 void G_RunFrame( int levelTime ) {
 	int			i;
 	gentity_t	*ent;
-	int			msec;
-int start, end;
 
 	// if we are waiting for the level to restart, do nothing
 	if ( level.restarted ) {
@@ -2301,7 +2207,6 @@ int start, end;
 	level.framenum++;
 	level.previousTime = level.time;
 	level.time = levelTime;
-	msec = level.time - level.previousTime;
 
 	// get any cvar changes
 	G_UpdateCvars();
@@ -2309,7 +2214,6 @@ int start, end;
 	//
 	// go through all allocated objects
 	//
-	start = trap_Milliseconds();
 	ent = &g_entities[0];
 	for (i=0 ; i<level.num_entities ; i++, ent++) {
 		if ( !ent->inuse ) {
@@ -2374,9 +2278,7 @@ int start, end;
 
 		G_RunThink( ent );
 	}
-end = trap_Milliseconds();
 
-start = trap_Milliseconds();
 	// perform final fixups on the players
 	ent = &g_entities[0];
 	for (i=0 ; i < level.maxclients ; i++, ent++ ) {
@@ -2384,7 +2286,6 @@ start = trap_Milliseconds();
 			ClientEndFrame( ent );
 		}
 	}
-end = trap_Milliseconds();
 
 	// see if it is time to do a tournement restart
 	CheckTournament();
@@ -2396,12 +2297,7 @@ end = trap_Milliseconds();
 	CheckTeamStatus();
 
 	// cancel vote if timed out
-	/* changed beryllium */
-	/*
 	CheckVote();
-	*/
-	BE_CheckVote();
-	/* end beryllium */
 
 	// check team votes
 	CheckTeamVote( TEAM_RED );
@@ -2419,15 +2315,4 @@ end = trap_Milliseconds();
 
 	if(!level.intermissiontime)
 		WoP_RunFrame();
-
-	/* added beryllium */
-
-	/* unlagged - backward reconciliation #4 */
-	/* Record the time at the end of this frame - it should be about
-	   the time the next frame begins - when the server starts
-	   accepting commands from connected clients
-	*/
-	level.frameStartTime = trap_Milliseconds();
-
-	/* end beryllium */
 }

@@ -537,8 +537,7 @@ void Init_LensFlareSys(void)
 	for(i=1;i<MAX_FLARES;i++) { flaremem[i].next = &flaremem[i-1]; }
 	freeflares=&flaremem[MAX_FLARES-1];
 
-//	trap_Cvar_VariableStringBuffer("g_skylensflare",tmpstr,256);
-	Q_strncpyz(tmpstr,Info_ValueForKey( info, "g_skylensflare" ),256);
+	Q_strncpyz( tmpstr, cg_skyLensflare.string, sizeof( tmpstr ) );
 	if(tmpstr[0]!='\0')
 	{
 		sscanf(tmpstr,"%f %f %f",&cg.skylensflare_dir[0],&cg.skylensflare_dir[1],&cg.skylensflare_dir[2]);
@@ -1001,6 +1000,10 @@ void AddLFsToScreen(void)
 	float	lfalpha;
 
 //	strcpy(cg.skylensflare,"testskylf");
+
+	if ( !cg_drawLensflare.integer ) {
+		return;
+	}
 
 	if(cg.skylensflare[0]!='\0')
 	{

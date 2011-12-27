@@ -63,62 +63,51 @@ typedef struct
 #define ID_EXIT			107
 
 // bindable actions
-#define ID_SHOWSCORES	0
-#define ID_USEITEM		1	
-#define ID_SPEED		2	
-#define ID_FORWARD		3	
-#define ID_BACKPEDAL	4
-#define ID_MOVELEFT		5
-#define ID_MOVERIGHT	6
-#define ID_MOVEUP		7	
-#define ID_MOVEDOWN		8
-#define ID_LEFT			9	
-#define ID_RIGHT		10	
-#define ID_STRAFE		11	
-#define ID_LOOKUP		12	
-#define ID_LOOKDOWN		13
-#define ID_MOUSELOOK	14
-#define ID_CENTERVIEW	15
-#define ID_ZOOMVIEW		16
-#define ID_WEAPON1		17	
-#define ID_WEAPON2		18	
-#define ID_WEAPON3		19	
-#define ID_WEAPON4		20	
-#define ID_WEAPON5		21	
-#define ID_WEAPON6		22	
-#define ID_WEAPON7		23	
-#define ID_WEAPON8		24	
-#define ID_WEAPON9		25	
-#define ID_ATTACK		26
-#define ID_WEAPPREV		27
-#define ID_WEAPNEXT		28
-#define ID_GESTURE		29
-#define ID_CHAT			30
-#define ID_CHAT2		31
-/*#define ID_CHAT3		32
-#define ID_CHAT4		33*/
+#define ID_SHOWSCORES		0
+#define ID_USEITEM			1	
+#define ID_SPEED			2	
+#define ID_FORWARD			3	
+#define ID_BACKPEDAL		4
+#define ID_MOVELEFT			5
+#define ID_MOVERIGHT		6
+#define ID_MOVEUP			7	
+#define ID_MOVEDOWN			8
+#define ID_WEAPON1			9
+#define ID_WEAPON2			10
+#define ID_WEAPON3			11
+#define ID_WEAPON4			12
+#define ID_WEAPON5			13
+#define ID_WEAPON6			14
+#define ID_WEAPON7			15
+#define ID_WEAPON8			16
+#define ID_WEAPON9			17
+#define ID_ATTACK			18
+#define ID_WEAPPREV			19
+#define ID_WEAPNEXT			20
+#define ID_GESTURE			21
+#define ID_CHAT				22
+#define ID_CHAT2			23
+/*#define ID_CHAT3			42
+#define ID_CHAT4			42*/
 
-#define ID_VOTEYES		32
-#define ID_VOTENO		33
+#define ID_VOTEYES			24
+#define ID_VOTENO			25
 
-#define ID_MUSIC		34
-#define ID_NEXTSONG		35
-#define ID_DROPCART		36
-#define ID_SERVERINFO	37
-#define ID_3RDPERSON	38
-#define ID_HELP_GAMETYPE	39
-#define ID_HELP_ITEMS		40
-#define ID_PUSH2TALK	41
+#define ID_MUSIC			26
+#define ID_NEXTSONG			27
+#define ID_DROPCART			28
+#define ID_SERVERINFO		29
+#define ID_3RDPERSON		30
+#define ID_HELP_GAMETYPE	31
+#define ID_HELP_ITEMS		32
+#define ID_PUSH2TALK		33
+#define ID_ZOOM				34
 
 
 // all others
-#define ID_FREELOOK		42
 #define ID_INVERTMOUSE	43
-#define ID_ALWAYSRUN	44
 #define ID_AUTOSWITCH	45
 #define ID_MOUSESPEED	46
-#define ID_JOYENABLE	47
-#define ID_JOYTHRESHOLD	48
 #define ID_SMOOTHMOUSE	49
 
 #define ANIM_IDLE		0
@@ -163,9 +152,6 @@ typedef struct
 	menuaction_s		stepright;
 	menuaction_s		moveup;
 	menuaction_s		movedown;
-	menuaction_s		turnleft;
-	menuaction_s		turnright;
-	menuaction_s		sidestep;
 	menuaction_s		run;
 	menuaction_s		machinegun;
 	menuaction_s		chainsaw;
@@ -179,17 +165,11 @@ typedef struct
 	menuaction_s		attack;
 	menuaction_s		prevweapon;
 	menuaction_s		nextweapon;
-	menuaction_s		lookup;
-	menuaction_s		lookdown;
-	menuaction_s		mouselook;
-	menuradiobutton_s	freelook;
-	menuaction_s		centerview;
-	menuaction_s		zoomview;
 	menuaction_s		gesture;
 	menuradiobutton_s	invertmouse;
 	menuslider_s		sensitivity;
 	menuradiobutton_s	smoothmouse;
-	menuradiobutton_s	alwaysrun;
+	menuaction_s		zoom;
 	menuradiobutton_s	autoswitch;
 	menuaction_s		showscores;
 	menuaction_s		useitem;
@@ -210,8 +190,6 @@ typedef struct
 	menuaction_s		helpGametype;
 	menuaction_s		helpItems;
 
-	menuradiobutton_s	joyenable;
-	menuslider_s		joythreshold;
 	int					section;
 	qboolean			waitingforkey;
 	char				playerModel[64];
@@ -241,14 +219,6 @@ static bind_t g_bindings[] =
 	{"+moveright", 		"step right",		ID_MOVERIGHT,	ANIM_STEPRIGHT,	'.',			-1,		-1, -1},
 	{"+moveup",			"up / jump",		ID_MOVEUP,		ANIM_JUMP,		K_SPACE,		-1,		-1, -1},
 	{"+movedown",		"down / crouch",	ID_MOVEDOWN,	ANIM_CROUCH,	'c',			-1,		-1, -1},
-	{"+left", 			"turn left",		ID_LEFT,		ANIM_TURNLEFT,	K_LEFTARROW,	-1,		-1, -1},
-	{"+right", 			"turn right",		ID_RIGHT,		ANIM_TURNRIGHT,	K_RIGHTARROW,	-1,		-1, -1},
-	{"+strafe", 		"sidestep / turn",	ID_STRAFE,		ANIM_IDLE,		K_ALT,			-1,		-1, -1},
-	{"+lookup", 		"look up",			ID_LOOKUP,		ANIM_LOOKUP,	K_PGDN,			-1,		-1, -1},
-	{"+lookdown", 		"look down",		ID_LOOKDOWN,	ANIM_LOOKDOWN,	K_DEL,			-1,		-1, -1},
-	{"+mlook", 			"mouse look",		ID_MOUSELOOK,	ANIM_IDLE,		'/',			-1,		-1, -1},
-	{"centerview", 		"center view",		ID_CENTERVIEW,	ANIM_IDLE,		K_END,			-1,		-1, -1},
-	{"+zoom", 			"zoom view",		ID_ZOOMVIEW,	ANIM_IDLE,		-1,				-1,		-1, -1},
 
 	{"weapon 1",		"PUNCHY",			ID_WEAPON1,		ANIM_WEAPON1,	'1',			-1,		-1, -1},
 	{"weapon 2",		"NiPPER",			ID_WEAPON2,		ANIM_WEAPON2,	'2',			-1,		-1, -1},
@@ -280,6 +250,7 @@ static bind_t g_bindings[] =
 	{ "ui_help gametype",	"help gametype",	ID_HELP_GAMETYPE,	ANIM_IDLE,	'g',	-1,	-1,	-1 },
 	{ "ui_help item",		"help items",		ID_HELP_ITEMS,		ANIM_IDLE,	'h',	-1,	-1,	-1 },
 	{"+voiprecord", "voice chat", ID_PUSH2TALK, ANIM_IDLE, 'r', -1, -1, -1},
+	{"+zoom", "zoom view", ID_ZOOM, ANIM_IDLE, -1, -1, -1, -1 },
 
 	{(char*)NULL,		(char*)NULL,		0,				0,				-1,				-1,		-1,	-1},
 };
@@ -290,16 +261,12 @@ static configcvar_t g_configcvars[] =
 	{"m_pitch",			0,					0},
 	{"cg_autoswitch",	0,					0},
 	{"sensitivity",		0,					0},
-	{"in_joystick",		0,					0},
-	{"joy_threshold",	0,					0},
 	{"m_filter",		0,					0},
-	{"cl_freelook",		0,					0},
 	{NULL,				0,					0}
 };
 
 static menucommon_s *g_movement_controls[] =
-{
-	(menucommon_s *)&s_controls.alwaysrun,     
+{  
 	(menucommon_s *)&s_controls.run,            
 	(menucommon_s *)&s_controls.walkforward,
 	(menucommon_s *)&s_controls.backpedal,
@@ -307,9 +274,6 @@ static menucommon_s *g_movement_controls[] =
 	(menucommon_s *)&s_controls.stepright,     
 	(menucommon_s *)&s_controls.moveup,        
 	(menucommon_s *)&s_controls.movedown,      
-	(menucommon_s *)&s_controls.turnleft,      
-	(menucommon_s *)&s_controls.turnright,     
-	(menucommon_s *)&s_controls.sidestep,
 	(menucommon_s *)&s_controls.useitem, //
 	(menucommon_s *)&s_controls.gesture, //
 	NULL
@@ -336,15 +300,8 @@ static menucommon_s *g_looking_controls[] = {
 	(menucommon_s *)&s_controls.sensitivity,
 	(menucommon_s *)&s_controls.smoothmouse,
 	(menucommon_s *)&s_controls.invertmouse,
-	(menucommon_s *)&s_controls.lookup,
-	(menucommon_s *)&s_controls.lookdown,
-	(menucommon_s *)&s_controls.mouselook,
-	(menucommon_s *)&s_controls.freelook,
-	(menucommon_s *)&s_controls.centerview,
-	(menucommon_s *)&s_controls.zoomview,
-	(menucommon_s *)&s_controls.joyenable,
-	(menucommon_s *)&s_controls.joythreshold,
-	NULL,
+	(menucommon_s *)&s_controls.zoom,
+	NULL
 };
 
 static menucommon_s *g_misc_controls[] = {
@@ -844,12 +801,8 @@ static void Controls_GetConfig( void )
 
 	s_controls.invertmouse.curvalue  = Controls_GetCvarValue( "m_pitch" ) < 0;
 	s_controls.smoothmouse.curvalue  = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "m_filter" ) );
-	s_controls.alwaysrun.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_run" ) );
 	s_controls.autoswitch.curvalue   = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cg_autoswitch" ) );
 	s_controls.sensitivity.curvalue  = UI_ClampCvar( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
-	s_controls.joyenable.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "in_joystick" ) );
-	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( "joy_threshold" ) );
-	s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
 }
 
 /*
@@ -886,12 +839,8 @@ static void Controls_SetConfig( void )
 		trap_Cvar_SetValue( "m_pitch", fabs( trap_Cvar_VariableValue( "m_pitch" ) ) );
 
 	trap_Cvar_SetValue( "m_filter", s_controls.smoothmouse.curvalue );
-	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
-	trap_Cvar_SetValue( "in_joystick", s_controls.joyenable.curvalue );
-	trap_Cvar_SetValue( "joy_threshold", s_controls.joythreshold.curvalue );
-	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
 	trap_Cmd_ExecuteText( EXEC_APPEND, "in_restart\n" );
 }
 
@@ -946,12 +895,8 @@ static void Controls_SetDefaults( void )
 
 	s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
 	s_controls.smoothmouse.curvalue  = Controls_GetCvarDefault( "m_filter" );
-	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
 	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
-	s_controls.joyenable.curvalue    = Controls_GetCvarDefault( "in_joystick" );
-	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "joy_threshold" );
-	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 }
 
 /*
@@ -1174,14 +1119,10 @@ static void Controls_MenuEvent( void* ptr, int event )
 			}
 			break;
 
-		case ID_FREELOOK:
 		case ID_MOUSESPEED:
 		case ID_INVERTMOUSE:
 		case ID_SMOOTHMOUSE:
-		case ID_ALWAYSRUN:
 		case ID_AUTOSWITCH:
-		case ID_JOYENABLE:
-		case ID_JOYTHRESHOLD:
 			if (event == QM_ACTIVATED)
 			{
 				s_controls.changesmade = qtrue;
@@ -1358,24 +1299,6 @@ static void Controls_MenuInit( void )
 	s_controls.movedown.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.movedown.generic.id        = ID_MOVEDOWN;
 
-	s_controls.turnleft.generic.type	  = MTYPE_ACTION;
-	s_controls.turnleft.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.turnleft.generic.callback  = Controls_ActionEvent;
-	s_controls.turnleft.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.turnleft.generic.id        = ID_LEFT;
-
-	s_controls.turnright.generic.type	   = MTYPE_ACTION;
-	s_controls.turnright.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.turnright.generic.callback  = Controls_ActionEvent;
-	s_controls.turnright.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.turnright.generic.id        = ID_RIGHT;
-
-	s_controls.sidestep.generic.type	  = MTYPE_ACTION;
-	s_controls.sidestep.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.sidestep.generic.callback  = Controls_ActionEvent;
-	s_controls.sidestep.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.sidestep.generic.id        = ID_STRAFE;
-
 	s_controls.run.generic.type	     = MTYPE_ACTION;
 	s_controls.run.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.run.generic.callback  = Controls_ActionEvent;
@@ -1454,49 +1377,12 @@ static void Controls_MenuInit( void )
 	s_controls.nextweapon.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.nextweapon.generic.id        = ID_WEAPNEXT;
 
-	s_controls.lookup.generic.type	    = MTYPE_ACTION;
-	s_controls.lookup.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.lookup.generic.callback  = Controls_ActionEvent;
-	s_controls.lookup.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.lookup.generic.id        = ID_LOOKUP;
-
-	s_controls.lookdown.generic.type	  = MTYPE_ACTION;
-	s_controls.lookdown.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.lookdown.generic.callback  = Controls_ActionEvent;
-	s_controls.lookdown.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.lookdown.generic.id        = ID_LOOKDOWN;
-
-	s_controls.mouselook.generic.type	   = MTYPE_ACTION;
-	s_controls.mouselook.generic.flags     = QMF_LEFT_JUSTIFY|QMF_HIGHLIGHT_IF_FOCUS|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.mouselook.generic.callback  = Controls_ActionEvent;
-	s_controls.mouselook.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.mouselook.generic.id        = ID_MOUSELOOK;
-
-	s_controls.freelook.generic.type		= MTYPE_RADIOBUTTON;
-	s_controls.freelook.generic.flags		= QMF_SMALLFONT;
-	s_controls.freelook.generic.x			= SCREEN_WIDTH/2;
-	s_controls.freelook.generic.name		= "free look";
-	s_controls.freelook.generic.id			= ID_FREELOOK;
-	s_controls.freelook.generic.callback	= Controls_MenuEvent;
-	s_controls.freelook.generic.statusbar	= Controls_StatusBar;
-
-	s_controls.centerview.generic.type	    = MTYPE_ACTION;
-	s_controls.centerview.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.centerview.generic.callback  = Controls_ActionEvent;
-	s_controls.centerview.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.centerview.generic.id        = ID_CENTERVIEW;
-
-	s_controls.zoomview.generic.type	  = MTYPE_ACTION;
-	s_controls.zoomview.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
-	s_controls.zoomview.generic.callback  = Controls_ActionEvent;
-	s_controls.zoomview.generic.ownerdraw = Controls_DrawKeyBinding;
-	s_controls.zoomview.generic.id        = ID_ZOOMVIEW;
-
 	s_controls.useitem.generic.type	     = MTYPE_ACTION;
 	s_controls.useitem.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.useitem.generic.callback  = Controls_ActionEvent;
 	s_controls.useitem.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.useitem.generic.id        = ID_USEITEM;
+	s_controls.useitem.generic.toolTip	 = "Press this key in game to throw killerducks / use floater / deploy bambam and place boomies (you must look at the ground to place a boomie).";
 
 	s_controls.showscores.generic.type	    = MTYPE_ACTION;
 	s_controls.showscores.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
@@ -1511,6 +1397,7 @@ static void Controls_MenuInit( void )
 	s_controls.invertmouse.generic.id        = ID_INVERTMOUSE;
 	s_controls.invertmouse.generic.callback  = Controls_MenuEvent;
 	s_controls.invertmouse.generic.statusbar = Controls_StatusBar;
+	s_controls.invertmouse.generic.toolTip	 = "Switch on to invert the directions of your mouse (not recommended).";
 
 	s_controls.smoothmouse.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.smoothmouse.generic.flags	 = QMF_SMALLFONT;
@@ -1519,14 +1406,7 @@ static void Controls_MenuInit( void )
 	s_controls.smoothmouse.generic.id        = ID_SMOOTHMOUSE;
 	s_controls.smoothmouse.generic.callback  = Controls_MenuEvent;
 	s_controls.smoothmouse.generic.statusbar = Controls_StatusBar;
-
-	s_controls.alwaysrun.generic.type      = MTYPE_RADIOBUTTON;
-	s_controls.alwaysrun.generic.flags	   = QMF_SMALLFONT;
-	s_controls.alwaysrun.generic.x	       = SCREEN_WIDTH/2;
-	s_controls.alwaysrun.generic.name	   = "always run";
-	s_controls.alwaysrun.generic.id        = ID_ALWAYSRUN;
-	s_controls.alwaysrun.generic.callback  = Controls_MenuEvent;
-	s_controls.alwaysrun.generic.statusbar = Controls_StatusBar;
+	s_controls.smoothmouse.generic.toolTip	 = "Switch on to smooth out movement when using the mouse to look around.";
 
 	s_controls.autoswitch.generic.type      = MTYPE_RADIOBUTTON;
 	s_controls.autoswitch.generic.flags	    = QMF_SMALLFONT;
@@ -1535,6 +1415,7 @@ static void Controls_MenuInit( void )
 	s_controls.autoswitch.generic.id        = ID_AUTOSWITCH;
 	s_controls.autoswitch.generic.callback  = Controls_MenuEvent;
 	s_controls.autoswitch.generic.statusbar = Controls_StatusBar;
+	s_controls.autoswitch.generic.toolTip	= "If enabled, your character will automatically switch to the weapon that you run into to pick up.";
 
 	s_controls.sensitivity.generic.type	     = MTYPE_SLIDER;
 	s_controls.sensitivity.generic.x		 = SCREEN_WIDTH/2;
@@ -1546,17 +1427,26 @@ static void Controls_MenuInit( void )
 	s_controls.sensitivity.maxvalue		     = 30;
 	s_controls.sensitivity.generic.statusbar = Controls_StatusBar;
 
+	s_controls.zoom.generic.type	  = MTYPE_ACTION;
+	s_controls.zoom.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.zoom.generic.callback  = Controls_ActionEvent;
+	s_controls.zoom.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.zoom.generic.id        = ID_ZOOM;
+	s_controls.zoom.generic.toolTip	  = "Press this key in game to enable zoom mode for weapons that support it.";
+
 	s_controls.gesture.generic.type	     = MTYPE_ACTION;
 	s_controls.gesture.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.gesture.generic.callback  = Controls_ActionEvent;
 	s_controls.gesture.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.gesture.generic.id        = ID_GESTURE;
+	s_controls.gesture.generic.toolTip	 = "Press this key in game to taunt other players.";
 
 	s_controls.chat.generic.type	  = MTYPE_ACTION;
 	s_controls.chat.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.chat.generic.callback  = Controls_ActionEvent;
 	s_controls.chat.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.chat.generic.id        = ID_CHAT;
+	s_controls.chat.generic.toolTip		= "Press this key in game before typing a message to text chat to all players in the game.";
 
 	s_controls.chat2.generic.type	   = MTYPE_ACTION;
 	s_controls.chat2.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
@@ -1570,6 +1460,7 @@ static void Controls_MenuInit( void )
 	s_controls.chat3.generic.ownerdraw = Controls_DrawKeyBinding;
 //	s_controls.chat3.generic.id        = ID_CHAT3;
 	s_controls.chat3.generic.id        = ID_VOTEYES;
+	s_controls.chat3.generic.toolTip   = "Cast a yes vote to a vote in progress (votes appear top left of the screen).";
 
 	s_controls.chat4.generic.type	   = MTYPE_ACTION;
 	s_controls.chat4.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
@@ -1577,6 +1468,7 @@ static void Controls_MenuInit( void )
 	s_controls.chat4.generic.ownerdraw = Controls_DrawKeyBinding;
 //	s_controls.chat4.generic.id        = ID_CHAT4;
 	s_controls.chat4.generic.id        = ID_VOTENO;
+	s_controls.chat4.generic.toolTip   = "Cast a no vote to a vote in progress (votes appear top left of the screen).";
 
 	s_controls.music.generic.type	   = MTYPE_ACTION;
 	s_controls.music.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
@@ -1601,48 +1493,35 @@ static void Controls_MenuInit( void )
 	s_controls.thirdPerson.generic.callback  = Controls_ActionEvent;
 	s_controls.thirdPerson.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.thirdPerson.generic.id        = ID_3RDPERSON;
+	s_controls.thirdPerson.generic.toolTip	 = "Press this key in game to switch to third person view, press again to switch back to first person view.";
 
 	s_controls.pushToTalk.generic.type		= MTYPE_ACTION;
 	s_controls.pushToTalk.generic.flags		= QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.pushToTalk.generic.callback	= Controls_ActionEvent;
 	s_controls.pushToTalk.generic.ownerdraw	= Controls_DrawKeyBinding;
 	s_controls.pushToTalk.generic.id		= ID_PUSH2TALK;
+	s_controls.pushToTalk.generic.toolTip	= "Press and hold this key to talk to other players through your microphone. This is not required if your microphone setting is set to open.";
 
 	s_controls.ServerInfo.generic.type	    = MTYPE_ACTION;
 	s_controls.ServerInfo.generic.flags     = QMF_LEFT_JUSTIFY|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.ServerInfo.generic.callback  = Controls_ActionEvent;
 	s_controls.ServerInfo.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.ServerInfo.generic.id        = ID_SERVERINFO;
+	s_controls.ServerInfo.generic.toolTip	= "Press this key in game to display server settings information.";
 
 	s_controls.helpGametype.generic.type		= MTYPE_ACTION;
 	s_controls.helpGametype.generic.flags		= ( QMF_LEFT_JUSTIFY | QMF_GRAYED | QMF_HIDDEN );
 	s_controls.helpGametype.generic.callback	= Controls_ActionEvent;
 	s_controls.helpGametype.generic.ownerdraw	= Controls_DrawKeyBinding;
 	s_controls.helpGametype.generic.id			= ID_HELP_GAMETYPE;
+	s_controls.helpGametype.generic.toolTip		= "Press this key in game to see a basic description of the rules of the gametype set.";
 
 	s_controls.helpItems.generic.type		= MTYPE_ACTION;
 	s_controls.helpItems.generic.flags		= ( QMF_LEFT_JUSTIFY | QMF_GRAYED | QMF_HIDDEN );
 	s_controls.helpItems.generic.callback	= Controls_ActionEvent;
 	s_controls.helpItems.generic.ownerdraw	= Controls_DrawKeyBinding;
 	s_controls.helpItems.generic.id			= ID_HELP_ITEMS;
-
-	s_controls.joyenable.generic.type      = MTYPE_RADIOBUTTON;
-	s_controls.joyenable.generic.flags	   = QMF_SMALLFONT;
-	s_controls.joyenable.generic.x	       = SCREEN_WIDTH/2;
-	s_controls.joyenable.generic.name	   = "joystick";
-	s_controls.joyenable.generic.id        = ID_JOYENABLE;
-	s_controls.joyenable.generic.callback  = Controls_MenuEvent;
-	s_controls.joyenable.generic.statusbar = Controls_StatusBar;
-
-	s_controls.joythreshold.generic.type	  = MTYPE_SLIDER;
-	s_controls.joythreshold.generic.x		  = SCREEN_WIDTH/2;
-	s_controls.joythreshold.generic.flags	  = QMF_SMALLFONT;
-	s_controls.joythreshold.generic.name	  = "joystick threshold";
-	s_controls.joythreshold.generic.id 	      = ID_JOYTHRESHOLD;
-	s_controls.joythreshold.generic.callback  = Controls_MenuEvent;
-	s_controls.joythreshold.minvalue		  = 0.05f;
-	s_controls.joythreshold.maxvalue		  = 0.75f;
-	s_controls.joythreshold.generic.statusbar = Controls_StatusBar;
+	s_controls.helpItems.generic.toolTip	= "Press this key in game to see information on what the weapons / powerups / items and icons are.";
 
 	Menu_AddItem( &s_controls.menu, &s_controls.looking );
 	Menu_AddItem( &s_controls.menu, &s_controls.movement );
@@ -1652,16 +1531,8 @@ static void Controls_MenuInit( void )
 	Menu_AddItem( &s_controls.menu, &s_controls.sensitivity );
 	Menu_AddItem( &s_controls.menu, &s_controls.smoothmouse );
 	Menu_AddItem( &s_controls.menu, &s_controls.invertmouse );
-	Menu_AddItem( &s_controls.menu, &s_controls.lookup );
-	Menu_AddItem( &s_controls.menu, &s_controls.lookdown );
-	Menu_AddItem( &s_controls.menu, &s_controls.mouselook );
-	Menu_AddItem( &s_controls.menu, &s_controls.freelook );
-	Menu_AddItem( &s_controls.menu, &s_controls.centerview );
-	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
-	Menu_AddItem( &s_controls.menu, &s_controls.joyenable );
-	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
-
-	Menu_AddItem( &s_controls.menu, &s_controls.alwaysrun );
+	Menu_AddItem( &s_controls.menu, &s_controls.zoom );
+	
 	Menu_AddItem( &s_controls.menu, &s_controls.run );
 	Menu_AddItem( &s_controls.menu, &s_controls.walkforward );
 	Menu_AddItem( &s_controls.menu, &s_controls.backpedal );
@@ -1669,9 +1540,6 @@ static void Controls_MenuInit( void )
 	Menu_AddItem( &s_controls.menu, &s_controls.stepright );
 	Menu_AddItem( &s_controls.menu, &s_controls.moveup );
 	Menu_AddItem( &s_controls.menu, &s_controls.movedown );
-	Menu_AddItem( &s_controls.menu, &s_controls.turnleft );
-	Menu_AddItem( &s_controls.menu, &s_controls.turnright );
-	Menu_AddItem( &s_controls.menu, &s_controls.sidestep );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.attack );
 	Menu_AddItem( &s_controls.menu, &s_controls.nextweapon );

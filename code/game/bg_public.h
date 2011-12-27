@@ -837,13 +837,14 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 #define MAX_SPRAYLOGOS_LOADED	64
 #define MAX_SPRAYLOGO_NAME		32
 
+enum {
+	ICON_ARROW			= 1,
+	ICON_BALLOON		= 2,
+	ICON_TEAMMATE		= 4,
+	ICON_HEALTHSTATION	= 8,
+	ICON_SPRAYROOM		= 16
+};
 
-/* added beryllium */
-
-int G_FrameMsec( void );
-
-#define UNLIMITED	999
-#define AMMOLESS	-1	
-
-/* end beryllium */
+#define ICON_ALL ( ICON_ARROW | ICON_BALLOON | ICON_TEAMMATE | ICON_HEALTHSTATION | ICON_SPRAYROOM )
+// Don't forget to update cg_icons in cg_main.c as well
 

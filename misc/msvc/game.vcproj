@@ -1129,6 +1129,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\code\game\g_gameinfo.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\code\game\g_items.c"
 				>
 				<FileConfiguration

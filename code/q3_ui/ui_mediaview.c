@@ -41,7 +41,7 @@ static mediaview_menu_t	s_mediaview_menu;
 static void MediaView_OnClose(void) {
 	if(s_mediaview_menu.mediatype == MT_VIDEO) {
 		trap_CIN_StopCinematic(s_mediaview_menu.CINhandle);
-		TriggerInGameMusicRestart();
+		Music_TriggerRestart();
 		uis.musicbool=qfalse;
 	}
 

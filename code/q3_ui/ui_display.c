@@ -21,12 +21,16 @@ DISPLAY OPTIONS MENU
 #define SOUND1		"menu/system/sound1"
 #define NETWORK0	"menu/system/network0"
 #define NETWORK1	"menu/system/network1"
+#define ACCEPT0		"menu/system/accept"
+#define ACCEPT1		"menu/system/accept"
 
 #define ID_GRAPHICS			10
 #define ID_DISPLAY			11
 #define ID_SOUND			12
 #define ID_NETWORK			13
 #define ID_BRIGHTNESS		14
+#define	ID_ANAGLYPH			17
+#define ID_GREYSCALE		18
 #define ID_BACK			15
 #define ID_IGNOREHWG		16
 
@@ -42,12 +46,38 @@ typedef struct {
 
 	menuslider_s	brightness;
 
+	menulist_s		anaglyph;
+
+	menuslider_s	greyscale;
+
+	menubitmap_s	apply;
 	menubitmap_s	back;
 } displayOptionsInfo_t;
 
 static displayOptionsInfo_t	displayOptionsInfo;
 
+static const char *anaglyph_names[] = {
+	"off",
+	"red-cyan",
+	"red-blue",
+	"red-green",
+	"cyan-red",
+	"blue-red",
+	"green-red",
+	NULL
+};
 
+
+
+static void ApplyPressed( void *unused, int notification )
+{
+	if (notification != QM_ACTIVATED)
+		return;
+
+	// hide the button and do the vid restart
+	displayOptionsInfo.apply.generic.flags |= QMF_HIDDEN|QMF_INACTIVE;
+	trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart\n" );
+}
 /*
 =================
 UI_DisplayOptionsMenu_Event
@@ -88,6 +118,21 @@ static void UI_DisplayOptionsMenu_Event( void* ptr, int event ) {
 
 	case ID_BACK:
 		UI_PopMenu();
+		break;
+
+	case ID_ANAGLYPH:
+		trap_Cvar_SetValue( "r_anaglyphMode", displayOptionsInfo.anaglyph.curvalue );
+		if ( !displayOptionsInfo.anaglyph.curvalue ) {
+			displayOptionsInfo.greyscale.generic.flags |= QMF_GRAYED;
+		}
+		else {
+			displayOptionsInfo.greyscale.generic.flags &= ~QMF_GRAYED;
+		}
+		break;
+
+	case ID_GREYSCALE:
+		trap_Cvar_SetValue( "r_greyscale", ( displayOptionsInfo.greyscale.curvalue / 100.0f ) );
+		displayOptionsInfo.apply.generic.flags &= ~( QMF_HIDDEN | QMF_INACTIVE );
 		break;
 	}
 }
@@ -165,7 +210,8 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.ignoreHWG.generic.id			= ID_IGNOREHWG;
 	displayOptionsInfo.ignoreHWG.generic.x			= 175;
 	displayOptionsInfo.ignoreHWG.generic.y			= y;
-	displayOptionsInfo.ignoreHWG.curvalue			= UI_GetCvarInt("r_ignorehwgamma");	
+	displayOptionsInfo.ignoreHWG.curvalue			= UI_GetCvarInt("r_ignorehwgamma");
+	displayOptionsInfo.ignoreHWG.generic.toolTip	= "If enabled you won't be able to adjust the brightness in game and will be locked and controlled by your current graphics card and monitor options. It is recommended to leave it off so you can adjust the brightness via the slider if necessary.";
 
 	y += BIGCHAR_HEIGHT+2;
 	displayOptionsInfo.brightness.generic.type		= MTYPE_SLIDER;
@@ -179,6 +225,38 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	displayOptionsInfo.brightness.maxvalue			= 20;
 	if( !uis.glconfig.deviceSupportsGamma )
 		displayOptionsInfo.brightness.generic.flags |= QMF_GRAYED;
+
+	y += ( 2 * BIGCHAR_HEIGHT + 2 );
+	displayOptionsInfo.anaglyph.generic.type		= MTYPE_SPINCONTROL;
+	displayOptionsInfo.anaglyph.generic.name		= "Stereoscopic 3D:";
+	displayOptionsInfo.anaglyph.generic.flags		= QMF_SMALLFONT;
+	displayOptionsInfo.anaglyph.generic.callback	= UI_DisplayOptionsMenu_Event;
+	displayOptionsInfo.anaglyph.generic.id			= ID_ANAGLYPH;
+	displayOptionsInfo.anaglyph.generic.x			= 175;
+	displayOptionsInfo.anaglyph.generic.y			= y;
+	displayOptionsInfo.anaglyph.itemnames			= anaglyph_names;
+	displayOptionsInfo.anaglyph.generic.toolTip		= "Switch on to play in 3D with the appriopriate glasses. Ensure the correct filter option you select matches that of your glasses or the effect won't work at all.";
+
+	y += ( BIGCHAR_HEIGHT + 2 );
+	displayOptionsInfo.greyscale.generic.type		= MTYPE_SLIDER;
+	displayOptionsInfo.greyscale.generic.name		= "Greyscale:";
+	displayOptionsInfo.greyscale.generic.flags		= QMF_SMALLFONT;
+	displayOptionsInfo.greyscale.generic.callback	= UI_DisplayOptionsMenu_Event;
+	displayOptionsInfo.greyscale.generic.id			= ID_GREYSCALE;
+	displayOptionsInfo.greyscale.generic.x			= 175;
+	displayOptionsInfo.greyscale.generic.y			= y;
+	displayOptionsInfo.greyscale.minvalue			= 0;
+	displayOptionsInfo.greyscale.maxvalue			= 100;
+
+	displayOptionsInfo.apply.generic.type     = MTYPE_BITMAP;
+	displayOptionsInfo.apply.generic.name     = ACCEPT0;
+	displayOptionsInfo.apply.generic.flags    = QMF_PULSEIFFOCUS|QMF_HIDDEN|QMF_INACTIVE;
+	displayOptionsInfo.apply.generic.callback = ApplyPressed;
+	displayOptionsInfo.apply.generic.x        = 516;
+	displayOptionsInfo.apply.generic.y        = 405;
+	displayOptionsInfo.apply.width				= 102;
+	displayOptionsInfo.apply.height  			= 61;
+	displayOptionsInfo.apply.focuspic			= ACCEPT1;
 
 
 	displayOptionsInfo.back.generic.type	= MTYPE_BITMAP;
@@ -199,9 +277,18 @@ static void UI_DisplayOptionsMenu_Init( void ) {
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.network );
 	Menu_AddItem( &displayOptionsInfo.menu, &displayOptionsInfo.ignoreHWG );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.brightness );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.anaglyph );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.greyscale );
+	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.apply );
 	Menu_AddItem( &displayOptionsInfo.menu, ( void * ) &displayOptionsInfo.back );
 
 	displayOptionsInfo.brightness.curvalue  = trap_Cvar_VariableValue("r_gamma") * 10;
+	displayOptionsInfo.anaglyph.curvalue	= Com_Clamp( 0, ( ARRAY_LEN( anaglyph_names ) - 1 ), trap_Cvar_VariableValue( "r_anaglyphMode" ) );
+	displayOptionsInfo.greyscale.curvalue  = Com_Clamp( 0, 100, ( trap_Cvar_VariableValue( "r_greyscale" ) * 100 ) );
+
+	if ( !displayOptionsInfo.anaglyph.curvalue ) {
+		displayOptionsInfo.greyscale.generic.flags |= QMF_GRAYED;
+	}
 }
 
 

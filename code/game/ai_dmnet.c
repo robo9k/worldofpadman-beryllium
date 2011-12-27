@@ -413,6 +413,7 @@ int BotGetItemLongTermGoal(bot_state_t *bs, int tfl, bot_goal_t *goal) {
 		//get the goal at the top of the stack
 		return trap_BotGetTopGoal(bs->gs, goal);
 	}
+
 	return qtrue;
 }
 
@@ -649,16 +650,11 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 		}
 		//get entity information of the companion
 		BotEntityInfo(bs->teammate, &entinfo);
-		/* changed beryllium */
-		/*
 		if(!entinfo.valid)
-			return qfalse;
-		*/
-		if ( !entinfo.valid ) {
+		{
 			bs->ltgtype = 0;
 			return qfalse;
 		}
-		/* end beryllium */
 		//if the companion is visible
 		if (BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 360, bs->teammate)) {
 			//update visible time
@@ -811,7 +807,7 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 				bs->defendaway_time = FloatTime() + 10 + 3 * random();
 			}
 
-			// balloon visible and bot is near?
+			// goal visible and bot is near?
 			if( traveltime && traveltime < DEFENDAWAY_RANGE/3 &&
 				BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, goal->entitynum) )
 			{
@@ -825,14 +821,9 @@ int BotGetLongTermGoal(bot_state_t *bs, int tfl, int retreat, bot_goal_t *goal) 
 			// tell the hud that you roam			
 			BotAddInfo(bs, va("defmode: roam for %.1f sec", bs->defendaway_time - FloatTime() ), AIDBG_GAMETYPE );
 			
-			// prolong defendaway_time if loon is visible from current pos
+			// prolong defendaway_time if goal is visible from current pos
 			if( random() < (float)bot_thinktime.integer/1000.0f ){	// about once per second
-				/* changed beryllium */
-				/*
-				if(BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, goal->entitynum)){
-				*/
-				if ( BotEntityVisible( bs->entitynum, bs->eye, bs->viewangles, 200, bs->teamgoal.entitynum ) ) {
-				/* end beryllium */
+				if(BotEntityVisible(bs->entitynum, bs->eye, bs->viewangles, 200, bs->teamgoal.entitynum)){
 					trap_BotResetAvoidReach(bs->ms);
 					bs->defendaway_time = FloatTime() + 10 + 3 * random();
 				}
@@ -1682,7 +1673,7 @@ int AINode_Seek_ActivateEntity(bot_state_t *bs) {
 			if (bs->cur_ps.weapon == bs->activatestack->weapon) {
 				VectorSubtract(bs->activatestack->target, bs->eye, dir);
 				vectoangles(dir, ideal_viewangles);
-				// if the bot is pretty close with it's aim
+				// if the bot is pretty close with its aim
 				if (InFieldOfVision(bs->viewangles, 20, ideal_viewangles)) {
 					trap_EA_Attack(bs->client);
 				}
@@ -2316,12 +2307,7 @@ int AINode_Seek_LTG(bot_state_t *bs)
 			int tt_nbg;
 			trap_BotGetTopGoal(bs->gs, &nbg);
 			tt_nbg = trap_AAS_AreaTravelTimeToGoalArea(bs->areanum, bs->origin, nbg.areanum, bs->tfl);
-			/* changed beryllium */
-			/*
-			if( bot_developer.integer & AIDBG_NBG )
-			*/
-			if ( bot_developer.integer & AIDBG_GOAL )
-			/* end beryllium */
+			if( bot_developer.integer & AIDBG_GOAL )
 				G_Printf("^2going for NBG with tt: %d, LTG has %d, range %d \n", tt_nbg, tt_ltg, range);
 			trap_BotResetLastAvoidReach(bs->ms);
 			//get the goal at the top of the stack

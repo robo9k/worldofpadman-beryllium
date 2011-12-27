@@ -113,7 +113,7 @@ void TossClientItems( gentity_t *self ) {
 	{
 		weapon = WP_NONE;
 	}
-
+	
 	// drop the weapon if not punchy, nipper of spraypistol
 	if ( weapon > WP_NIPPER && weapon != WP_GRAPPLING_HOOK && 
 		weapon != WP_SPRAYPISTOL &&
@@ -217,7 +217,6 @@ LookAtKiller
 */
 void LookAtKiller( gentity_t *self, gentity_t *inflictor, gentity_t *attacker ) {
 	vec3_t		dir;
-	vec3_t		angles;
 
 	if ( attacker && attacker != self ) {
 		VectorSubtract (attacker->s.pos.trBase, self->s.pos.trBase, dir);
@@ -229,10 +228,6 @@ void LookAtKiller( gentity_t *self, gentity_t *inflictor, gentity_t *attacker ) 
 	}
 
 	self->client->ps.stats[STAT_DEAD_YAW] = vectoyaw ( dir );
-
-	angles[YAW] = vectoyaw ( dir );
-	angles[PITCH] = 0; 
-	angles[ROLL] = 0;
 }
 
 /*
@@ -437,7 +432,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		killerName = "<world>";
 	}
 
-	if ( meansOfDeath < 0 || meansOfDeath >= sizeof( modNames ) / sizeof( modNames[0] ) ) {
+	if ( meansOfDeath < 0 || meansOfDeath >= ARRAY_LEN( modNames ) ) {
 		obit = "<bad obituary>";
 	} else {
 		obit = modNames[ meansOfDeath ];
@@ -482,12 +477,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	{
 		attacker->client->lastkilled_client = self->s.number;
 
-		/* changed beryllium */
-		/*
-		if ( attacker == self || OnSameTeam (self, attacker ) ) {
-		*/		
 		if ( attacker == self || ( OnSameTeam (self, attacker ) || IsItemSameTeam( attacker, self ) ) ) {
-		/* end beryllium */
 			if(g_gametype.integer!=GT_LPS)
 				AddScore( attacker, self->r.currentOrigin, SCORE_TEAMKILL, SCORE_TEAMKILL_S );
 		} else {
@@ -550,10 +540,6 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
-	/* added beryllium */
-	BE_ClientKilled( self );
-	/* end beryllium */
-
 	// if client is in a nodrop area, don't drop anything (but return CTF flags!)
 	contents = trap_PointContents( self->r.currentOrigin, -1 );
 	if ( !( contents & CONTENTS_NODROP ) && !level.cammode ) {
@@ -586,7 +572,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
-	self->takedamage = qtrue;	// can still be gibbed
+	self->takedamage = qfalse;	// no gibbing in wop
 
 	self->s.weapon = WP_NONE;
 	self->s.powerups = 0;
@@ -753,7 +739,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
 	gclient_t	*client;
 	int			take;
-	int			save;
 	int			asave;
 	int			knockback;
 	int			max;
@@ -767,6 +752,22 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( level.intermissionQueued ) {
 		return;
 	}
+
+	client = targ->client;
+
+	if ( ( !attacker || ( attacker->s.eType != ET_PLAYER ) ) && 
+	     ( client && ( client->lastSentFlying > -1 ) ) &&
+	     ( ( mod == MOD_FALLING /* just in case */ ) || ( mod == MOD_LAVA ) || ( mod == MOD_SLIME ) || ( mod == MOD_TRIGGER_HURT ) || ( mod == MOD_SUICIDE ) ) )  {
+			// FIXME: Magical constant
+            if ( ( client->lastSentFlyingTime + 5000 ) < level.time ) {
+				// More than 5 seconds, not a kill!
+                client->lastSentFlying = -1;
+            }
+			else {
+                attacker = &g_entities[client->lastSentFlying];
+            }
+        }
+
 	if ( !inflictor ) {
 		inflictor = &g_entities[ENTITYNUM_WORLD];
 	}
@@ -781,17 +782,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// shootable doors / buttons don't actually have any health
 	if ( targ->s.eType == ET_MOVER ) {
 		if ( targ->use && ( targ->moverState == MOVER_POS1 || targ->moverState == ROTATOR_POS1 ) ) {
-			/* added beryllium */
-			if ( be_debugSecrets.integer ) {
-				/* FIXME: G_assert ent, other? */
-				SendClientCommand( ( attacker - g_entities ), CCMD_PRT, va( "Shooting %s\n", targ->target ) );
-			}
-
-			if ( !BE_CanUseMover( targ, attacker ) ) {
-				return;
-			}
-			/* end beryllium */
-
 			targ->use( targ, inflictor, attacker );
 		}
 		return;
@@ -802,8 +792,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		max = attacker->client->ps.stats[STAT_MAX_HEALTH];
 		damage = damage * max / 100;
 	}
-
-	client = targ->client;
 
 	if ( client ) {
 		if ( client->noclip ) {
@@ -871,6 +859,15 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			targ->client->ps.pm_time = t;
 			targ->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
 		}
+
+		// Remeber the last person to hurt the player
+		if ( ( targ == attacker ) || OnSameTeam( targ, attacker ) ) {
+			targ->client->lastSentFlying = -1;
+		}
+		else {
+			targ->client->lastSentFlying = attacker->s.number;
+			targ->client->lastSentFlyingTime = level.time;
+		}
 	}
 
 	// check for completely getting out of the damage
@@ -878,22 +875,15 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 		// if TF_NO_FRIENDLY_FIRE is set, don't do damage to the target
 		// if the attacker was on the same team
-		/* changed beryllium */
-		/*
-		if ( targ != attacker && OnSameTeam (targ, attacker)  ) {
+		// NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage
+		if((targ != attacker && (OnSameTeam(targ, attacker) || IsItemSameTeam(attacker, targ))) ||
+		   (targ == attacker && mod == MOD_BOOMIES)
+		  )
+		{
 			if ( !g_friendlyFire.integer ) {
 				return;
 			}
-		*/
-		/* NOTE: With Boomies we can have targ==attacker, should be considered friendlyfire instead of selfdamage */
-		if ( ( ( targ != attacker ) && ( OnSameTeam( targ, attacker ) || IsItemSameTeam( attacker, targ ) ) )
-	         || ( ( targ == attacker ) && ( mod == MOD_BOOMIES ) ) ) {
-			if ( g_friendlyFire.integer <= 0 ) {
-				return;
-			}
 		}
-
-		/* end beryllium */
 
 		// check for godmode
 		if ( targ->flags & FL_GODMODE ) {
@@ -933,16 +923,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	if ( damage < 1 ) {
 		damage = 1;
 	}
-
-
-	/* added beryllium */
-	/* FIXME: Call earlier? The minimum damage of 1 is a problem here */
-	BE_Damage( targ, inflictor, attacker, dir, point, &damage, &dflags, &mod );
-	/* end beryllium */
-
-
 	take = damage;
-	save = 0;
 
 	// save some from armor
 	asave = CheckArmor (targ, take, dflags);
@@ -953,12 +934,21 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			targ->health, take, asave );
 	}
 
+	if ( g_logDamage.integer ) {
+		// "Damage: target-cid inflictor-cid attacker-cid damage meansofdeath"
+		G_LogPrintf( "Damage: %ld %ld %ld %d %d\n", ( targ - g_entities ), ( inflictor - g_entities ), ( attacker - g_entities ),
+		             take, mod );
+	}
+
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks
 	// at the end of the frame
 	if ( client ) {
 		if ( attacker ) {
 			client->ps.persistant[PERS_ATTACKER] = attacker->s.number;
+		}
+		else if ( client->lastSentFlying > -1 ) {
+			client->ps.persistant[PERS_ATTACKER] = client->lastSentFlying;
 		} else {
 			client->ps.persistant[PERS_ATTACKER] = ENTITYNUM_WORLD;
 		}

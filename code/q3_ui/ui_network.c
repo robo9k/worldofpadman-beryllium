@@ -189,6 +189,7 @@ static void UI_NetworkOptionsMenu_Init( void ) {
 	networkOptionsInfo.allowdownload.generic.id		= ID_ALLOWDOWNLOAD;
 	networkOptionsInfo.allowdownload.generic.x		= 190;
 	networkOptionsInfo.allowdownload.generic.y		= y;
+	networkOptionsInfo.allowdownload.generic.toolTip = "Enable to automatically download custom maps / custom files needed to play on modified servers. NOTE: Custom game files may interfere with normal game files. Only connect to trusted servers with this enabled.";
 
 	networkOptionsInfo.back.generic.type		= MTYPE_BITMAP;
 	networkOptionsInfo.back.generic.name		= BACK0;

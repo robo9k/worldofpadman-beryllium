@@ -14,7 +14,6 @@ pml_t		pml;
 float	pm_stopspeed = 100.0f;
 float	pm_duckScale = 0.25f;
 float	pm_swimScale = 0.50f;
-float	pm_wadeScale = 0.70f;
 
 float	pm_accelerate = 10.0f;
 float	pm_airaccelerate = 1.0f;
@@ -1565,7 +1564,6 @@ static void PM_Weapon( void ) {
 				pm->ps->eFlags |= EF_FLOATER;
 
 				pm->ps->stats[STAT_HOLDABLEVAR]-=50;//FIXME: it would be better if the value gets calculated from framerate ...
-				/* beryllium FIXME: See above. This depends on client framerate, so we'd need a timer, uargh! */
 				if(pm->ps->stats[STAT_HOLDABLEVAR]<=0)
 				{
 					pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
@@ -1756,13 +1754,7 @@ fire:
 	pm->ps->eFlags &= ~EF_CHARGED;
 
 	// take an ammo away if not infinite
-	/* changed beryllium */
-	/*
 	if ( pm->ps->ammo[ pm->ps->weapon ] != -1 ) {
-	*/
-	if ( ( pm->ps->ammo[ pm->ps->weapon ] != -1 )
-	     && ( pm->ps->ammo[ pm->ps->weapon ] != UNLIMITED ) ) {
-	/* end beryllium */
 		pm->ps->ammo[ pm->ps->weapon ]--;
 	}
 
@@ -1944,7 +1936,8 @@ void PmoveSingle (pmove_t *pmove)
 
 	// set the firing flag for continuous beam weapons
 	// HERBY: Imperius charging
-	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION
+	if ( !(pm->ps->pm_flags & PMF_RESPAWNED)
+		&& ( pm->ps->pm_type != PM_INTERMISSION ) && ( PM_FREEZE != pm->ps->pm_type )
 		&& ( pm->cmd.buttons & BUTTON_ATTACK ) && pm->ps->ammo[ pm->ps->weapon ]
 		&& ( pm->ps->weapon != WP_IMPERIUS || pm->ps->weaponstate == WEAPON_CHARGING )
 		&& ( ( pm->gametype != GT_LPS ) || ( pm->ps->stats[STAT_LIVESLEFT] > 0 ) )

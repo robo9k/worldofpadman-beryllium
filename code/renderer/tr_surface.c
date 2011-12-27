@@ -615,10 +615,10 @@ static void LerpMeshVertexes_altivec(md3Surface_t *surf, float backlerp)
 {
 	short	*oldXyz, *newXyz, *oldNormals, *newNormals;
 	float	*outXyz, *outNormal;
-	float	oldXyzScale ALIGN(16);
-	float   newXyzScale ALIGN(16);
-	float	oldNormalScale ALIGN(16);
-	float newNormalScale ALIGN(16);
+	float	oldXyzScale QALIGN(16);
+	float   newXyzScale QALIGN(16);
+	float	oldNormalScale QALIGN(16);
+	float newNormalScale QALIGN(16);
 	int		vertNum;
 	unsigned lat, lng;
 	int		numVerts;
@@ -928,10 +928,6 @@ static void RB_SurfaceFace( srfSurfaceFace_t *surf ) {
 
 	tess.numIndexes += surf->numIndices;
 
-	v = surf->points[0];
-
-	ndx = tess.numVertexes;
-
 	numPoints = surf->numPoints;
 
 	if ( tess.shader->needsNormal ) {
@@ -1046,7 +1042,6 @@ static void RB_SurfaceGrid( srfGridMesh_t *cv ) {
 	// in the tess structure, so we may have to issue it in multiple passes
 
 	used = 0;
-	rows = 0;
 	while ( used < lodHeight - 1 ) {
 		// see how many rows of both verts and indexes we can add without overflowing
 		do {
@@ -1242,6 +1237,7 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 #ifdef RAVENMD4
 	(void(*)(void*))RB_MDRSurfaceAnim,		// SF_MDR,
 #endif
+	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
 	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
 	(void(*)(void*))RB_SurfaceEntity,		// SF_ENTITY
 	(void(*)(void*))RB_SurfaceDisplayList		// SF_DISPLAY_LIST

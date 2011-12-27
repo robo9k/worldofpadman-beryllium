@@ -34,7 +34,8 @@
 
 
 typedef struct {
-	entityState_t	s;				// communicated by server to clients
+	entityState_t	unused;			// apparently this field was put here accidentally
+									//  (and is kept only for compatibility, as a struct pad)
 
 	qboolean	linked;				// qfalse if not in any good cluster
 	int			linkcount;
@@ -63,8 +64,8 @@ typedef struct {
 	// when a trace call is made and passEntityNum != ENTITYNUM_NONE,
 	// an ent will be excluded from testing if:
 	// ent->s.number == passEntityNum	(don't interact with self)
-	// ent->s.ownerNum = passEntityNum	(don't interact with your own missiles)
-	// entity[ent->s.ownerNum].ownerNum = passEntityNum	(don't interact with other missiles from owner)
+	// ent->r.ownerNum == passEntityNum	(don't interact with your own missiles)
+	// entity[ent->r.ownerNum].r.ownerNum == passEntityNum	(don't interact with other missiles from owner)
 	int			ownerNum;
 } entityShared_t;
 

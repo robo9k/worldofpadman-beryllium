@@ -86,17 +86,29 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	iconx = SB_BOTICON_X + (SB_RATING_WIDTH / 2);
 	headx = SB_HEAD_X + (SB_RATING_WIDTH / 2);
 
-	// draw the handicap or bot skill marker (unless player has flag)
-	if ( ci->botSkill > 0 && ci->botSkill <= 5 ) {
-		if ( cg_drawIcons.integer ) {
-			CG_DrawPic( iconx, icony, lineHeight, lineHeight, cgs.media.botSkillShaders[ ci->botSkill - 1 ] );
+	// draw the handicap or bot skill marker (unless player has lolly)
+	if ( ci->powerups & ( 1 << PW_REDFLAG ) ) {
+		if( cg_drawIcons.integer ) {
+			CG_DrawFlagModel( iconx, icony, lineHeight, lineHeight, TEAM_RED, qfalse );
 		}
-	} else if ( ci->handicap < 100 ) {
-		Com_sprintf( string, sizeof( string ), "%i", ci->handicap );
-		if ( cgs.gametype == GT_TOURNAMENT )
-			CG_DrawSmallStringColor( iconx, y - SMALLCHAR_HEIGHT/2, string, color );
-		else
-			CG_DrawSmallStringColor( iconx, y, string, color );
+	}
+	else if ( ci->powerups & ( 1 << PW_BLUEFLAG ) ) {
+		if( cg_drawIcons.integer ) {
+			CG_DrawFlagModel( iconx, icony, lineHeight, lineHeight, TEAM_BLUE, qfalse );
+		}
+	}
+	else {
+		if ( ci->botSkill > 0 && ci->botSkill <= 5 ) {
+			if ( cg_drawIcons.integer ) {
+				CG_DrawPic( iconx, icony, lineHeight, lineHeight, cgs.media.botSkillShaders[ ci->botSkill - 1 ] );
+			}
+		} else if ( ci->handicap < 100 ) {
+			Com_sprintf( string, sizeof( string ), "%i", ci->handicap );
+			if ( cgs.gametype == GT_TOURNAMENT )
+				CG_DrawSmallStringColor( iconx, y - SMALLCHAR_HEIGHT/2, string, color );
+			else
+				CG_DrawSmallStringColor( iconx, y, string, color );
+		}
 	}
 
 	// draw the wins / losses
@@ -589,15 +601,15 @@ void CG_DrawOldTourneyScoreboard( void ) {
 		trap_SendClientCommand( "score" );
 	}
 
-	color[0] = 1;
-	color[1] = 1;
-	color[2] = 1;
-	color[3] = 1;
-
 	// draw the dialog background
 	color[0] = color[1] = color[2] = 0;
 	color[3] = 1;
 	CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
+
+	color[0] = 1;
+	color[1] = 1;
+	color[2] = 1;
+	color[3] = 1;
 
 	// print the mesage of the day
 	s = CG_ConfigString( CS_MOTD );

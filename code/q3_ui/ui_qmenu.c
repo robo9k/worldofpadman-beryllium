@@ -992,6 +992,8 @@ static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 	sound = 0;
 	switch (key)
 	{
+		case K_KP_RIGHTARROW:
+		case K_RIGHTARROW:
 		case K_MOUSE1:
 			if((/*s->numitems<3 ||*/ s->generic.ownerdraw) && !(s->generic.flags&QMF_FORCEDROPDOWN))
 			{
@@ -1023,24 +1025,10 @@ static sfxHandle_t SpinControl_Key( menulist_s *s, int key )
 		
 		case K_KP_LEFTARROW:
 		case K_LEFTARROW:
-			if (s->curvalue > 0)
-			{
-				s->curvalue--;
-				sound = menu_move_sound;
-			}
-			else
-				sound = menu_buzz_sound;
-			break;
-
-		case K_KP_RIGHTARROW:
-		case K_RIGHTARROW:
-			if (s->curvalue < s->numitems-1)
-			{
-				s->curvalue++;
-				sound = menu_move_sound;
-			}
-			else
-				sound = menu_buzz_sound;
+			s->curvalue--;
+			if (s->curvalue < 0)
+				s->curvalue = s->numitems-1;
+			sound = menu_move_sound;
 			break;
 	}
 
@@ -1497,7 +1485,7 @@ void ScrollList_Draw( menulist_s *l )
 				style |= UI_CENTER;
 			}
 
-			sLen=strlen(l->itemnames[i]);//TODO? maybe exchange with q3color-strlen-stuff
+			sLen = Q_PrintStrlen( l->itemnames[i] );
 			if(sLen>l->width)
 			{
 				int j = l->width;
@@ -1512,6 +1500,8 @@ void ScrollList_Draw( menulist_s *l )
 				}
 				else
 				{
+					// TODO: Beware of cutting a color code like ^2 in between or
+					//       copying the color before inserted "..."
 					Q_strncpyz(buff,l->itemnames[i],j);
 					strcpy(buff+j-4,"...");
 					UI_DrawString(x,y,buff,style,color);
@@ -1724,6 +1714,64 @@ wrap:
 	}
 }
 
+void UI_DrawToolTip( menucommon_s* focusItem )
+{	
+	static const int textStyleFlags = UI_SMALLFONT;
+	static const int maxTextWidth = 250;
+	static const int boxMargin = 5;
+	static const int lineHeight = 20;
+	static const int outerMargin = 10;
+	int numLines;
+	int boxWidth, boxHeight;
+	int totalTextWidth;
+	int boxX, boxY, textX, textY;
+
+	if( !focusItem )
+		return;
+
+	if( !focusItem->toolTip )
+		return;
+
+	// how many lines do we need?
+	totalTextWidth = UI_ProportionalStringWidth( focusItem->toolTip ) * UI_ProportionalSizeScale( textStyleFlags );
+	if ( totalTextWidth > maxTextWidth )
+	{
+		numLines = UI_AutoWrappedString_LineCount( maxTextWidth, focusItem->toolTip, textStyleFlags, qfalse );
+		boxWidth = maxTextWidth + 2*boxMargin;
+	}
+	else
+	{
+		numLines = 1;
+		boxWidth = totalTextWidth + 2*boxMargin;
+	}
+
+	boxHeight = numLines * lineHeight + 2 * boxMargin;
+
+	boxX = focusItem->x;
+	if( boxX > 640 - boxWidth )
+	{
+		boxX -= boxWidth;
+		if( boxX < 0 )
+			boxX = 0;
+	}
+
+	boxY = focusItem->y - boxHeight - outerMargin;
+	if( boxY < 0 && focusItem->y < 240) // box doesnt fit and item is in the top half
+	{
+		boxY = focusItem->y + 15 + outerMargin;
+	}
+
+	textX = boxX + boxMargin;
+	textY = boxY + boxMargin;
+
+	UI_FillRect( boxX, boxY, boxWidth, boxHeight, color_orange );
+	UI_DrawString_AutoWrapped( textX, textY, maxTextWidth, 20, focusItem->toolTip, textStyleFlags, menu_text_color, qfalse );
+	UI_DrawRect( boxX, boxY, boxWidth, boxHeight, colorYellow, 2);
+
+	// draw frame and tip
+	//UI_DrawString(500, SCREEN_HEIGHT * 0.85, focusItem->toolTip, UI_SMALLFONT|UI_CENTER, colorWhite );
+}
+
 /*
 =================
 Menu_Draw
@@ -1830,14 +1878,12 @@ void Menu_Draw( menuframework_s *menu )
 	{
 		vec4_t  dropdownBG;
 		int mouseover = (uis.cursory-uis.dropdownxywh[1])/SMALLCHAR_HEIGHT;
+		mouseover = Com_Clamp( 0, uis.dropdownlist->numitems, mouseover );
 
 		dropdownBG[0] = uis.dropdownxywh[0] - 5;
 		dropdownBG[1] = uis.dropdownxywh[1] - 5;
 		dropdownBG[2] = uis.dropdownxywh[2] + 10;
 		dropdownBG[3] = uis.dropdownxywh[3] + 10;
-
-		if(mouseover<0) mouseover=0;
-		else if(mouseover>uis.dropdownlist->numitems) mouseover=uis.dropdownlist->numitems;
 
 		//UI_FillRect(uis.dropdownxywh[0]+8,uis.dropdownxywh[1]+8,uis.dropdownxywh[2],uis.dropdownxywh[3],tblack);
 		UI_FillRect(dropdownBG[0],dropdownBG[1],dropdownBG[2],dropdownBG[3],uis.dropdownlist->dropdown_bg);
@@ -1853,8 +1899,13 @@ void Menu_Draw( menuframework_s *menu )
 	}
 
 	itemptr = Menu_ItemAtCursor( menu );
-	if ( itemptr && itemptr->statusbar)
-		itemptr->statusbar( ( void * ) itemptr );
+	if ( itemptr )
+	{
+		if( itemptr->statusbar )
+			itemptr->statusbar( ( void * ) itemptr );
+
+		UI_DrawToolTip( itemptr );
+	}
 }
 
 /*
@@ -2092,11 +2143,11 @@ void Menu_Cache( void )
 	uis.pad_ingamebg		= trap_R_RegisterShaderNoMip("menu/ingame/bg2");
 	uis.pad_singlemenubg	= trap_R_RegisterShaderNoMip("menu/single/background");
 
-	menu_switch_sound = trap_S_RegisterSound( "sounds/menu/menu_switch.wav", qfalse );
-	menu_click_sound = trap_S_RegisterSound( "sounds/menu/mouse_click.wav", qfalse );
-	menu_move_sound = trap_S_RegisterSound( "sounds/menu/mouse_over.wav", qfalse );
-	menu_buzz_sound	= trap_S_RegisterSound( "sounds/menu/menu_error.wav", qfalse );
-	weaponChangeSound	= trap_S_RegisterSound( "sounds/weapons/change.wav", qfalse );
+	menu_switch_sound = trap_S_RegisterSound( "sounds/menu/menu_switch", qfalse );
+	menu_click_sound = trap_S_RegisterSound( "sounds/menu/mouse_click", qfalse );
+	menu_move_sound = trap_S_RegisterSound( "sounds/menu/mouse_over", qfalse );
+	menu_buzz_sound	= trap_S_RegisterSound( "sounds/menu/menu_error", qfalse );
+	weaponChangeSound	= trap_S_RegisterSound( "sounds/weapons/change", qfalse );
 
 	// need a nonzero sound, make an empty sound for this
 	menu_null_sound = -1;

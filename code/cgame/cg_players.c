@@ -4,21 +4,21 @@
 #include "cg_local.h"
 
 char	*cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
-	"*death1.wav",
-	"*death2.wav",
-	"*death3.wav",
-	"*jump1.wav",
-	"*pain25_1.wav",
-	"*pain50_1.wav",
-	"*pain75_1.wav",
-	"*pain100_1.wav",
-	"*falling1.wav",
-	"*gasp.wav",
-	"*drown.wav",
-	"*fall1.wav",
-	"*taunt.wav"
-	,"*hehe1.wav",
-	"*hehe2.wav"
+	"*death1",
+	"*death2",
+	"*death3",
+	"*jump1",
+	"*pain25_1",
+	"*pain50_1",
+	"*pain75_1",
+	"*pain100_1",
+	"*falling1",
+	"*gasp",
+	"*drown",
+	"*fall1",
+	"*taunt"
+	,"*hehe1",
+	"*hehe2"
 };
 
 
@@ -31,6 +31,7 @@ CG_CustomSound
 sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 	clientInfo_t *ci;
 	int			i;
+	char		soundBaseName[MAX_QPATH];
 
 	if ( soundName[0] != '*' ) {
 		return trap_S_RegisterSound( soundName, qfalse );
@@ -41,8 +42,11 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 	}
 	ci = &cgs.clientinfo[ clientNum ];
 
+	// Backwards compability; "*falling1.wav" etc. should still work
+	COM_StripExtension( soundName, soundBaseName, sizeof( soundBaseName ) );
+
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS && cg_customSoundNames[i] ; i++ ) {
-		if ( !strcmp( soundName, cg_customSoundNames[i] ) ) {
+		if ( !strcmp( soundBaseName, cg_customSoundNames[i] ) ) {
 			return ci->sounds[i];
 		}
 	}
@@ -350,7 +354,7 @@ static qboolean	CG_FindClientModelFile( char *filename, int length, clientInfo_t
 			char* ptr;
 
 			Q_strncpyz( tmpSkin, skinName, sizeof( tmpSkin ) );
-			ptr = Q_strrchr( tmpSkin, '_' );
+			ptr = strrchr( tmpSkin, '_' );
 			if ( ptr != NULL ) {
 				*ptr = '\0';
 				skinName = tmpSkin;
@@ -509,7 +513,7 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 		// e.g. padman/padrock_red uses padman/padrock glowskin
 		// padman/red uses padman
 		Q_strncpyz( subSkinName, skinName, sizeof( subSkinName ) );
-		ptr = Q_strrchr( subSkinName, '_' );
+		ptr = strrchr( subSkinName, '_' );
 		if ( ptr ) {
 			*ptr++ = '\0';
 		}
@@ -524,7 +528,7 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 		ci->torsoSkin = trap_R_RegisterSkin( filename );
 
 		Q_strncpyz( subSkinName, headSkinName, sizeof( subSkinName ) );
-		ptr = Q_strrchr( subSkinName, '_' );
+		ptr = strrchr( subSkinName, '_' );
 		if ( ptr ) {
 			*ptr++ = '\0';
 		}
@@ -724,7 +728,7 @@ static qboolean CG_ScanForExistingClientInfo( clientInfo_t *ci ) {
 			&& !Q_stricmp( ci->headSkinName, match->headSkinName ) 
 			&& (cgs.gametype < GT_TEAM || ci->team == match->team)
 		    && ( ci->glowModel == match->glowModel ) ) {
-			// this clientinfo is identical, so use it's handles
+			// this clientinfo is identical, so use its handles
 
 			ci->deferred = qfalse;
 
@@ -933,7 +937,6 @@ void CG_NewClientInfo( int clientNum ) {
 
 	Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
 	Q_strncpyz( newInfo.modelName, modelStr, sizeof( newInfo.modelName ) );
-
 
 	// headmodel
 	v = Info_ValueForKey( configstring, "hmodel" );
@@ -1831,10 +1834,8 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
 	
 	// add the lolly only if it's not the local client 
-	if( cent->currentState.clientNum != cg.snap->ps.clientNum
-		|| cg.renderingThirdPerson
-		)
-	{
+	if ( ( cent->currentState.clientNum != cg.snap->ps.clientNum )
+		|| cg.renderingThirdPerson ) {
 		// red lolly
 		if ( powerups & ( 1 << PW_REDFLAG ) ) {
 			if (ci->newAnims) {
@@ -1843,7 +1844,6 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 			else {
 				CG_TrailItem( cent, cgs.media.redFlagModel );
 			}
-			trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2f, 0.2f );
 		}
 
 		// blue lolly
@@ -1854,8 +1854,14 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 			else {
 				CG_TrailItem( cent, cgs.media.blueFlagModel );
 			}
-			trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1.0 );
 		}
+	}
+	// add lolly glow for any client
+	if ( powerups & ( 1 << PW_REDFLAG ) ) {
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2, 0.2 );
+	}
+	else if ( powerups & ( 1 << PW_BLUEFLAG ) ) {
+		trap_R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2, 0.2, 1.0 );
 	}
 
 	// speedy leaves smoke trails
@@ -1876,7 +1882,7 @@ CG_PlayerFloatSprite
 Float a sprite over the player's head
 ===============
 */
-static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
+static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader, qboolean wallhack ) {
 	int				rf;
 	refEntity_t		ent;
 
@@ -1898,29 +1904,27 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 	ent.shaderRGBA[2] = 255;
 	ent.shaderRGBA[3] = 255;
 
-	// FIXME: Less hackity
-	if ( cgs.gametype == GT_BALLOON ) {
-		if ( shader == cgs.media.friendShader ) {
-			ent.renderfx |= RF_DEPTHHACK;
-		}
-		// NOTE: Currently the gamecode uses EF_AWARD_CAP for both CTL and BB,
-		//       which results in medalPadStar. There is no sound however, since
-		//       AddBalloonScores() does not increase PERS_CAPTURES, which is associated
-		//       with the award in CTL.
-		else if ( shader == cgs.media.medalPadStar ) {
-			int team = cgs.clientinfo[ cent->currentState.clientNum ].team;
-			ent.customShader = cgs.media.hud_balloon; // FIXME: There is a separate icons/ballonicon
+	if( wallhack ){
+		ent.renderfx |= RF_DEPTHHACK;
+	}
 
-			ent.shaderRGBA[0] = ent.shaderRGBA[1] = ent.shaderRGBA[2] = 0;
-			ent.shaderRGBA[3] = 255;
-			switch ( team ) {
-				case TEAM_BLUE:
-					ent.shaderRGBA[2] = 255;
-					break;
-				default:
-					ent.shaderRGBA[0] = 255;
-					break;
-			}
+	// NOTE: Currently the gamecode uses EF_AWARD_CAP for both CTL and BB,
+	//       which results in medalPadStar. There is no sound however, since
+	//       AddBalloonScores() does not increase PERS_CAPTURES, which is associated
+	//       with the award in CTL.
+	if ( cgs.gametype == GT_BALLOON && shader == cgs.media.medalPadStar ) {
+		int team = cgs.clientinfo[ cent->currentState.clientNum ].team;
+		ent.customShader = cgs.media.hud_balloon; // FIXME: There is a separate icons/ballonicon
+
+		ent.shaderRGBA[0] = ent.shaderRGBA[1] = ent.shaderRGBA[2] = 0;
+		ent.shaderRGBA[3] = 255;
+		switch ( team ) {
+			case TEAM_BLUE:
+				ent.shaderRGBA[2] = 255;
+				break;
+			default:
+				ent.shaderRGBA[0] = 255;
+				break;
 		}
 	}
 
@@ -1940,37 +1944,46 @@ static void CG_PlayerSprites( centity_t *cent ) {
 	int		team;
 
 	if ( cent->currentState.eFlags & EF_CONNECTION ) {
-		CG_PlayerFloatSprite( cent, cgs.media.connectionShader );
+		CG_PlayerFloatSprite( cent, cgs.media.connectionShader, qfalse );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_TALK ) {
-		CG_PlayerFloatSprite( cent, cgs.media.balloonShader );
+		CG_PlayerFloatSprite( cent, cgs.media.balloonShader, qfalse );
 		return;
 	}
 
+	// got voicechat from player within the last second?
+	if( cg.lastVoiceTime[ cent->currentState.clientNum ] > cg.time - 1000 ){
+		// TODO: find out how bots get through this, do they have sane lastVoiceTime values?
+		if( 0 == cgs.clientinfo[ cent->currentState.clientNum ].botSkill ){
+			CG_PlayerFloatSprite( cent, cgs.media.voiceIcon, qfalse );
+			return;
+		}
+	}
+
 	if ( cent->currentState.eFlags & EF_AWARD_EXCELLENT ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalExcellent );
+		CG_PlayerFloatSprite( cent, cgs.media.medalExcellent, qfalse );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_GAUNTLET ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalGauntlet );
+		CG_PlayerFloatSprite( cent, cgs.media.medalGauntlet, qfalse );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_SPRAYGOD ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalSpraygod );
+		CG_PlayerFloatSprite( cent, cgs.media.medalSpraygod, qfalse );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_SPRAYKILLER ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalSpraykiller );
+		CG_PlayerFloatSprite( cent, cgs.media.medalSpraykiller, qfalse );
 		return;
 	}
 
 	if ( cent->currentState.eFlags & EF_AWARD_CAP ) {
-		CG_PlayerFloatSprite( cent, cgs.media.medalPadStar );
+		CG_PlayerFloatSprite( cent, cgs.media.medalPadStar, qfalse );
 		return;
 	}
 
@@ -1979,7 +1992,8 @@ static void CG_PlayerSprites( centity_t *cent ) {
 		cg.snap->ps.persistant[PERS_TEAM] == team &&
 		cgs.gametype >= GT_TEAM) {
 		if (cg_drawFriend.integer) {
-			CG_PlayerFloatSprite( cent, cgs.media.friendShader );
+			qboolean wallhack = (cg_icons.integer & ICON_TEAMMATE) && cgs.gametype == GT_BALLOON;
+			CG_PlayerFloatSprite( cent, cgs.media.friendShader, wallhack );
 		}
 		return;
 	}
@@ -2534,6 +2548,11 @@ void CG_Player( centity_t *cent ) {
 
 	// add powerups floating behind the player
 	CG_PlayerPowerups( cent, &torso );
+
+// unlagged - client options
+	// add the bounding box (if cg_drawBBox is 1)
+	CG_AddBoundingBox( cent );
+// unlagged - client options
 }
 
 

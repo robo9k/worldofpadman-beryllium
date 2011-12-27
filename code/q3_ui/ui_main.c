@@ -185,10 +185,10 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_browserMaster, "ui_browserMaster", "2", CVAR_ARCHIVE },
 	{ &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
 	{ &ui_browserSortKey, "ui_browserSortKey", "5", CVAR_ARCHIVE },
-	{ &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
+	{ &ui_browserShowFull, "ui_browserShowFull", "0", CVAR_ARCHIVE },
 	{ &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
 	{ &ui_browserOnlyHumans, "ui_browserOnlyHumans", "1", CVAR_ARCHIVE },
-	{ &ui_browserHidePrivate, "ui_browserHidePrivate", "1", CVAR_ARCHIVE },
+	{ &ui_browserHidePrivate, "ui_browserHidePrivate", "0", CVAR_ARCHIVE },
 
 	{ &ui_createGametype, "ui_createGametype", "3", 0 },
 
@@ -229,17 +229,8 @@ static cvarTable_t		cvarTable[] = {
 	,{ &wop_specialSPLoadingScreen, "wop_specialSPLoadingScreen", "1", CVAR_TEMP }
 };
 
-// bk001129 - made static to avoid aliasing
-static int cvarTableSize = sizeof(cvarTable) / sizeof(cvarTable[0]);
+static int cvarTableSize = ARRAY_LEN( cvarTable );
 
-int UI_GetCvarInt(const char *cvar)
-{
-	char buffer[32];
-
-	trap_Cvar_VariableStringBuffer(cvar,buffer,32);
-
-	return atoi(buffer);
-}
 
 /*
 =================

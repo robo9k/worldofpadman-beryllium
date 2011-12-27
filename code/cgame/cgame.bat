@@ -42,6 +42,10 @@ cd vm
 @if errorlevel 1 goto quit
 %compile% ../cg_marks.c
 @if errorlevel 1 goto quit
+%compile% ../cg_misc.c
+@if errorlevel 1 goto quit
+%compile% ../cg_particles.c
+@if errorlevel 1 goto quit
 %compile% ../cg_players.c
 @if errorlevel 1 goto quit
 %compile% ../cg_playerstate.c

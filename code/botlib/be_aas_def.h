@@ -29,13 +29,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************/
 
+#include "../qcommon/q_shared.h"
+
 //debugging on
 #define AAS_DEBUG
-
-#define MAX_CLIENTS			64
-#define	MAX_MODELS			256		// these are sent over the net as 8 bits
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
-#define	MAX_CONFIGSTRINGS	1024
 
 #define	CS_SCORES			32
 #define	CS_MODELS			(CS_SCORES+MAX_CLIENTS)
@@ -168,21 +165,8 @@ typedef struct aas_routingupdate_s
 	qboolean inlist;							//true if the update is in the list
 	struct aas_routingupdate_s *next;
 	struct aas_routingupdate_s *prev;
-	// cyr
-    struct aas_routingupdate_s* fib_parent;  // zeiger auf vater
-    struct aas_routingupdate_s* fib_child;
-    struct aas_routingupdate_s* fib_left;
-    struct aas_routingupdate_s* fib_right;
-    int                     fib_degree;   // anzahl der söhne
-    int                     fib_mark;     // hm
+	int	heapPos;
 } aas_routingupdate_t;
-
-// cyr  fibonacci heap
-typedef struct MyQueue_s{
-    aas_routingupdate_t* proot; // first element ( heap could be implemented without this)
-    aas_routingupdate_t* pmin;  // minimum element
-    int size;                   // nodes count
-}MyQueue_t;
 
 //reversed reachability link
 typedef struct aas_reversedlink_s
@@ -293,7 +277,9 @@ typedef struct aas_s
 	//cache list sorted on time
 	aas_routingcache_t *oldestcache;		// start of cache list sorted on time
 	aas_routingcache_t *newestcache;		// end of cache list sorted on time
-	aas_routingupdate_t** fibA;     // cyr
+	aas_routingupdate_t** clusterCacheHeap;
+	int clusterCacheHeapSize;
+	int clusterCacheHeapMaxSize;
 	//maximum travel time through portal areas
 	int *portalmaxtraveltimes;
 	//areas the reachabilities go through

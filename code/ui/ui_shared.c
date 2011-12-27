@@ -246,12 +246,13 @@ void String_Init(void) {
 	}
 }
 
+#if 0
 /*
 =================
 PC_SourceWarning
 =================
 */
-void PC_SourceWarning(int handle, char *format, ...) {
+static __attribute__ ((format (printf, 2, 3))) void PC_SourceWarning(int handle, char *format, ...) {
 	int line;
 	char filename[128];
 	va_list argptr;
@@ -267,13 +268,14 @@ void PC_SourceWarning(int handle, char *format, ...) {
 
 	Com_Printf(S_COLOR_YELLOW "WARNING: %s, line %d: %s\n", filename, line, string);
 }
+#endif
 
 /*
 =================
 PC_SourceError
 =================
 */
-void PC_SourceError(int handle, char *format, ...) {
+static __attribute__ ((format (printf, 2, 3))) void PC_SourceError(int handle, char *format, ...) {
 	int line;
 	char filename[128];
 	va_list argptr;
@@ -1258,7 +1260,7 @@ commandDef_t commandList[] =
   {"orbit", &Script_Orbit}                      // group/name
 };
 
-int scriptCommandCount = sizeof(commandList) / sizeof(commandDef_t);
+int scriptCommandCount = ARRAY_LEN(commandList);
 
 
 void Item_RunScript(itemDef_t *item, const char *s) {
@@ -1528,12 +1530,8 @@ int Item_Slider_OverSlider(itemDef_t *item, float x, float y) {
 
 int Item_ListBox_OverLB(itemDef_t *item, float x, float y) {
 	rectDef_t r;
-	listBoxDef_t *listPtr;
 	int thumbstart;
-	int count;
 
-	count = DC->feederCount(item->special);
-	listPtr = (listBoxDef_t*)item->typeData;
 	if (item->window.flags & WINDOW_HORIZONTAL) {
 		// check if on left arrow
 		r.x = item->window.rect.x;
@@ -2592,16 +2590,9 @@ static rectDef_t *Item_CorrectedTextRect(itemDef_t *item) {
 void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	int i;
 	itemDef_t *item = NULL;
-	qboolean inHandler = qfalse;
 
-	if (inHandler) {
-		return;
-	}
-
-	inHandler = qtrue;
 	if (g_waitingForKey && down) {
 		Item_Bind_HandleKey(g_bindItem, key, down);
-		inHandler = qfalse;
 		return;
 	}
 
@@ -2609,7 +2600,6 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 		if (!Item_TextField_HandleKey(g_editItem, key)) {
 			g_editingField = qfalse;
 			g_editItem = NULL;
-			inHandler = qfalse;
 			return;
 		} else if (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3) {
 			g_editingField = qfalse;
@@ -2621,18 +2611,16 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	}
 
 	if (menu == NULL) {
-		inHandler = qfalse;
 		return;
 	}
 
-		// see if the mouse is within the window bounds and if so is this a mouse click
+	// see if the mouse is within the window bounds and if so is this a mouse click
 	if (down && !(menu->window.flags & WINDOW_POPUP) && !Rect_ContainsPoint(&menu->window.rect, DC->cursorx, DC->cursory)) {
 		static qboolean inHandleKey = qfalse;
 		if (!inHandleKey && ( key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3 ) ) {
 			inHandleKey = qtrue;
 			Menus_HandleOOBClick(menu, key, down);
 			inHandleKey = qfalse;
-			inHandler = qfalse;
 			return;
 		}
 	}
@@ -2647,13 +2635,11 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 	if (item != NULL) {
 		if (Item_HandleKey(item, key, down)) {
 			Item_Action(item);
-			inHandler = qfalse;
 			return;
 		}
 	}
 
 	if (!down) {
-		inHandler = qfalse;
 		return;
 	}
 
@@ -2701,7 +2687,6 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 						item->cursorPos = 0;
 						g_editingField = qtrue;
 						g_editItem = item;
-						DC->setOverstrikeMode(qtrue);
 					}
 				} else {
 					if (Rect_ContainsPoint(&item->window.rect, DC->cursorx, DC->cursory)) {
@@ -2739,14 +2724,12 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 					item->cursorPos = 0;
 					g_editingField = qtrue;
 					g_editItem = item;
-					DC->setOverstrikeMode(qtrue);
 				} else {
 						Item_Action(item);
 				}
 			}
 			break;
 	}
-	inHandler = qfalse;
 }
 
 void ToWindowCoords(float *x, float *y, windowDef_t *window) {
@@ -3038,8 +3021,6 @@ void Item_TextField_Paint(itemDef_t *item) {
 		DC->getCVarString(item->cvar, buff, sizeof(buff));
 	} 
 
-	parent = (menuDef_t*)item->parent;
-
 	if (item->window.flags & WINDOW_HASFOCUS) {
 		lowLight[0] = 0.8 * parent->focusColor[0]; 
 		lowLight[1] = 0.8 * parent->focusColor[1]; 
@@ -3113,7 +3094,6 @@ void Item_Multi_Paint(itemDef_t *item) {
 
 typedef struct {
 	char	*command;
-	int		id;
 	int		defaultbind1;
 	int		defaultbind2;
 	int		bind1;
@@ -3193,7 +3173,7 @@ static bind_t g_bindings[] =
 };
 
 
-static const int g_bindCount = sizeof(g_bindings) / sizeof(bind_t);
+static const int g_bindCount = ARRAY_LEN(g_bindings);
 
 #ifndef MISSIONPACK
 static configcvar_t g_configcvars[] =
@@ -3378,10 +3358,8 @@ void BindingFromName(const char *cvar) {
 
 void Item_Slider_Paint(itemDef_t *item) {
 	vec4_t newColor, lowLight;
-	float x, y, value;
+	float x, y;
 	menuDef_t *parent = (menuDef_t*)item->parent;
-
-	value = (item->cvar) ? DC->getCVarValue(item->cvar) : 0;
 
 	if (item->window.flags & WINDOW_HASFOCUS) {
 		lowLight[0] = 0.8 * parent->focusColor[0]; 
@@ -3405,20 +3383,16 @@ void Item_Slider_Paint(itemDef_t *item) {
 
 	x = Item_Slider_ThumbPosition(item);
 	DC->drawHandlePic( x - (SLIDER_THUMB_WIDTH / 2), y - 2, SLIDER_THUMB_WIDTH, SLIDER_THUMB_HEIGHT, DC->Assets.sliderThumb );
-
 }
 
 void Item_Bind_Paint(itemDef_t *item) {
 	vec4_t newColor, lowLight;
-	float value;
 	int maxChars = 0;
 	menuDef_t *parent = (menuDef_t*)item->parent;
 	editFieldDef_t *editPtr = (editFieldDef_t*)item->typeData;
 	if (editPtr) {
 		maxChars = editPtr->maxPaintChars;
 	}
-
-	value = (item->cvar) ? DC->getCVarValue(item->cvar) : 0;
 
 	if (item->window.flags & WINDOW_HASFOCUS) {
 		if (g_bindItem == item) {
@@ -3442,7 +3416,7 @@ void Item_Bind_Paint(itemDef_t *item) {
 		BindingFromName(item->cvar);
 		DC->drawText(item->textRect.x + item->textRect.w + 8, item->textRect.y, item->textscale, newColor, g_nameBind1, 0, maxChars, item->textStyle);
 	} else {
-		DC->drawText(item->textRect.x, item->textRect.y, item->textscale, newColor, (value != 0) ? "FIXME" : "FIXME", 0, maxChars, item->textStyle);
+		DC->drawText(item->textRect.x, item->textRect.y, item->textscale, newColor, "FIXME", 0, maxChars, item->textStyle);
 	}
 }
 
@@ -3647,7 +3621,8 @@ void Item_Image_Paint(itemDef_t *item) {
 }
 
 void Item_ListBox_Paint(itemDef_t *item) {
-	float x, y, size, count, i, thumb;
+	float x, y, size, thumb;
+	int	count, i;
 	qhandle_t image;
 	qhandle_t optionalImage;
 	listBoxDef_t *listPtr = (listBoxDef_t*)item->typeData;
@@ -3800,12 +3775,9 @@ void Item_ListBox_Paint(itemDef_t *item) {
 
 
 void Item_OwnerDraw_Paint(itemDef_t *item) {
-  menuDef_t *parent;
-
 	if (item == NULL) {
 		return;
 	}
-  parent = (menuDef_t*)item->parent;
 
 	if (DC->ownerDrawItem) {
 		vec4_t color, lowLight;

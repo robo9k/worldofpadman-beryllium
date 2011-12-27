@@ -126,12 +126,6 @@ void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
-	/* added beryllium */
-	if ( other->client && other->client->hook ) {
-		return;
-	}
-	/* end beryllium */
-
 	BG_TouchJumpPad( &other->client->ps, &self->s );
 }
 
@@ -189,7 +183,7 @@ void SP_trigger_push( gentity_t *self ) {
 	self->r.svFlags &= ~SVF_NOCLIENT;
 
 	// make sure the client precaches this sound
-	G_SoundIndex("sounds/world/jumppad.wav");
+	G_SoundIndex("sounds/world/jumppad");
 
 	self->s.eType = ET_PUSH_TRIGGER;
 	self->touch = trigger_push_touch;
@@ -230,7 +224,7 @@ void SP_target_push( gentity_t *self ) {
 	VectorScale (self->s.origin2, self->speed, self->s.origin2);
 
 	if ( self->spawnflags & 1 ) {
-		self->noise_index = G_SoundIndex("sounds/world/jumppad.wav");
+		self->noise_index = G_SoundIndex("sounds/world/jumppad");
 	}
 
 	if ( self->target ) {
@@ -294,6 +288,8 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 			trap_SendServerCommand( other->client->ps.clientNum, va( "srwc %i", WP_SPRAYPISTOL ) );
 			other->client->pers.cmd.weapon = WP_SPRAYPISTOL;
 			other->client->ps.weapon = WP_SPRAYPISTOL;
+
+			G_BackupPowerups( other->client );
 		}
 		// sprayroom teleporter out
 		else if ( self->spawnflags & 0x4 ) {
@@ -301,6 +297,8 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 			trap_SendServerCommand( other->client->ps.clientNum, va( "srwc %i", other->client->last_nonspray_weapon ) );
 			other->client->pers.cmd.weapon = other->client->last_nonspray_weapon;
 			other->client->ps.weapon = other->client->last_nonspray_weapon;
+
+			G_RestorePowerups( other->client );
 		}
 	}
 
@@ -309,17 +307,6 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 		G_Printf ("Couldn't find teleporter destination\n");
 		return;
 	}
-
-	/* added beryllium */
-	if ( be_debugSecrets.integer ) {
-		/* FIXME: G_assert ent, other? */
-		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Using %s\n", self->target ) );
-	}
-
-	if ( !BE_CanUseTeleporter( self, other ) ) {
-		return;
-	}
-	/* end beryllium */
 
 	TeleportPlayer( other, dest->s.origin, dest->s.angles );
 
@@ -345,9 +332,10 @@ void SP_trigger_teleport( gentity_t *self ) {
 		self->r.svFlags &= ~SVF_NOCLIENT;
 	}
 
-	if(self->spawnflags & 0x2)//mark the tele for cg_predict
-	{
-		self->s.generic1=0x23;// ;)
+	// Mark as sprayroom teleporter if ENTER_SPRAYROOM is set.
+	// Used for clientside prediction etc.
+	if ( self->spawnflags & 0x2 ) {
+		self->s.generic1 = 0x23;
 		self->s.origin2[0]=(self->r.absmin[0]+self->r.absmax[0])*0.5f;
 		self->s.origin2[1]=(self->r.absmin[1]+self->r.absmax[1])*0.5f;
 		self->s.origin2[2]=(self->r.absmin[2]+self->r.absmax[2])*0.5f;
@@ -359,7 +347,7 @@ void SP_trigger_teleport( gentity_t *self ) {
     }
 
 	// make sure the client precaches this sound
-	G_SoundIndex("sounds/world/jumppad.wav");
+	G_SoundIndex("sounds/world/jumppad");
 
 	self->s.eType = ET_TELEPORT_TRIGGER;
 	self->touch = trigger_teleporter_touch;
@@ -428,7 +416,7 @@ void hurt_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 void SP_trigger_hurt( gentity_t *self ) {
 	InitTrigger (self);
 
-	self->noise_index = G_SoundIndex( "sounds/world/trigger_hurt.wav" );
+	self->noise_index = G_SoundIndex( "sounds/world/trigger_hurt" );
 	self->touch = hurt_touch;
 
 	if ( !self->damage ) {
@@ -437,12 +425,13 @@ void SP_trigger_hurt( gentity_t *self ) {
 
 	self->r.contents = CONTENTS_TRIGGER;
 
-	if ( self->spawnflags & 2 ) {
-		self->use = hurt_use;
-	}
+	self->use = hurt_use;
 
 	// link in to the world if starting active
-	if ( ! (self->spawnflags & 1) ) {
+	if ( self->spawnflags & 1 ) {
+		trap_UnlinkEntity (self);
+	}
+	else {
 		trap_LinkEntity (self);
 	}
 }
