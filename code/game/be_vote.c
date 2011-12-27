@@ -373,6 +373,47 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 
 
 /*
+	Returns qtrue when the current vote should pass
+*/
+static qboolean G_VotePassed( void ) {
+	return ( level.voteYes > ( level.numVotingClients *  be_votePass.value ) );
+}
+
+
+/*
+	Returns qtrue when the current vote should fail
+*/
+static qboolean G_VoteFailed( void ) {
+	return ( level.voteNo >= ( level.numVotingClients * ( 1.0 - be_votePass.value ) ) );
+}
+
+
+/*
+	Counts the number of clients which can vote and sets level.numVotingClients
+*/
+static void G_CountVotingClients( void ) {
+	int i;
+
+	level.numVotingClients = 0;
+	for ( i = 0; i < level.maxclients; i++ ) {
+		if ( ( level.clients[i].pers.connected != CON_CONNECTED ) ||
+		     ( g_entities[i].r.svFlags & SVF_BOT ) ) {
+			continue;
+		}
+
+		/* Anyone currently in a team is allowed to vote */
+		if ( level.clients[i].sess.sessionTeam != TEAM_SPECTATOR ) {
+			level.numVotingClients++;
+		}
+		/* If spectator but voted already, also count him */
+		else if ( level.clients[i].pers.voted != VOTE_NONE ) {
+			level.numVotingClients++;
+		}
+	}
+}
+
+
+/*
 	Beryllium's replacement for CheckVote() in g_main.c
 	Determines whether a vote passed or failed and execute it
 */
@@ -394,20 +435,7 @@ void BE_CheckVote( void ) {
 	          account for players that callvote/vote, join spectators (but are still counted, since
 	          they voted previously) at the next vote. So just recount here quick&dirty
 	*/
-	level.numVotingClients = 0;
-	for ( i = 0; i < level.maxclients; i++ ) {
-		if ( ( level.clients[i].pers.connected != CON_CONNECTED ) ||
-		     ( g_entities[i].r.svFlags & SVF_BOT ) ) {
-			continue;
-		}
-
-		if ( level.clients[i].sess.sessionTeam != TEAM_SPECTATOR ) {
-			level.numVotingClients++;
-		}
-		else if ( level.clients[i].pers.voted != VOTE_NONE ) {
-			level.numVotingClients++;
-		}
-	}
+	G_CountVotingClients();
 
 
 	/* TODO: Print numbers of yay-nay-rest? */
@@ -415,12 +443,12 @@ void BE_CheckVote( void ) {
 		SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote failed, timeout.\n" );
 	}
 	else {
-		if ( level.voteYes > ( level.numVotingClients *  be_votePass.value ) ) {
+		if ( G_VotePassed() ) {
 			/* Set timeout, then execute and remove the vote at next call */
 			SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote passed.\n" );
 			level.voteExecuteTime = ( level.time + VOTE_EXECUTEDELAY );
 		}
-		else if ( level.voteNo >= ( level.numVotingClients * ( 1.0 - be_votePass.value ) ) ) {
+		else if ( G_VoteFailed() ) {
 			/* same behavior as a timeout */
 			SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote failed.\n" );
 		}
