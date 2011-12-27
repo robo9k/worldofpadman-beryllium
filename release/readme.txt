@@ -20,6 +20,10 @@
   not work with older, newer or beta versions of the game. This is
   a limitation of the Quake 3 QVM system.
 
+  If you have any questions or suggestions regarding Beryllium, just
+  contact me at brain@loop8.net
+
+
   :: Installation
 
   According to Beryllium's aims outlined above, you should not
