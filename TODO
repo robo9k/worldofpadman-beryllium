@@ -111,3 +111,6 @@ upload to users.loop8.net/~brain/ foo /beryllium/files
 
 fix compiler warnings for qvm/so
 
+Print some self-advertisement in server console at startup (G_ColoredOutput)
+and on client connect (skipnotify)?
+

@@ -9,6 +9,7 @@
 
 //(original)#define	GAME_VERSION		"baseq3-1"
 #define	GAME_VERSION		"padcode 1.153"
+/* beryllium: This should be used to prevent using e.g. v1.5 qvm with v1.6 */
 
 #define	DEFAULT_GRAVITY		800
 
