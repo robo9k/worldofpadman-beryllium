@@ -16,7 +16,7 @@
 
   This readme is for Beryllium __VERSION__ and may thus not apply
   to older versions.
-  This version is based on World of Padman v1.5 and will therefore
+  This version is based on World of Padman v1.6 and will therefore
   not work with older, newer or beta versions of the game. This is
   a limitation of the Quake 3 QVM system.
 

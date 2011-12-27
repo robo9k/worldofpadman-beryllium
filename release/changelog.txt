@@ -12,11 +12,15 @@
 
   :: Current Version
 
-  v1.1c - 07.12.11
-  * Fix inactivity for respawning players
+  v1.6a - 27.12.11
+  * Update to WoP v1.6
+  * Fix connection icon not being set
 
 
   :: History
+
+  :: v1.1c - 07.12.11
+  * Fix inactivity for respawning players
 
   :: v1.1b - 05.12.11
   * Fix compiler warnings etc.
