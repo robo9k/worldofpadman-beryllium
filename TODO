@@ -114,3 +114,5 @@ fix compiler warnings for qvm/so
 Print some self-advertisement in server console at startup (G_ColoredOutput)
 and on client connect (skipnotify)?
 
+g_team ps.team vs sess.sessionTeam?
+

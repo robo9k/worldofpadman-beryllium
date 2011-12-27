@@ -924,6 +924,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			if(ps->stats[STAT_HOLDABLE_ITEM] == item-bg_itemlist)
 				return qtrue;
 
+			/* beryllium: Print message "You already have xy"? */
 			return qfalse;
 		}
 		return qtrue;

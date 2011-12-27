@@ -21,10 +21,11 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 /* Variables */
 const ccmd_t BE_CCMDS[] = {
-	{ "callvote",		CMD_MESSAGE,	BE_Cmd_CallVote_f		},
-	{ "cv",				CMD_MESSAGE,	BE_Cmd_CallVote_f		},
-	{ "vote",			CMD_MESSAGE,	BE_Cmd_Vote_f			},
-	{ "ignore",			0,				BE_Cmd_Ignore_f			}
+	{ "callvote",		CMD_MESSAGE,	BE_Cmd_CallVote_f			},
+	{ "cv",				CMD_MESSAGE,	BE_Cmd_CallVote_f			},
+	{ "vote",			CMD_MESSAGE,	BE_Cmd_Vote_f				},
+	{ "ignore",			0,				BE_Cmd_Ignore_f				},
+	{ "qcr",			0,				BE_Cmd_QueryCvarResponse_f	}
 };
 const unsigned int NUM_CCMDS = ARRAY_LEN( BE_CCMDS );
 
@@ -181,5 +182,31 @@ void BE_Cmd_Ignore_f( gentity_t *ent ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, message );
 		}
 	}
+}
+
+
+/*
+	We recieved a query cvar response from a client, just print it
+*/
+void BE_Cmd_QueryCvarResponse_f( gentity_t *ent ) {
+	char value[MAX_STRING_CHARS];
+	char cvar[MAX_STRING_CHARS];
+	int clientNum;
+
+	clientNum = ( ent - g_entities );
+
+	if ( trap_Argc() != 3 ) {
+		G_Printf( "Recieved invalid query cvar response from client %d.\n", clientNum );
+		return;
+	}
+
+	/* TODO: Add some sort of challenge, so clients can not easily send fake qcr.
+	         Needs clientside code in cg_misc.c
+	*/
+
+	trap_Argv( 1, cvar, sizeof( cvar ) );
+	trap_Argv( 2, value, sizeof( value ) );
+
+	G_Printf( "Query cvar response from %d: %s - \"%s\"\n", clientNum, cvar, value );
 }
 

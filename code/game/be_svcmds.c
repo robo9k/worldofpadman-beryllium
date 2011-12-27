@@ -40,6 +40,7 @@ static void BE_Svcmd_RunAs_f( void );
 static void BE_Svcmd_PlaySound_f( void );
 static void BE_Svcmd_Memory_f( void );
 static void BE_Svcmd_Beryllium_f( void );
+static void BE_Svcmd_QueryCvar_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -69,7 +70,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "runas",			BE_Svcmd_RunAs_f			},
 	{ "sound",			BE_Svcmd_PlaySound_f		},
 	{ "memory",			BE_Svcmd_Memory_f			},
-	{ "beryllium",		BE_Svcmd_Beryllium_f		}
+	{ "beryllium",		BE_Svcmd_Beryllium_f		},
+	{ "querycvar",		BE_Svcmd_QueryCvar_f		}
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -881,5 +883,41 @@ static void BE_Svcmd_Beryllium_f( void ) {
 		Q_DecolorStr( buf, buf, sizeof( buf ) );
 	}
 	G_Printf( "%s", buf );
+}
+
+
+/*
+	Sends a cvar query to a client
+*/
+static void BE_Svcmd_QueryCvar_f( void ) {
+	char	clientStr[3], cmd[MAX_STRING_CHARS];
+	int		clientNum;
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf( "Usage: querycvar <cid> <cvar>\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Not a valid client number.\n" );
+		return;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		G_Printf( "Client not connected.\n" );
+		return;
+	}
+
+	Com_sprintf( cmd, sizeof( cmd ), "qc %s", ConcatArgs( 2 ) );
+
+	trap_SendServerCommand( clientNum, cmd );
 }
 
