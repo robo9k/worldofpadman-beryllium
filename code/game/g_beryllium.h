@@ -81,6 +81,11 @@ enum {
 	CHAT_SPECTATOR_TEAM	= 2
 };
 
+enum {
+	BE_UNIQUENAMES	= 1,
+	BE_SIMPLENAMES	= 2
+};
+
 
 extern int			numGUIDBans;
 extern guidBan_t	guidBans[MAX_GUIDBANS];
@@ -128,6 +133,8 @@ extern vmCvar_t	be_chatFlags;
 
 extern vmCvar_t	be_overrideEntities;
 
+extern vmCvar_t	be_settings;
+
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */
 void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
@@ -135,7 +142,7 @@ char *ConcatArgs( int start );
 void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message );
 
 /* Declared in g_client.c, formerly static */
-extern void ClientCleanName( const char *in, char *out, int outSize );
+extern void ClientCleanName( const char *in, char *out, size_t outSize );
 
 
 /* "Exported" Functions */

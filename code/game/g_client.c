@@ -871,17 +871,8 @@ ClientCheckName
 /* changed beryllium */
 /*
 static void ClientCleanName(const char *in, char *out, int outSize)
-*/
-void ClientCleanName(const char *in, char *out, int outSize)
-/* end beryllium */
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
-	/* added beryllium */
-	int			totalWhitespace = 0;
-	qboolean	invalid = qfalse;
-	char		cleanName[MAX_NETNAME];
-	/* end beryllium */
-
 
 	// discard leading spaces
 	for(; *in == ' '; in++);
@@ -924,19 +915,6 @@ void ClientCleanName(const char *in, char *out, int outSize)
 			colorlessLen++;
 		}
 		
-		/* added beryllium */
-		/* don't allow nonprinting characters or (dead) console keys */
-		if ( *in < ' ' || *in > '}' || *in == '`' ) {
-			colorlessLen--;
-			continue;
-		}
-
-		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
-		if ( *in == ' ' ) {
-			totalWhitespace++;
-		}
-		/* end beryllium */
-
 		outpos++;
 	}
 
@@ -945,9 +923,82 @@ void ClientCleanName(const char *in, char *out, int outSize)
 	// don't allow empty names
 	if( *out == '\0' || colorlessLen == 0)
 		Q_strncpyz(out, "UnnamedPlayer", outSize );
+}
+*/
+void ClientCleanName( const char *in, char *out, size_t outSize ) {
+	int outpos = 0, colorlessLen = 0, spaces = 0;
+	int			totalWhitespace = 0;
+	qboolean	invalid = qfalse;
+	char		cleanName[MAX_NETNAME];
 
 
-	/* added beryllium */
+	/* Discard leading spaces */
+	for ( ; ' ' == *in; in++ ) {
+		/* NOP */
+	}
+	
+	for ( ; ( *in && ( outpos < ( outSize - 1 ) ) ); in++ ) {
+		out[outpos] = *in;
+
+		if (' ' == *in ) {
+			/* Don't allow too many consecutive spaces */
+			if ( spaces > 2 ) {
+				continue;
+			}
+			
+			spaces++;
+		}
+		else if ( ( outpos > 0 ) && ( Q_COLOR_ESCAPE == out[outpos - 1] ) ) {
+			if ( Q_IsColorString( &out[outpos - 1] ) ) {
+				colorlessLen--;
+				
+				/* beryllium: I honestly don't see what kind of advantage you
+				              get from black names..
+				*/
+				/*
+				if(ColorIndex(*in) == 0)
+				{
+					// Disallow color black in names to prevent players
+					// from getting advantage playing in front of black backgrounds
+					outpos--;
+					continue;
+				}
+				*/
+			}
+			else {
+				spaces = 0;
+				colorlessLen++;
+			}
+		}
+		else {
+			spaces = 0;
+			colorlessLen++;
+		}
+		
+		if ( be_settings.integer & BE_SIMPLENAMES ) {
+			/* Don't allow nonprinting characters or (dead) console keys */
+			/* This includes the WoP symbol */
+			if ( *in < ' ' || *in > '}' || *in == '`' ) {
+				colorlessLen--;
+				continue;
+			}
+		}
+
+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+		if ( *in == ' ' ) {
+			totalWhitespace++;
+		}
+
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+
+	/* Don't allow empty names */
+	if (  ( '\0' == *out ) || ( 0 == colorlessLen ) ) {
+		Q_strncpyz(out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+	}
+
 	/* /name "^7 " etc. also results in an "empty" name */
 	if ( totalWhitespace >= colorlessLen ) {
 		invalid = qtrue;	

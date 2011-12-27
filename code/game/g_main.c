@@ -126,6 +126,8 @@ vmCvar_t	be_chatFlags;
 
 vmCvar_t	be_overrideEntities;
 
+vmCvar_t	be_settings;
+
 /* end beryllium */
 
 
@@ -271,7 +273,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue },
 
-	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue }
+	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue },
+
+	{ &be_settings, "be_settings", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qfalse }
 
 	/* end beryllium */
 };

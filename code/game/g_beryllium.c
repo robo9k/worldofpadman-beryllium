@@ -175,8 +175,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	          after the original ClientUserinfoChanged() returns. So we need to set and reset
 	          to the new name in userinfo.
 	*/
-	/* Hectic dislikes renamed bots.. */
-	if ( !( ent->r.svFlags & SVF_BOT ) ) {
+	if ( !( ent->r.svFlags & SVF_BOT ) && ( be_settings.integer & BE_UNIQUENAMES ) ) {
 		Q_strncpyz( ent->client->pers.netname, name, sizeof( ent->client->pers.netname ) );
 		if ( ClientnumFromString( name ) == CID_MULTIPLE ) {
 			char newname[MAX_NETNAME];

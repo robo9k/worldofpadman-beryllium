@@ -188,6 +188,13 @@
     additional work. Stay tuned!
 
 
+    :: be_settings
+    This is a bitmask, supporting the following flags:
+      1 - Enforce unique player names
+      2 - Enforce simple player names
+          Black ^0 is now usable either way
+
+
 
   
   :: Commands
@@ -337,13 +344,11 @@
     Beryllium also includes some changes to the game which are
     mandatory and can not be configured at all.
   
-   * Beryllium automatically renames players, preventing
-     multiple players having the same name.
    * Several names are now forbidden, e.g. "server".
    * Quite a few sanity checks are being run against votes.
    * Some bugs in the original code have been fixed
    * Most bugfixes from WoP's bleeding edge code have been 
-     backported, even those changing gameplay
+     backported
 
 
 

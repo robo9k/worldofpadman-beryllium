@@ -215,7 +215,7 @@ qboolean ValidClientID( int clientNum, qboolean allowWorld ) {
 */
 clientNum_t ClientnumFromString( const char *name ) {
 	gclient_t	*player;
-	char		cleanName[MAX_NETNAME], cleanquery[MAX_NETNAME];
+	char		cleanName[MAX_NETNAME], cleanQuery[MAX_NETNAME];
 	int			id = CID_NONE, matches = 0, i;
 
 
@@ -223,7 +223,7 @@ clientNum_t ClientnumFromString( const char *name ) {
 
 
 	/* FIXME: Const correctness */
-	Q_ExtraCleanStr( (char*)name, cleanquery, sizeof( cleanquery ) );
+	ClientCleanName( (char*)name, cleanQuery, sizeof( cleanQuery ) );
 
 	/* FIXME: Return as soon as matches > 1? */
 
@@ -246,8 +246,8 @@ clientNum_t ClientnumFromString( const char *name ) {
 		/* match without colorcodes etc. */
 		/* TODO: Maybe check for 'l' vs. '1' etc., as the font makes them look rather similar */
 		/* FIXME: Does this violate the multiple matches approach? */
-		Q_ExtraCleanStr( player->pers.netname, cleanName, sizeof( cleanName ) );
-		if ( Q_stricmp( cleanquery, cleanName ) == 0 ) {
+		ClientCleanName( player->pers.netname, cleanName, sizeof( cleanName ) );
+		if ( Q_stricmp( cleanQuery, cleanName ) == 0 ) {
 			id = i;
 			matches++;
 			continue;

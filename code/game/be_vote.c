@@ -418,9 +418,6 @@ static void G_CountVotingClients( void ) {
 	Determines whether a vote passed or failed and execute it
 */
 void BE_CheckVote( void ) {
-	int i;
-
-
 	if ( level.voteExecuteTime && ( level.voteExecuteTime < level.time ) ) {
 		level.voteExecuteTime = 0;
 		trap_SendConsoleCommand( EXEC_APPEND, va( "%s\n", level.voteString ) );
