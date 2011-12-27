@@ -2302,6 +2302,11 @@ int BotFindEnemy(bot_state_t *bs, int curenemy) {
 		if (EntityIsInvisible(&entinfo) && !EntityIsShooting(&entinfo)) {
 			continue;
 		}
+		/* added beryllium */
+		if ( g_entities[i].flags & FL_NOTARGET ) {
+			continue;
+		}
+		/* end beryllium */
 		// no fighting in the sprayroom please
 		if( ClientInSprayroom(i) ) continue;
 		//if not an easy fragger don't shoot at chatting players
@@ -4573,7 +4578,12 @@ void BotSetupDeathmatchAI(void) {
 	maxclients = trap_Cvar_VariableIntegerValue("sv_maxclients");
 
 	trap_Cvar_Register(&bot_rocketjump, "bot_rocketjump", "1", 0);
+	/* changed beryllium */
+	/*
 	trap_Cvar_Register(&bot_grapple, "bot_grapple", "0", 0);
+	*/
+	trap_Cvar_Register( &bot_grapple, "bot_grapple", "1", 0 );
+	/* end beryllium */
 	trap_Cvar_Register(&bot_fastchat, "bot_fastchat", "0", 0);
 	trap_Cvar_Register(&bot_nochat, "bot_nochat", "0", 0);
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
