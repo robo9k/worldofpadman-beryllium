@@ -345,7 +345,7 @@ typedef struct {
 
 /* FIXME: This should be in beryllium's headers, which are included too late */
 /* NOTE: This data remains over nextmap/map_restart and different gametypes. It's
-         basically and extension of clientSession_t.
+         basically an extension of clientSession_t.
 */
 typedef struct {
 	qboolean	ignoreList[MAX_CLIENTS];

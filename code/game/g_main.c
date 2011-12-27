@@ -465,11 +465,11 @@ void G_UpdateCvars( void ) {
 						cv->cvarName, cv->vmCvar->string ) );
 					*/
 					if ( cv->cvarFlags & CVAR_LATCH ) {
-						// game is unaware of the new latched value, so just don't print it
+						/* game code is unaware of the new latched value, so just don't print it */
 						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed.\n", cv->cvarName ) );
 					}
 					else {
-						// FIXME: Don't print the new value at all?
+						/* FIXME: Don't print the new value at all? */
 						SendClientCommand( CID_ALL, CCMD_PRT, va( "Variable "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" changed to "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT".\n", cv->cvarName, cv->vmCvar->string ) );
 					}
 					/* end beryllium */

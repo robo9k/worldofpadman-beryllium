@@ -848,7 +848,7 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 		|| ps->origin[2] - origin[2] < -36 ) {
 		return qfalse;
 	}
-	/* beryllium NOTE: fix z so we do not miss items (return flag!)? */
+	/* beryllium NOTE: fix z so we do not miss items by "jumping" over them? */
 
 	return qtrue;
 }
@@ -1357,6 +1357,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 #ifdef QAGAME
 	s->pos.trDuration = G_FrameMsec();
 #else
+	/* FIXME: Make sv_fps CVAR_SYSTEMINFO so client can access it? */
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
 #endif
 	/* end beryllium */
