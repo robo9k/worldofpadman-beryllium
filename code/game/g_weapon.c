@@ -407,7 +407,12 @@ static void check_sprayawards( gentity_t *ent ) {
 		// add the sprite over the player's head
 		SetAward( ent->client, AWARD_SPRAYKILLER );
 
+		/* changed beryllium */
+		/*
 		PrintMsg( NULL, "%s"S_COLOR_MAGENTA" is a SprayKiller!\n", ent->client->pers.netname );
+		*/
+		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_MAGENTA" is a SprayKiller!\n", ent->client->pers.netname ) );
+		/* end beryllium */
 
 		AddScore( ent,ent->client->ps.origin, SCORE_BONUS_SPRAYKILLER, SCORE_BONUS_SPRAYKILLER_S );
 		if ( g_gametype.integer == GT_SPRAY ) {
@@ -420,7 +425,12 @@ static void check_sprayawards( gentity_t *ent ) {
 		// add the sprite over the player's head
 		SetAward( ent->client, AWARD_SPRAYGOD );
 
+		/* changed beryllium */
+		/*
 		PrintMsg( NULL, "%s"S_COLOR_MAGENTA" is a SprayGod!\n", ent->client->pers.netname );
+		*/
+		SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_MAGENTA" is a SprayGod!\n", ent->client->pers.netname ) );
+		/* end beryllium */
 
 		AddScore( ent,ent->client->ps.origin, SCORE_BONUS_SPRAYGOD, SCORE_BONUS_SPRAYGOD_S );
 		if ( g_gametype.integer == GT_SPRAY ) {
@@ -454,7 +464,12 @@ void weapon_spraypistol_fire( gentity_t *ent ) {
 				// FIXME: Use an event rather than that crap
 				trap_SendServerCommand( -1, va( "cdi 1 %i",(int)( random() * 3.9999 ) ) );
 				
+				/* changed beryllium */
+				/*
 				PrintMsg( NULL, "%s"S_COLOR_MAGENTA" (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) );
+				*/
+				SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_MAGENTA" (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) ) );
+				/* end beryllium */
 			}
 		}
 		else if ( &g_entities[tr.entityNum] == level.bspraywall ) {
@@ -467,7 +482,12 @@ void weapon_spraypistol_fire( gentity_t *ent ) {
 				AddScore( ent, tr.endpos, SCORE_SPRAY_WRONGWALL, SCORE_SPRAY_WRONGWALL_S );
 				trap_SendServerCommand( -1, va( "cdi 1 %i",(int)( random() * 3.9999 ) ) );
 
+				/* changed beryllium */
+				/*
 				PrintMsg( NULL, "%s"S_COLOR_MAGENTA " (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) );
+				*/
+				SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_MAGENTA " (%s Team) sprayed on the WRONG WALL!!!\n", ent->client->pers.netname, TeamName( ent->client->sess.sessionTeam ) ) );
+				/* end beryllium */
 			}
 		}
 	}

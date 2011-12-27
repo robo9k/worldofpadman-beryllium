@@ -365,11 +365,16 @@ qboolean bambam_createByPlayer( gentity_t *pEnt, char* pickupName ) {
 	vec3_t tmpAngles;
 	trace_t	tr;
 
+	/* changed beryllium */
+	/*
 	vec3_t boxMins = {-128, -128, -30};
 	vec3_t boxMaxs = {128, 128, 64};
 	int boxEnts[10];
 	int numBoxEnts;
 	int i;
+	*/
+	/* end beryllium */
+
 	gentity_t* entBam;
 
 	if( MAX_TEAM_BAMBAMS <= level.numBambams[ pEnt->client->sess.sessionTeam ] )

@@ -826,7 +826,12 @@ void AddTournamentQueue(gclient_t *client);
 void QDECL G_LogPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void SendScoreboardMessageToAllClients( void );
 void QDECL G_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+/* changed beryllium */
+/*
 void QDECL G_Error( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+*/
+void QDECL G_Error( const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
+/* end beryllium */
 
 //
 // g_client.c
@@ -851,7 +856,11 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 );
 void Team_CheckDroppedItem( gentity_t *dropped );
 int Team_GetFlagStatus(int team);
 qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker );
+/* changed beryllium */
+/*
 void QDECL PrintMsg( gentity_t *ent, const char *fmt, ... );
+*/
+/* end beryllium */
 
 //
 // g_mem.c

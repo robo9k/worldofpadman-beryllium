@@ -83,7 +83,7 @@ void PrintMessage( const gentity_t *ent, const char *msg );
 
 qboolean InList( const char *needle, const char *haystack );
 
-void QDECL G_DPrintf( const char *fmt, ... );
+void QDECL G_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 
 void Q_DecolorStr( char *in, char *out, size_t outsize );
 void Q_StripWhitespace( char *in, char *out, size_t outsize );
