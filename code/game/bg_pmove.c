@@ -1564,6 +1564,7 @@ static void PM_Weapon( void ) {
 				pm->ps->eFlags |= EF_FLOATER;
 
 				pm->ps->stats[STAT_HOLDABLEVAR]-=50;//FIXME: it would be better if the value gets calculated from framerate ...
+				/* beryllium FIXME: See above. This depends on client framerate, so we'd need a timer, uargh! */
 				if(pm->ps->stats[STAT_HOLDABLEVAR]<=0)
 				{
 					pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
@@ -1754,7 +1755,13 @@ fire:
 	pm->ps->eFlags &= ~EF_CHARGED;
 
 	// take an ammo away if not infinite
+	/* changed beryllium */
+	/*
 	if ( pm->ps->ammo[ pm->ps->weapon ] != -1 ) {
+	*/
+	if ( ( pm->ps->ammo[ pm->ps->weapon ] != -1 )
+	     && ( pm->ps->ammo[ pm->ps->weapon ] != UNLIMITED ) ) {
+	/* end beryllium */
 		pm->ps->ammo[ pm->ps->weapon ]--;
 	}
 

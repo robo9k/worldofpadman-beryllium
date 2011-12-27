@@ -837,6 +837,7 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 		|| ps->origin[2] - origin[2] < -36 ) {
 		return qfalse;
 	}
+	/* beryllium NOTE: fix z so we do not miss items (return flag!)? */
 
 	return qtrue;
 }
@@ -1337,7 +1338,17 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	// set the time for linear prediction
 	s->pos.trTime = time;
 	// set maximum extra polation time
+	/* changed beryllium */
+	/*
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+	*/
+
+#ifdef QAGAME
+	s->pos.trDuration = G_FrameMsec();
+#else
+	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
+#endif
+	/* end beryllium */
 
 	s->apos.trType = TR_INTERPOLATE;
 	VectorCopy( ps->viewangles, s->apos.trBase );

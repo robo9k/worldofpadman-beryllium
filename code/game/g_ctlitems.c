@@ -218,6 +218,12 @@ static void bambam_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if(!other->client) return;
 	if(!ent->team) return;
 
+	/* added beryllium */
+	if ( other->flags & FL_NOTARGET ) {
+		return;
+	}
+	/* end beryllium */
+
 	if ( !IsItemSameTeam( ent, other ) && 
 	     ( ent->timestamp == 0 || ( level.time - ent->timestamp ) > 100 ) ) {
 		trace_t tr;
@@ -496,6 +502,12 @@ static void boomies_touch( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	if ( !other->client ) {
 		return;
 	}
+
+	/* added beryllium */
+	if ( other->flags & FL_NOTARGET ) {
+		return;
+	}
+	/* end beryllium */
 
 	if ( !IsItemSameTeam( ent, other ) ) {
 		// EXPLODE! goes the wiesel

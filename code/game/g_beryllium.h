@@ -65,7 +65,7 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 							"|_____|___|_| |_  |_|_|_|___|_|_|_|\n" \
 							"              |___|                \n"
 
-#define G_VERSION_S			"wop 1.5_SVN1898M"
+#define G_VERSION_S			"wop 1.6_svn2178"
 
 typedef struct {
 	char guid[GUIDSTRMAXLEN];

@@ -80,7 +80,7 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 	char	buff[MAX_STRING_CHARS];
 	int		clientNum;
 	char	*var;
-	const char *endp;
+	char *endp;
 	int		i;
 	clientStorage_t	*stor;
 
@@ -96,18 +96,9 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 
 	endp = buff;
 	for ( i = 0; i < MAX_CLIENTS; i++ ) {
-		#ifdef Q3_VM
 		stor->ignoreList[i] = strtol( endp, &endp, 10 );
-		#else
-		// stdlib does not use const char
-		stor->ignoreList[i] = strtol( (char*)endp, (char**)&endp, 10 );
-		#endif
 	}
-	#ifdef Q3_VM
 	stor->firstTime = strtol( endp, &endp, 10 );
-	#else
-	stor->firstTime = strtol( (char*)endp, (char**)&endp, 10 );
-	#endif
 }
 
 

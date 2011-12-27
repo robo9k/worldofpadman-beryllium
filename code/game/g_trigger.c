@@ -126,6 +126,12 @@ void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
+	/* added beryllium */
+	if ( other->client && other->client->hook ) {
+		return;
+	}
+	/* end beryllium */
+
 	BG_TouchJumpPad( &other->client->ps, &self->s );
 }
 
@@ -307,6 +313,17 @@ void trigger_teleporter_touch( gentity_t *self, gentity_t *other, trace_t *trace
 		G_Printf ("Couldn't find teleporter destination\n");
 		return;
 	}
+
+	/* added beryllium */
+	if ( be_debugSecrets.integer ) {
+		/* FIXME: G_assert ent, other? */
+		SendClientCommand( ( other - g_entities ), CCMD_PRT, va( "Using %s\n", self->target ) );
+	}
+
+	if ( !BE_CanUseTeleporter( self, other ) ) {
+		return;
+	}
+	/* end beryllium */
 
 	TeleportPlayer( other, dest->s.origin, dest->s.angles );
 

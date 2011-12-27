@@ -410,8 +410,13 @@ replacePair_t q3ToWopItems[] = {
 	{ "ammo_bfg",		"ammo_imperius"	},
 			
 	{ "item_quad",		"item_padpower"			},
+	/* changed beryllium */
+	/*
 	{ "item_enviro",	"item_climber"			},
 	{ "item_hast",		"item_speedy"			},
+	*/
+	{ "item_haste",		"item_speedy"			},
+	/* end beryllium */
 	{ "item_flight",	"item_jump"				},
 	{ "item_invis",		"item_visionless"		},
 	{ "item_regen",		"item_revival"			},
@@ -443,6 +448,47 @@ replacePair_t spawnpointReplacements[] = {
 	{ NULL,					NULL }
 };
 
+
+/* added beryllium */
+
+/*
+	Returns whether value includes gametype.
+	If g_q3Items is enabled, will also check against Q3 gametype names.
+*/
+static qboolean G_ValueIncludesGametype( const char *value, gametype_t gametype ) {
+	const char *gametypeName;
+	char *s;
+
+	// Order needs to match gametype_t of WoP
+	static const char *gametypeNames[] =	{ "ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"	};
+	static const char *gametypeNamesQ3[] =	{ "ffa", "tournament", "single", NULL,    NULL,  "team", "ctf", NULL,   NULL		};
+
+	if ( ( gametype < GT_FFA ) || ( gametype >= GT_MAX_GAME_TYPE ) ) {
+		return qfalse;
+	}
+	gametypeName = gametypeNames[gametype];
+
+	s = strstr( value, gametypeName );
+	if ( !s ) {
+		if ( g_q3Items.integer ) {
+			gametypeName = gametypeNamesQ3[gametype];
+			if ( NULL == gametypeName ) {
+				return qfalse;
+			}
+
+			s = strstr( value, gametypeName );
+			if ( s ) {
+				return qtrue;
+			}
+		}
+
+		return qfalse;
+	}
+
+	return qtrue;
+}
+/* end beryllium */
+
 /*
 ===================
 G_SpawnGEntityFromSpawnVars
@@ -454,11 +500,17 @@ level.spawnVars[], then call the class specfic spawn function
 void G_SpawnGEntityFromSpawnVars( void ) {
 	int			i;
 	gentity_t	*ent;
-	char		*s, *value;
+	char		*value;
+	gitem_t		*item;
+	/* changed beryllium */
+	/*
+	char		*s;
 	const char	*gametypeName;
 	gitem_t		*item;
 
 	static const char *gametypeNames[] = {"ffa", "tournament", "single", "spray", "lps", "team", "ctl", "sptp", "balloon"};
+	*/
+	/* end beryllium */
 
 	// get the next free entity
 	ent = G_Spawn();
@@ -471,6 +523,10 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 	if ( g_q3Items.integer ) {
 		for ( i = 0; q3ToWopItems[i].s; i++ ) {
 			if ( Q_stricmp( ent->classname, q3ToWopItems[i].s ) == 0 ) {
+				/* added beryllium */
+				G_DPrintf( "spawning (q3 items): Replacing entity "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" with "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT".\n",
+				           ent->classname, q3ToWopItems[i].r );
+				/* end beryllium */
 				ent->classname = (char*)q3ToWopItems[i].r;
 				break;
 			}
@@ -551,6 +607,8 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 		return;
 	}
 
+	/* changed beryllium */
+	/*
 	if( G_SpawnString( "gametype", NULL, &value ) ) {
 		if( g_gametype.integer >= GT_FFA && g_gametype.integer < GT_MAX_GAME_TYPE ) {
 			gametypeName = gametypeNames[g_gametype.integer];
@@ -574,6 +632,23 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 			}
 		}
 	}
+	*/
+	if ( G_SpawnString( "gametype", NULL, &value ) ) {
+		if ( !G_ValueIncludesGametype( value, g_gametype.integer ) ) {
+			G_DPrintf( "spawning: Not spawning "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" due to gametype key.\n", ent->classname );
+			G_FreeEntity( ent );
+			return;
+		}
+	}
+
+	if ( G_SpawnString( "notGametype", NULL, &value ) ) {
+		if ( G_ValueIncludesGametype( value, g_gametype.integer ) ) {
+			G_DPrintf( "spawning: Not spawning "S_COLOR_ITALIC"%s"S_COLOR_DEFAULT" due to notGametype key.\n", ent->classname );
+			G_FreeEntity( ent );
+			return;
+		}
+	}
+	/* end beryllium */
 
 
 	for ( item = ( bg_itemlist + 1 ); item->classname; item++ ) {
@@ -687,7 +762,12 @@ qboolean G_ParseSpawnVars( void ) {
 	level.numSpawnVarChars = 0;
 
 	// parse the opening brace
+	/* changed beryllium */
+	/*
 	if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	*/
+	if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+	/* end beryllium */
 		// end of spawn string
 		return qfalse;
 	}
@@ -698,7 +778,12 @@ qboolean G_ParseSpawnVars( void ) {
 	// go through all the key / value pairs
 	while ( 1 ) {	
 		// parse key
+		/* changed beryllium */
+		/*
 		if ( !trap_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		*/
+		if ( !BE_GetEntityToken( keyname, sizeof( keyname ) ) ) {
+		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -706,8 +791,13 @@ qboolean G_ParseSpawnVars( void ) {
 			break;
 		}
 		
-		// parse value	
+		// parse value
+		/* changed beryllium */
+		/*	
 		if ( !trap_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		*/
+		if ( !BE_GetEntityToken( com_token, sizeof( com_token ) ) ) {
+		/* end beryllium */
 			G_Error( "G_ParseSpawnVars: EOF without closing brace" );
 		}
 
@@ -829,6 +919,10 @@ void G_SpawnEntitiesFromString( void ) {
 	level.numSpawnVars = 0;
 	level.sr_tl_tele = NULL;
 
+	/* added beryllium */
+	BE_PreSpawnEntities();
+	/* end beryllium */
+
 	// the worldspawn is not an actual entity, but it still
 	// has a "spawn" function to perform any global setup
 	// needed by a level (setting configstrings or cvars, etc)
@@ -841,6 +935,10 @@ void G_SpawnEntitiesFromString( void ) {
 	while( G_ParseSpawnVars() ) {
 		G_SpawnGEntityFromSpawnVars();
 	}	
+
+	/* added beryllium */
+	BE_PostSpawnEntities();
+	/* end beryllium */
 
 	level.spawning = qfalse;			// any future calls to G_Spawn*() will be errors
 }

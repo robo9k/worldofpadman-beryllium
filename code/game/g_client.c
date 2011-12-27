@@ -229,6 +229,8 @@ SelectRandomFurthestSpawnPoint
 Chooses a player start, deathmatch start, etc
 ============
 */
+/* changed beryllium */
+/*
 gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot ) {
 	gentity_t	*spot;
 	vec3_t		delta;
@@ -306,7 +308,7 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 					continue;
 	
 				VectorCopy (tmpent.s.origin, origin);
-//				origin[2] += 9;//sind jetzt vor dem überprüfen
+//				origin[2] += 9;//sind jetzt vor dem Ã¼berprÃ¼fen
 				VectorCopy (spot->s.angles, angles);
 				return spot;
 			}
@@ -332,6 +334,121 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 
 	return list_spot[rnd];
 }
+*/
+
+/* Taken from ioquake.
+   There's some error causing the final list_spot[rnd]->s.* to point into nowhere
+   in the original wop code.
+*/
+gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, vec3_t angles, qboolean isbot ) {
+	gentity_t	*spot;
+	vec3_t		delta;
+	float		dist;
+	float		list_dist[MAX_SPAWN_POINTS];
+	gentity_t	*list_spot[MAX_SPAWN_POINTS];
+	int			numSpots, rnd, i, j;
+
+	numSpots = 0;
+	spot = NULL;
+
+	while((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL)
+	{
+		if(SpotWouldTelefrag(spot))
+			continue;
+
+		if(((spot->flags & FL_NO_BOTS) && isbot) ||
+		   ((spot->flags & FL_NO_HUMANS) && !isbot))
+		{
+			// spot is not for this human/bot player
+			continue;
+		}
+
+		VectorSubtract( spot->s.origin, avoidPoint, delta );
+		dist = VectorLength( delta );
+
+		for (i = 0; i < numSpots; i++)
+		{
+			if(dist > list_dist[i])
+			{
+				if (numSpots >= MAX_SPAWN_POINTS)
+					numSpots = MAX_SPAWN_POINTS - 1;
+					
+				for(j = numSpots; j > i; j--)
+				{
+					list_dist[j] = list_dist[j-1];
+					list_spot[j] = list_spot[j-1];
+				}
+				
+				list_dist[i] = dist;
+				list_spot[i] = spot;
+				
+				numSpots++;
+				break;
+			}
+		}
+		
+		if(i >= numSpots && numSpots < MAX_SPAWN_POINTS)
+		{
+			list_dist[numSpots] = dist;
+			list_spot[numSpots] = spot;
+			numSpots++;
+		}
+	}
+	
+	if(!numSpots)
+	{
+
+		/* wop specific: try to avoid telefrags */
+		spot = NULL;
+		j = 1;
+
+		for ( i = 1; j > 0; i++ ) {
+			j = 0;
+			while ( ( spot = G_Find( spot, FOFS( classname ), "info_player_deathmatch" ) ) != NULL ) {
+				gentity_t	tmp;
+				trace_t		tr;
+
+				VectorCopy( spot->s.origin, tmp.s.origin );
+				tmp.s.origin[2] += ( 9 + 64 * i ); /* FIXME: Magical constants */
+
+				trap_Trace( &tr, spot->s.origin, playerMins, playerMaxs, tmp.s.origin,
+				            ENTITYNUM_NONE, ( CONTENTS_SOLID | CONTENTS_PLAYERCLIP ) );
+				if ( tr.fraction != 1.0f ) {
+					continue;
+				}
+
+				j++;
+				if ( SpotWouldTelefrag( &tmp ) ) {
+					continue;
+				}
+	
+				VectorCopy( tmp.s.origin, origin );
+				VectorCopy( spot->s.angles, angles );
+				return spot;
+			}
+		}
+
+		spot = G_Find(NULL, FOFS(classname), "info_player_deathmatch");
+
+		if (!spot)
+			G_Error( "Couldn't find a spawn point" );
+
+		VectorCopy (spot->s.origin, origin);
+		origin[2] += 9;
+		VectorCopy (spot->s.angles, angles);
+		return spot;
+	}
+
+	// select a random spot from the spawn points furthest away
+	rnd = random() * (numSpots / 2);
+
+	VectorCopy (list_spot[rnd]->s.origin, origin);
+	origin[2] += 9;
+	VectorCopy (list_spot[rnd]->s.angles, angles);
+
+	return list_spot[rnd];
+}
+/* end beryllium */
 
 /*
 ===========
@@ -495,7 +612,13 @@ void CopyToBodyQue( gentity_t *ent ) {
 		return; // maybe this was the reason for deadbodys in the lps-intermission-view
 
 	// grab a body que and cycle to the next one
-	body = level.bodyQue[ ent->s.number ];//noch zu ändern falls BODY_QUEUE_SIZE geändert wird
+	/* changed beryllium */
+	/*
+	body = level.bodyQue[ ent->s.number ];//noch zu ï¿½ndern falls BODY_QUEUE_SIZE geï¿½ndert wird
+	*/
+	body = level.bodyQue[ level.bodyQueIndex ];
+	level.bodyQueIndex = ( ( level.bodyQueIndex + 1 ) % BODY_QUEUE_SIZE );
+	/* end beryllium */
 
 	trap_UnlinkEntity (body);
 
@@ -667,6 +790,8 @@ PickTeam
 
 ================
 */
+/* changed beryllium */
+/*
 team_t PickTeam( int ignoreClientNum ) {
 	int		counts[TEAM_NUM_TEAMS];
 
@@ -685,6 +810,38 @@ team_t PickTeam( int ignoreClientNum ) {
 	}
 	return TEAM_BLUE;
 }
+*/
+team_t PickTeam( int ignoreClientNum ) {
+	int		counts[TEAM_NUM_TEAMS];
+	team_t	team;
+
+	counts[TEAM_BLUE] = TeamCount( ignoreClientNum, TEAM_BLUE );
+	counts[TEAM_RED] = TeamCount( ignoreClientNum, TEAM_RED );
+
+	if ( counts[TEAM_BLUE] > counts[TEAM_RED] ) {
+		team = TEAM_RED;
+	}
+	else if ( counts[TEAM_RED] > counts[TEAM_BLUE] ) {
+		team = TEAM_BLUE;
+	}
+	/* equal team count, so join the team with the lowest score */
+	/* TODO: Also consider number of humans/bots */
+	else if ( level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED] ) {
+		team = TEAM_RED;
+	}
+	else {
+		team = TEAM_BLUE;
+	}
+
+	/* If team is locked, default to spectator, so things don't break */
+	/* TODO: Could join OtherTeam, but breaks balance */
+	if ( level.teamLocked[team] ) {
+		team = TEAM_SPECTATOR;
+	}
+
+	return team;
+}
+/* end beryllium */
 
 /*
 ===========
@@ -711,9 +868,20 @@ static void ForceClientSkin( gclient_t *client, char *model, const char *skin ) 
 ClientCheckName
 ============
 */
+/* changed beryllium */
+/*
 static void ClientCleanName(const char *in, char *out, int outSize)
+*/
+void ClientCleanName(const char *in, char *out, int outSize)
+/* end beryllium */
 {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
+	/* added beryllium */
+	int			totalWhitespace = 0;
+	qboolean	invalid = qfalse;
+	char		cleanName[MAX_NETNAME];
+	/* end beryllium */
+
 
 	// discard leading spaces
 	for(; *in == ' '; in++);
@@ -756,6 +924,19 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 			colorlessLen++;
 		}
 		
+		/* added beryllium */
+		/* don't allow nonprinting characters or (dead) console keys */
+		if ( *in < ' ' || *in > '}' || *in == '`' ) {
+			colorlessLen--;
+			continue;
+		}
+
+		/* NOTE: \t is a somewhat valid character, maps to some strange char ingame */
+		if ( *in == ' ' ) {
+			totalWhitespace++;
+		}
+		/* end beryllium */
+
 		outpos++;
 	}
 
@@ -764,6 +945,44 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 	// don't allow empty names
 	if( *out == '\0' || colorlessLen == 0)
 		Q_strncpyz(out, "UnnamedPlayer", outSize );
+
+
+	/* added beryllium */
+	/* /name "^7 " etc. also results in an "empty" name */
+	if ( totalWhitespace >= colorlessLen ) {
+		invalid = qtrue;	
+	}
+
+	Q_strncpyz( cleanName, out, sizeof( cleanName ) );
+	Q_CleanStr( cleanName );
+
+	/* Used to not print text to chat area, but console only */
+	if ( Q_strncmp( "[skipnotify]", cleanName, 12 ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* Used in serverside chat messages */
+	if ( Q_stricmp( CHAT_SERVER_NAME, cleanName ) == 0 ) {
+		invalid = qtrue;
+	}
+
+	/* NOTE: Problematic names below don't harm votes in beryllium anymore,
+	         yet none should use them as names.
+	*/
+	/* "kick 42". Numerical names as in client numbers */
+	if ( Q_isanumber( cleanName ) && ValidClientID( atoi( cleanName ), qtrue ) ) {
+		invalid = qtrue;
+	}
+	/* "kick all", "kick allbots" */
+	if ( Q_stricmp( "all", cleanName ) == 0 ) {
+		invalid = qtrue;
+	}
+
+
+	if ( invalid ) {
+		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
+	}
+	/* end beryllium */
 }
 
 /*
@@ -792,6 +1011,12 @@ void ClientUserinfoChanged( int clientNum ) {
 	ent = g_entities + clientNum;
 	client = ent->client;
 
+
+	/* added beryllium */
+	BE_ClientUserinfoChanged( clientNum );
+	/* end beryllium */
+
+
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 	// check for malformed or illegal info strings
@@ -799,6 +1024,9 @@ void ClientUserinfoChanged( int clientNum ) {
 		strcpy (userinfo, "\\name\\badinfo");
 		// Why keep those clients and userinfo? Get out!
 		trap_DropClient( clientNum, "Invalid userinfo" );
+		/* added beryllium */
+		return;
+		/* end beryllium */
 	}
 
 	// check for local client
@@ -819,6 +1047,17 @@ void ClientUserinfoChanged( int clientNum ) {
 	Q_strncpyz ( oldname, client->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey (userinfo, "name");
 	ClientCleanName( s, client->pers.netname, sizeof(client->pers.netname) );
+
+
+	/* added beryllium */
+	/* NOTE: If we don't do this, the engine might still have an "invalid" name in client->name
+	         Fixing the userinfo will cause the engine to correctly re-read the name.
+	         We can not properly do this inside BE_ClientUserinfoChanged()
+	*/
+	Info_SetValueForKey( userinfo, "name", client->pers.netname );
+	trap_SetUserinfo( clientNum , userinfo );
+	/* end beryllium */
+
 
 	if ( ( client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( client ) ) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
@@ -893,6 +1132,9 @@ void ClientUserinfoChanged( int clientNum ) {
 	
 	// send over a subset of the userinfo keys so other clients can
 	// print scoreboards, display models, and play custom sounds
+
+	/* changed beryllium */
+/*
 	if (ent->r.svFlags & SVF_BOT)
 	{
 //cyr{
@@ -915,6 +1157,32 @@ void ClientUserinfoChanged( int clientNum ) {
 
 	// this is not the userinfo, more like the configstring actually
 	G_LogPrintf( "ClientUserinfoChanged: %i %s\n", clientNum, s );
+*/
+	/* NOTE: According to r1ch's tremulous patch, the original code can cause problems;
+	         "we can't use va() here, if the configstring call below overflows a client,
+	          then clientdisconnect is called which trashes the static buffer, causing all
+	          clients after the overflown one to receive garbage. this is the cause of the 'sarge bug'"
+	*/
+	if ( ent->r.svFlags & SVF_BOT ) {
+		Com_sprintf( userinfo, sizeof( userinfo ),
+		             "n\\%s\\t\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%d\\hc\\%d\\w\\%d\\l\\%d\\skill\\%s\\tt\\%d\\tl\\%d\\sl\\%s",
+		             client->pers.netname, team, model, headModel, c1, (int)( random() * 5.9f ),
+		             client->pers.maxHealth, client->sess.wins, client->sess.losses,
+		             Info_ValueForKey( userinfo, "skill" ), teamTask, teamLeader, client->sess.selectedlogo );
+	}
+	else {
+		Com_sprintf( userinfo, sizeof( userinfo ),
+		            "n\\%s\\t\\%d\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%d\\w\\%d\\l\\%d\\tt\\%d\\tl\\%d\\sl\\%s",
+		            client->pers.netname, client->sess.sessionTeam, model, headModel, c1, c2, 
+		            client->pers.maxHealth, client->sess.wins, client->sess.losses, teamTask, teamLeader, client->sess.selectedlogo );
+	}
+
+	trap_SetConfigstring( ( CS_PLAYERS + clientNum ), userinfo );
+
+	/* this is not the ClientUserinfo, more like the configstring actually */
+	G_LogPrintf( "ClientUserinfoChanged: %d %s\n", clientNum, userinfo );
+
+	/* end beryllium */
 }
 
 
@@ -946,6 +1214,15 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	gentity_t	*ent;
 
 	ent = &g_entities[ clientNum ];
+
+
+	/* added beryllium */
+	value = BE_ClientConnect( clientNum, firstTime, isBot );
+	if ( value != NULL ) {
+		return value;
+	}
+	/* end beryllium */
+
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
@@ -991,6 +1268,13 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	}
 	G_ReadSessionData( client );
 
+	/* added beryllium */
+	if ( firstTime ) {
+		BE_InitClientStorageData( client );
+	}
+	BE_ReadClientStorageData( client );
+	/* end beryllium */
+
 	if( isBot ) {
 		ent->r.svFlags |= SVF_BOT;
 		ent->inuse = qtrue;
@@ -998,6 +1282,14 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			return "BotConnectfailed";
 		}
 	}
+
+
+	/* added beryllium */
+	/* NOTE: See NOTEs in BE_ClientConnect() */
+	/* Copy pasta .. */
+	Q_strncpyz( client->pers.guid, Info_ValueForKey( userinfo, "cl_guid" ), sizeof( client->pers.guid ) );
+	Q_strncpyz( client->pers.ip, Info_ValueForKey( userinfo, "ip" ), sizeof( client->pers.ip ) );
+	/* end beryllium */
 
 	
 	// get and distribute relevent paramters
@@ -1083,10 +1375,23 @@ void ClientBegin( int clientNum ) {
 		tent->s.clientNum = ent->s.clientNum;
 
 		if ( g_gametype.integer != GT_TOURNAMENT  ) {
+			/* changed beryllium */
+			/*
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
+			*/
+			if ( ent->client->storage.firstTime ) {
+				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_NEGATIVE"%s entered the game.\n", client->pers.netname ) );
+			}
+			/* end beryllium */
 		}
 	}
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
+
+	/* added beryllium */
+	client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+
+	BE_ClientBegan( clientNum );
+	/* end beryllium */
 
 	// count current clients and rank for scoreboard
 	CalculateRanks();
@@ -1119,6 +1424,9 @@ void ClientSpawn(gentity_t *ent) {
 	int		accuracy_hits, accuracy_shots;
 	int		eventSequence;
 	char	userinfo[MAX_INFO_STRING];
+	/* added beryllium */
+	clientStorage_t	savedStor;
+	/* end beryllium */
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1184,9 +1492,15 @@ void ClientSpawn(gentity_t *ent) {
 		persistant[i] = client->ps.persistant[i];
 	}
 	eventSequence = client->ps.eventSequence;
+	/* added beryllium */
+	savedStor = client->storage;
+	/* end beryllium */
 
 	memset (client, 0, sizeof(*client)); // bk FIXME: Com_Memset?
 
+	/* added beryllium */
+	client->storage = savedStor;
+	/* end beryllium */
 	client->pers = saved;
 	client->sess = savedSess;
 	client->ps.ping = savedPing;
@@ -1243,7 +1557,13 @@ void ClientSpawn(gentity_t *ent) {
 		
 		// add instagib weapon to client's inventory
 		client->ps.stats[ STAT_WEAPONS ] = ( 1 << weapon );
+		/* changed beryllium */
+		/*
 		client->ps.ammo[ weapon ] = INFINITE;
+		*/
+		client->ps.ammo[ weapon ] = UNLIMITED;
+		/* end beryllium */
+trap_SendServerCommand( index, va( "srwc %i", weapon ) ); /* dbg beryllium */
 	}
 	else
 	{
@@ -1308,6 +1628,7 @@ void ClientSpawn(gentity_t *ent) {
 		// force the base weapon up
 		client->ps.weapon = WP_NIPPER;
 		client->ps.weaponstate = WEAPON_READY;
+trap_SendServerCommand( index, va( "srwc %i", WP_NIPPER ) ); /* dbg beryllium */
 	}
 
 	// don't allow full run speed for a bit
@@ -1315,7 +1636,11 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.pm_time = 100;
 
 	client->respawnTime = level.time;
+	/* changed beryllium */
+	/*
 	client->inactivityTime = level.time + g_inactivity.integer * 1000;
+	*/
+	/* end beryllium */
 	client->latched_buttons = 0;
 
 	// set default animations
@@ -1443,6 +1768,10 @@ void ClientDisconnect( int clientNum ) {
 	if ( ent->r.svFlags & SVF_BOT ) {
 		BotAIShutdownClient( clientNum, qfalse );
 	}
+
+	/* added beryllium */
+	BE_ClientDisconnect( clientNum );
+	/* end beryllium */
 }
 
 

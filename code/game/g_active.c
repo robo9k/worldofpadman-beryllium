@@ -382,6 +382,8 @@ Returns qfalse if the client is dropped
 =================
 */
 qboolean ClientInactivityTimer( gclient_t *client ) {
+	/* changed beryllium */
+	/*
 	if ( ! g_inactivity.integer ) {
 		// give everyone some time, so if the operator sets g_inactivity during
 		// gameplay, everyone isn't kicked
@@ -404,6 +406,35 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 		}
 	}
 	return qtrue;
+	*/
+
+	if ( ! g_inactivity.integer ) {
+		/* Give everyone some time, so if the operator sets g_inactivity during
+		   gameplay, everyone isn't kicked instantly
+		*/
+		client->pers.inactivityTime = ( level.time + 60 * 1000 );
+		client->pers.inactivityWarning = qfalse;
+	}
+	else if ( client->pers.cmd.forwardmove ||
+		client->pers.cmd.rightmove ||
+		client->pers.cmd.upmove ||
+		( client->pers.cmd.buttons & BUTTON_ATTACK ) ) {
+		client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+		client->pers.inactivityWarning = qfalse;
+	}
+	else if ( !client->pers.localClient ) {
+		if ( level.time > client->pers.inactivityTime ) {
+			trap_DropClient( client - level.clients, "Dropped due to inactivity" );
+			return qfalse;
+		}
+		if ( ( level.time > ( client->pers.inactivityTime - 10000 ) ) && !client->pers.inactivityWarning ) {
+			client->pers.inactivityWarning = qtrue;
+			SendClientCommand( ( client - level.clients ), CCMD_CP, S_COLOR_BOLD"Ten seconds until inactivity drop!\n" );
+		}
+	}
+
+	return qtrue;
+	/* end beryllium */
 }
 
 /*
@@ -421,6 +452,10 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 
 	while ( client->timeResidual >= 1000 ) {
 		client->timeResidual -= 1000;
+
+		/* added beryllium */
+		BE_ClientTimerActions( ent );
+		/* end beryllium */
 
 		if ( client->ps.powerups[PW_REVIVAL] ) {
 			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
@@ -706,6 +741,46 @@ void ClientThink_real( gentity_t *ent ) {
 		ucmd->serverTime = level.time - 1000;
 //		G_Printf("serverTime >>>>>\n" );
 	} 
+
+	/* added beryllium */
+	/* unlagged - backward reconciliation #4 */
+	/* frameOffset should be about the number of milliseconds into a frame 
+	   this command packet was received, depending on how fast the server
+	   does a G_RunFrame()
+	*/
+	client->frameOffset = ( trap_Milliseconds() - level.frameStartTime );
+
+
+	/* unlagged - true ping */
+	/* Save the estimated ping in a queue for averaging later */
+
+	/* We use level.previousTime to account for 50ms lag correction.
+	   Besides, this will turn out numbers more like what players are used to.
+	*/
+	client->pers.pingsamples[client->pers.samplehead] = ( level.previousTime + client->frameOffset - ucmd->serverTime );
+	client->pers.samplehead++;
+	if ( client->pers.samplehead >= NUM_PING_SAMPLES ) {
+		client->pers.samplehead -= NUM_PING_SAMPLES;
+	}
+
+	if ( g_truePing.integer ) {
+		int i, sum = 0;
+
+		for ( i = 0; i < NUM_PING_SAMPLES; i++ ) {
+			sum += client->pers.pingsamples[i];
+		}
+
+		client->pers.realPing = sum / NUM_PING_SAMPLES;
+	}
+	else {
+		client->pers.realPing = client->ps.ping;
+	}
+
+	/* Make sure the true ping is over 0 - with negative cl_timenudge it can be less */
+	if ( client->pers.realPing < 0 ) {
+		client->pers.realPing = 0;
+	}
+	/* end beryllium */
 
 	msec = ucmd->serverTime - client->ps.commandTime;
 	// following others may result in bad times, but we still want
@@ -1065,11 +1140,22 @@ void ClientEndFrame( gentity_t *ent ) {
 	P_DamageFeedback (ent);
 
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
+	/* changed beryllium */
+	/*
 	if ( level.time - ent->client->lastCmdTime > 1000 ) {
 		ent->s.eFlags |= EF_CONNECTION;
 	} else {
 		ent->s.eFlags &= ~EF_CONNECTION;
 	}
+	*/
+	/* s->eFlags gets overwritten by ps->eFlags in BG_PlayerStateToEntityState.. */
+	if ( ( level.time - ent->client->lastCmdTime ) > 1000 ) {
+		ent->client->ps.eFlags |= EF_CONNECTION;
+	}
+	else {
+		ent->client->ps.eFlags &= ~EF_CONNECTION;
+	}
+	/* end beryllium */
 
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 

@@ -848,3 +848,12 @@ enum {
 #define ICON_ALL ( ICON_ARROW | ICON_BALLOON | ICON_TEAMMATE | ICON_HEALTHSTATION | ICON_SPRAYROOM )
 // Don't forget to update cg_icons in cg_main.c as well
 
+/* added beryllium */
+
+int G_FrameMsec( void );
+
+#define UNLIMITED	999
+#define AMMOLESS	-1	
+
+/* end beryllium */
+

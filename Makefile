@@ -239,6 +239,7 @@ endif
 
 # version info
 VERSION=1.6
+BERYLLIUM_VERSION=$(shell ./version.sh)
 
 USE_SVN=
 ifeq ($(wildcard .svn),.svn)
@@ -255,6 +256,11 @@ ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
   endif
 endif
 endif
+
+## FIXME: BASEGAME
+BERYLLIUM_OBJ_CVS = \
+	$(B)/baseq3/game/g_main.o \
+	$(B)/baseq3/game/g_main.asm
 
 
 #############################################################################
@@ -1063,7 +1069,7 @@ endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) $(DBG) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1129,12 +1135,14 @@ all: debug release
 debug:
 	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="$(DEBUG_CFLAGS)" OPTIMIZEVM="$(DEBUG_CFLAGS)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  DBG=""
 
 release:
 	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS) $(DEPEND_CFLAGS)" \
 	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" OPTIMIZEVM="-DNDEBUG $(OPTIMIZEVM)" \
-	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V)
+	  CLIENT_CFLAGS="$(CLIENT_CFLAGS)" SERVER_CFLAGS="$(SERVER_CFLAGS)" V=$(V) \
+	  DBG="-DNDEBUG"
 
 # Create the build directories, check libraries and print out
 # an informational message, then start building
@@ -1355,7 +1363,7 @@ endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) -DQAGAME -DBERYLLIUM_VERSION=\"$(BERYLLIUM_VERSION)\" $(DBG) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
@@ -2120,6 +2128,14 @@ Q3GOBJ_ = \
   $(B)/baseq3/game/wopg_sphandling.o \
   $(B)/baseq3/game/wopg_spstoryfiles.o \
   \
+  $(B)/baseq3/game/g_beryllium.o \
+  $(B)/baseq3/game/be_util.o \
+  $(B)/baseq3/game/be_cmds.o \
+  $(B)/baseq3/game/be_svcmds.o \
+  $(B)/baseq3/game/be_vote.o \
+  $(B)/baseq3/game/be_storage.o \
+  $(B)/baseq3/game/be_alloc.o \
+  \
   $(B)/baseq3/qcommon/q_math.o \
   $(B)/baseq3/qcommon/q_shared.o
 
@@ -2382,6 +2398,10 @@ ifeq ($(USE_SVN),1)
   $(B)/client/cl_console.o : .svn/entries
   $(B)/client/common.o : .svn/entries
   $(B)/ded/common.o : .svn/entries
+
+  ifdef BERYLLIUM_OBJ_CVS
+    $(BERYLLIUM_OBJ_SVN): .git/index
+  endif
 endif
 
 

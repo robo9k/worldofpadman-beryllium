@@ -4,6 +4,15 @@
 
 #define	MISSILE_PRESTEP_TIME	50
 
+/* added beryllium */
+/* In order to fix bugs with hardcoded MISSILE_PRESTEP_TIME ( 1000 / sv_fps )
+   we introduced a new function. Hopefully this covers all sv_fps dependant
+   behaviour (or at least related bugs).
+*/
+#undef MISSILE_PRESTEP_TIME
+#define MISSILE_PRESTEP_TIME G_FrameMsec()
+/* end beryllium */
+
 /*
 ================
 G_BounceMissile
@@ -300,6 +309,11 @@ void move_killerducks(gentity_t *ent)
 		if( ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( &level.clients[i] ) ) {
 			continue;
 		}
+		/* added beryllium */
+		if ( g_entities[i].flags & FL_NOTARGET ) {
+			continue;
+		}
+		/* end beryllium */
 		
 		tmpv3[0]=level.clients[i].ps.origin[0]-ent->r.currentOrigin[0];
 		tmpv3[1]=level.clients[i].ps.origin[1]-ent->r.currentOrigin[1];
@@ -323,11 +337,19 @@ void move_killerducks(gentity_t *ent)
 
 		tmpv3[0]=tmpv3[0]*tmpv3[0]+tmpv3[1]*tmpv3[1]+tmpv3[2]*tmpv3[2];
 
+		/* changed beryllium */
+		/*
 		if(tmpv3[0]<opferlenght)
 		{
 			opfer=ownerNum;//r.ownerNum;
 			opferlenght=tmpv3[0];
 		}
+		*/
+		if ( ( tmpv3[0] < opferlenght ) && !( g_entities[ownerNum].flags & FL_NOTARGET ) ) {
+			opfer = ownerNum;
+			opferlenght = tmpv3[0];
+		}
+		/* end beryllium */
 	}
 
 	if(opfer!=-1 && (level.time-(ent->nextthink - 10000))>500)// in die ersten 1/2 sek. sollen die opfer egal sein
@@ -609,7 +631,12 @@ void G_RunMissile( gentity_t *ent ) {
 		passent = ent->r.ownerNum;
 	}
 	// trace a line from the previous position to the current position
+	/* changed beryllium */
+	/*
 	if ( level.time - ent->s.pos.trTime > 50 )
+	*/
+	if ( ( level.time - ent->s.pos.trTime ) > MISSILE_PRESTEP_TIME )
+	/* end beryllium */
 		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask );
 	else
 		trap_Trace( &tr, ent->r.currentOrigin, vec3_origin, vec3_origin, origin, passent, ent->clipmask );
