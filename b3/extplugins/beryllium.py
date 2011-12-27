@@ -109,7 +109,7 @@
 
 
 ## major.minor.(svn)revision
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 __author__  = 'thbrn'
 
 import b3
@@ -145,15 +145,15 @@ class BerylliumPlugin(b3.plugin.Plugin):
             self.error('Could not find admin plugin')
             return False
 
-        ## TODO: We could check whether be_version cvar is present and
+        ## TODO: We could check whether g_beryllium cvar is present and
         ##       either bail out or disable beryllium specific commands.
         ##       This would even allow syncing mod<->plugin versions.
 
-        ## Current target mod version: 0.20a-bfc9d71
+        ## Current target mod version: 1.6a-ce5a825
 
         ## see whether beryllium mod in installed
         try:
-            be_version = self.console.getCvar('be_version').getString()
+            be_version = self.console.getCvar('g_beryllium').getString()
             self.debug('Beryllium mod %s' % be_version)
         except:
             self.warning('Beryllium mod is not running')
