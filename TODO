@@ -112,8 +112,7 @@ upload to users.loop8.net/~brain/ foo /beryllium/files
 fix compiler warnings for qvm/so
 
 Print some self-advertisement in server console at startup (G_ColoredOutput)
-and on client connect (skipnotify)?
-^ Could show info about cg_smoothClients if set
+Print motd on client connect?
 
 g_team ps.team vs sess.sessionTeam?
 

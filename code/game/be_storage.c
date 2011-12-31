@@ -40,6 +40,8 @@ void BE_InitClientStorageData( gclient_t *client ) {
 	stor = &client->storage;
 
 	Com_Memset( &stor->ignoreList, 0, sizeof( stor->ignoreList ) );
+	stor->firstTime = qtrue;
+	stor->sawGreeting = qfalse;
 
 	BE_WriteClientStorageData( client );
 }
@@ -68,6 +70,7 @@ void BE_WriteClientStorageData( const gclient_t *client ) {
 		Q_strcat( buff, sizeof( buff ), va( "%d ", stor->ignoreList[i] ) );
 	}
 	Q_strcat( buff, sizeof( buff ), va( "%d ", stor->firstTime ) );
+	Q_strcat( buff, sizeof( buff ), va( "%d ", stor->sawGreeting ) );
 
 	trap_Cvar_Set( var, buff );
 }
@@ -99,6 +102,7 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 		stor->ignoreList[i] = strtol( endp, &endp, 10 );
 	}
 	stor->firstTime = strtol( endp, &endp, 10 );
+	stor->sawGreeting = strtol( endp, &endp, 10 );
 }
 
 

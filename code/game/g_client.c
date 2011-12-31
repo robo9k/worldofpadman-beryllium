@@ -1008,7 +1008,7 @@ void ClientCleanName( const char *in, char *out, size_t outSize ) {
 	Q_CleanStr( cleanName );
 
 	/* Used to not print text to chat area, but console only */
-	if ( Q_strncmp( "[skipnotify]", cleanName, 12 ) == 0 ) {
+	if ( Q_strncmp( SKIPNOTIFY_S, cleanName, 12 ) == 0 ) {
 		invalid = qtrue;
 	}
 
@@ -1323,7 +1323,9 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	if ( firstTime ) {
 		BE_InitClientStorageData( client );
 	}
+
 	BE_ReadClientStorageData( client );
+	client->storage.firstTime = firstTime;
 	/* end beryllium */
 
 	if( isBot ) {
@@ -1431,7 +1433,7 @@ void ClientBegin( int clientNum ) {
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
 			*/
 			if ( ent->client->storage.firstTime ) {
-				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_NEGATIVE"%s entered the game.\n", client->pers.netname ) );
+				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_WHITE"%s entered the game.\n", client->pers.netname ) );
 			}
 			/* end beryllium */
 		}

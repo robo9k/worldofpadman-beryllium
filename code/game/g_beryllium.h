@@ -50,6 +50,8 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #define CHAT_SERVER_NAME	"server"
 
+#define SKIPNOTIFY_S		"[skipnotify]"
+
 #define MAX_CAMPTIME		20
 
 #define MAX_TARGETNAME		64

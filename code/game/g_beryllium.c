@@ -259,8 +259,6 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		return "Invalid userinfo.";
 	}
 
-	level.clients[clientNum].storage.firstTime = firstTime;
-
 	/* All other checks are only reasonable against "humans" */	
 	if ( isBot ) {
 		return NULL;
@@ -272,7 +270,7 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	/* NOTE: Do not strip port anymore, see NOTE about consistency below */
   
 
-	if( !*ip ) {
+	if ( !*ip ) {
     	return "No IP in userinfo.";
 	}
 	/* "127.0.0.1" or the like */
@@ -338,7 +336,6 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	/* NOTE: We can not set any data for the client, since original ClientConnect()
 	         will erase the whole client struct with memset() after we return.
 	*/
-
 
 	return NULL;
 }
@@ -419,6 +416,9 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 */
 void BE_ClientBegan( int clientNum ) {
 	gentity_t *ent;
+	char userinfo[MAX_INFO_STRING];
+	char *value;
+	int  smoothClients;
 
 
 	G_assert( ( 0 <= clientNum ) && ( MAX_CLIENTS > clientNum ) ); /* FIXME: ValidClientID()? */
@@ -427,6 +427,27 @@ void BE_ClientBegan( int clientNum ) {
 	ent = &g_entities[clientNum];
 
 	ent->client->pers.lifeShards = 0;
+
+	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
+
+	if ( !ent->client->storage.sawGreeting ) {
+		ent->client->storage.sawGreeting = qtrue;
+
+		/* Do some silent self-advertisement */
+		if ( ent->client->storage.firstTime ) {
+			SendClientCommand( clientNum, CCMD_PRT,
+			                   va( SKIPNOTIFY_S"This server is running "S_COLOR_BLUE"beryllium"S_COLOR_CYAN" "BERYLLIUM_VERSION S_COLOR_DEFAULT".\n" ) );
+		}
+
+
+		/* Warn if cg_smoothClients is set, since unlagged does not use it */
+		/* TODO: Warn more than once? */
+		value = Info_ValueForKey( userinfo, "cg_smoothClients" );
+		smoothClients = atoi( value );	
+		if ( smoothClients ) {
+			SendClientCommand( clientNum, CCMD_PRT, S_COLOR_RED"Please disable "S_COLOR_CYAN"cg_smoothClients" S_COLOR_RED", as it may cause bugs with unlagged!\n" );
+		}
+	}
 }
 
 
