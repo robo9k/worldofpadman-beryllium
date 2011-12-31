@@ -776,6 +776,13 @@ void ClientThink_real( gentity_t *ent ) {
 		client->pers.realPing = client->ps.ping;
 	}
 
+	/* unlagged - smooth clients #1 */
+	/*
+	   Keep track of this for later - we'll use this to decide whether or not
+	   to send extrapolated positions for this client
+	*/
+	client->lastUpdateFrame = level.framenum;
+
 	/* Make sure the true ping is over 0 - with negative cl_timenudge it can be less */
 	if ( client->pers.realPing < 0 ) {
 		client->pers.realPing = 0;
@@ -928,12 +935,27 @@ void ClientThink_real( gentity_t *ent ) {
 	if ( ent->client->ps.eventSequence != oldEventSequence ) {
 		ent->eventTime = level.time;
 	}
+
+	/* changed beryllium */
+	/* unlagged - smooth clients #2 */
+	/* 
+	   Clients no longer do extrapolation if cg_smoothClients is 1, because
+	   skip correction is all handled server-side now
+	   since that's the case, it makes no sense to store the extra info
+	   in the client's snapshot entity, so let's save a little bandwidth
+	*/
+	/*
 	if (g_smoothClients.integer) {
 		BG_PlayerStateToEntityStateExtraPolate( &ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue );
 	}
 	else {
 		BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
 	}
+	*/
+
+	BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
+	/* end beryllium */
+
 	SendPendingPredictableEvents( &ent->client->ps );
 
 	if ( !( ent->client->ps.eFlags & EF_FIRING ) ) {
@@ -1024,9 +1046,15 @@ void ClientThink( int clientNum ) {
 	ent = g_entities + clientNum;
 	trap_GetUsercmd( clientNum, &ent->client->pers.cmd );
 
+	/* changed beryllium */
+	/* unlagged - smooth clients #1 */
+	/* This is handled differently now */
+	/*
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
 	ent->client->lastCmdTime = level.time;
+	*/
+	/* end beryllium */
 
 	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
 		ClientThink_real( ent );
@@ -1101,6 +1129,10 @@ while a slow client may have multiple ClientEndFrame between ClientThink.
 void ClientEndFrame( gentity_t *ent ) {
 	int			i;
 	clientPersistant_t	*pers;
+	/* added beryllium */
+	/* unlagged - smooth clients #1 */
+	int frames;
+	/* end beryllium */
 
 	if ( ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( ent->client ) ) {
 		SpectatorClientEndFrame( ent );
@@ -1149,26 +1181,71 @@ void ClientEndFrame( gentity_t *ent ) {
 	}
 	*/
 	/* s->eFlags gets overwritten by ps->eFlags in BG_PlayerStateToEntityState.. */
+
+	/* unlagged - smooth clients #1 */
+	/* This is handled differently now */
+	/*
 	if ( ( level.time - ent->client->lastCmdTime ) > 1000 ) {
 		ent->client->ps.eFlags |= EF_CONNECTION;
 	}
 	else {
 		ent->client->ps.eFlags &= ~EF_CONNECTION;
 	}
+	*/
 	/* end beryllium */
 
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
 	G_SetClientSound (ent);
 
-	// set the latest infor
+	// set the latest information
+	/* changed beryllium */
+	/* unlagged - smooth clients #2 */
+	/*
+	   Clients no longer do extrapolation if cg_smoothClients is 1, because
+	   skip correction is all handled server-side now
+	   since that's the case, it makes no sense to store the extra info
+	   in the client's snapshot entity, so let's save a little bandwidth
+	*/
+	/*
 	if (g_smoothClients.integer) {
 		BG_PlayerStateToEntityStateExtraPolate( &ent->client->ps, &ent->s, ent->client->ps.commandTime, qtrue );
 	}
 	else {
 		BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
 	}
+	*/
+
+	BG_PlayerStateToEntityState( &ent->client->ps, &ent->s, qtrue );
+	/* end beryllium */
+
 	SendPendingPredictableEvents( &ent->client->ps );
+
+	/* added beryllium */
+	/* unlagged - smooth clients #1 */
+	/* Mark as not missing updates initially */
+	ent->client->ps.eFlags &= ~EF_CONNECTION;
+
+	/* See how many frames the client has missed */
+	frames = ( level.framenum - ent->client->lastUpdateFrame - 1 );
+
+	/* Don't extrapolate more than two frames */
+	if ( frames > 2 ) {
+		frames = 2;
+
+		/* If they missed more than two in a row, show the phone jack */
+		ent->client->ps.eFlags |= EF_CONNECTION;
+		ent->s.eFlags |= EF_CONNECTION;
+	}
+
+	/* Did the client miss any frames? */
+	if ( ( frames > 0 ) && g_smoothClients.integer ) {
+		/* Yep, missed one or more, so extrapolate the player's movement */
+		G_PredictPlayerMove( ent, (float)frames / sv_fps.integer );
+		/* Save network bandwidth */
+		SnapVector( ent->s.pos.trBase );
+	}
+	/* end beryllium */
 
 	// set the bit for the reachability area the client is currently in
 //	i = trap_AAS_PointReachabilityAreaIndex( ent->client->ps.origin );

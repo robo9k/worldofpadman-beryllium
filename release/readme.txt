@@ -199,6 +199,11 @@
           Black ^0 is now usable either way
 
 
+    :: g_smoothClients
+    Taken from the unlagged code, will do exactly the same.
+    Read their readme if you wish to known more.
+
+
 
   
   :: Commands

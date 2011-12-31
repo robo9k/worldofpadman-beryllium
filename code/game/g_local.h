@@ -390,9 +390,15 @@ struct gclient_s {
 	int			balloonTime;
 	gentity_t*	balloonEnt;
 
+	/* unlagged - smooth clients #1 */
+	/* This is handled differently now */
+	/*
 	int			lastCmdTime;		// level.time of last usercmd_t, for EF_CONNECTION
 									// we can't just use pers.lastCommand.time, because
 									// of the g_sycronousclients case
+	*/
+	/* end unlagged - smooth clients #1 */
+
 	int			buttons;
 	int			oldbuttons;
 	int			latched_buttons;
@@ -459,6 +465,10 @@ struct gclient_s {
 	/* unlagged - backward reconciliation #1 */
 	/* NOTE: We don't do any backward reconciliation, this is needed for g_truePing */
 	int			frameOffset;
+
+	/* unlagged - smooth clients #1 */
+	/* The last frame number we got an update from this client */
+	int			lastUpdateFrame;
 	/* end beryllium */
 };
 
@@ -1248,6 +1258,10 @@ int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t 
 #include "be_svcmds.h"
 #include "be_storage.h"
 #include "be_alloc.h"
+
+//unlagged - g_unlagged.c
+void G_PredictPlayerMove( gentity_t *ent, float frametime );
+//unlagged - g_unlagged.c
 
 /* end beryllium */
 

@@ -12,11 +12,14 @@
 
   :: Current Version
 
-  v1.6b - 27.12.11
-  * Add cvar "be_settings"
+  v1.7a - 31.12.11
+  * Add g_smoothClients behaviour from unlagged
 
 
   :: History
+
+  :: v1.6b - 27.12.11
+  * Add cvar "be_settings"
 
   ::   v1.6a - 27.12.11
   * Update to WoP v1.6

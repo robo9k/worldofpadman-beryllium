@@ -126,14 +126,15 @@ extern vmCvar_t	be_hideChat;
 
 extern vmCvar_t	be_banFile;
 
-/* Parts of unlagged gamecode here as not to pollute the vanilla code */
-extern vmCvar_t g_truePing;
-
 extern vmCvar_t	be_chatFlags;
 
 extern vmCvar_t	be_overrideEntities;
 
 extern vmCvar_t	be_settings;
+
+/* Parts of unlagged gamecode here as not to pollute the vanilla code */
+extern vmCvar_t g_truePing;
+extern vmCvar_t	sv_fps;
 
 
 /* FIXME: Add these to game headers? Declared in g_cmds.c, partially static */

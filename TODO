@@ -8,7 +8,7 @@ Do more sanity checks and calls to G_Error plus some debug output.
 Improve vote pass. Print amount of yes-no-dontcare-required at vote end?
 Allow players to change their mind? Enforce delay/maximum count
 
-Unlagged? Or at least its serverside-only features or similar ones like anti-warp
+Unlagged? Or at least its serverside-only features or similar ones like anti-warp/smoothclients
 
 Floodlimit chat, userinfo
 NOTE: This'll cause problems, as we might need to call ClientUserinfoChanged() ourself
@@ -113,6 +113,7 @@ fix compiler warnings for qvm/so
 
 Print some self-advertisement in server console at startup (G_ColoredOutput)
 and on client connect (skipnotify)?
+^ Could show info about cg_smoothClients if set
 
 g_team ps.team vs sess.sessionTeam?
 

@@ -128,6 +128,9 @@ vmCvar_t	be_overrideEntities;
 
 vmCvar_t	be_settings;
 
+/* unlagged - server options */
+vmCvar_t	sv_fps;
+
 /* end beryllium */
 
 
@@ -198,6 +201,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_allowVote, "g_allowVote", "1", CVAR_ARCHIVE|CVAR_SERVERINFO, 0, qfalse },
 	{ &g_listEntity, "g_listEntity", "0", 0, 0, qfalse },
 
+	/* beryllium: NOTE: Used by unlagged */
 	{ &g_smoothClients, "g_smoothClients", "1", 0, 0, qfalse},
 	/* Still causing issues, maybe use pmove_float from OpenArena instead */
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
@@ -269,13 +273,16 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &be_banFile, "be_banFile", "guidbans.dat", CVAR_ARCHIVE, 0, qfalse },
 
-	{ &g_truePing, "g_truePing", "0", CVAR_ARCHIVE, 0, qtrue },
-
 	{ &be_chatFlags, "be_chatFlags", "0", CVAR_ARCHIVE, 0, qtrue },
 
 	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue },
 
-	{ &be_settings, "be_settings", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qfalse }
+	{ &be_settings, "be_settings", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qfalse },
+
+	/* unlagged - server options */
+	{ &g_truePing, "g_truePing", "1", CVAR_ARCHIVE, 0, qtrue },
+	/* No CVAR_SYSTEMINFO, since WoP cgame doesn't have this */
+	{ &sv_fps, "sv_fps", "20", CVAR_ARCHIVE, 0, qfalse }
 
 	/* end beryllium */
 };

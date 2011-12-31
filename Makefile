@@ -2135,6 +2135,7 @@ Q3GOBJ_ = \
   $(B)/baseq3/game/be_vote.o \
   $(B)/baseq3/game/be_storage.o \
   $(B)/baseq3/game/be_alloc.o \
+  $(B)/baseq3/game/g_unlagged.o \
   \
   $(B)/baseq3/qcommon/q_math.o \
   $(B)/baseq3/qcommon/q_shared.o
