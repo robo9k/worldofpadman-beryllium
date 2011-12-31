@@ -438,15 +438,14 @@ void BE_ClientBegan( int clientNum ) {
 			SendClientCommand( clientNum, CCMD_PRT,
 			                   va( SKIPNOTIFY_S"This server is running "S_COLOR_BLUE"beryllium"S_COLOR_CYAN" "BERYLLIUM_VERSION S_COLOR_DEFAULT".\n" ) );
 		}
+	}
 
-
-		/* Warn if cg_smoothClients is set, since unlagged does not use it */
-		/* TODO: Warn more than once? */
-		value = Info_ValueForKey( userinfo, "cg_smoothClients" );
-		smoothClients = atoi( value );	
-		if ( smoothClients ) {
-			SendClientCommand( clientNum, CCMD_PRT, S_COLOR_RED"Please disable "S_COLOR_CYAN"cg_smoothClients" S_COLOR_RED", as it may cause bugs with unlagged!\n" );
-		}
+	/* Warn if cg_smoothClients is set, since unlagged does not use it */
+	value = Info_ValueForKey( userinfo, "cg_smoothClients" );
+	smoothClients = atoi( value );	
+	if ( smoothClients ) {
+		G_Say( NULL, ent, SAY_TELL,
+		       S_COLOR_NEGATIVE"Please disable "S_COLOR_BOLD"cg_smoothClients" S_COLOR_NEGATIVE", as it may cause bugs with unlagged!" );
 	}
 }
 
