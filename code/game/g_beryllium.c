@@ -389,7 +389,7 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	/* Check ping and connection, then drop client when too bad */
 	/* FIXME: Write some sort of wrapper for DropClient()? */
 	/* FIXME: Can ping ever be < 0? Need to add test whether sv_minPing is set */
-	counter = ( ( ent->client->ps.ping < 999 ) ? ent->client->ps.ping : 999 );
+	counter = ( ( ent->client->pers.realPing < 999 ) ? ent->client->pers.realPing : 999 );
 	remaining = trap_Cvar_VariableIntegerValue( "sv_maxping" );
 	if ( remaining && ( counter > remaining ) ) {
 		ent->client->pers.connectionCounter++;
