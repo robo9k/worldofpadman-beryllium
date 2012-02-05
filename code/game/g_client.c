@@ -1301,6 +1301,17 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 			strcmp( g_password.string, value) != 0) {
 			return "Invalid password";
 		}
+
+		/* added beryllium */
+		/*
+			If a player reconnects quickly after a disconnect, the client
+			disconnect may never be called, thus flag can get lost in the ether.
+		*/
+		if ( ent->inuse ) {
+			/* So lets just fix up anything that should happen on a disconnect */
+			ClientDisconnect( ent - g_entities );
+		}
+		/* end beryllium */
 	}
 
 	// they can connect
