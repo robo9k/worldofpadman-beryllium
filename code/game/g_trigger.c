@@ -232,6 +232,12 @@ void SP_target_push( gentity_t *self ) {
 	if ( self->spawnflags & 1 ) {
 		self->noise_index = G_SoundIndex("sounds/world/jumppad");
 	}
+	/* added beryllium */
+	else {
+		/* Hm, there should be a sound, use an arbitrary one for debugging. */
+		self->noise_index = G_SoundIndex("sounds/world/jumppad");
+	}
+	/* end beryllium */
 
 	if ( self->target ) {
 		VectorCopy( self->s.origin, self->r.absmin );
