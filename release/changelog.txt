@@ -12,7 +12,7 @@
 
   :: Current Version
 
-  v1.7c - 11.02.2012
+  v1.7c - 06.03.2012
   * Add cvar "be_welcomeMessage"
   * Add some documentation about "Overriding entities"
 
