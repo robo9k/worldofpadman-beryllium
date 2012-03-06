@@ -116,3 +116,7 @@ Print motd on client connect?
 
 g_team ps.team vs sess.sessionTeam?
 
+Include source code?
+git diff 89f3f94d919a6eba668b7f580a241735ebcbaf69 > beryllium.diff
+^ is partially broken since not based on clean wop src dmp
+
