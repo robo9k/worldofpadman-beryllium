@@ -20,7 +20,7 @@ along with this program.	If not, see <http://gnu.org/licenses/>.
 #include "g_local.h"
 
 /* 512K ought to be enough for anybody */
-# define	POOL_SIZE ( 8192 * 1024 )
+# define	POOL_SIZE ( 2048 * 1024 )
 
 /* Any unlikely to be used value */
 #define	FREEMEMCOOKIE	((int)0xDEADBE3F)
@@ -217,6 +217,8 @@ void BE_MemoryInfo( void ) {
 	freeMemNode_t *end = (freeMemNode_t *)( memory_pool + POOL_SIZE );
 	void *p;
 	char sizeBuf[128];
+
+	/* NOTE: QVM implementation of printf("%p") does not print "0x" prefix */
 
 	G_Printf( "%p-%p: ", fmn, end );
 	ReadableSize( sizeBuf, sizeof( sizeBuf ), ( POOL_SIZE - freeMem ) );
