@@ -1,7 +1,7 @@
 #!/bin/sh
 
-VERSION=`cat VERSION`
-CVS=`LANG=C git rev-parse --short HEAD`
+VERSION=$(cat VERSION)
+CVS=$(LANG=C git rev-parse --short HEAD)
 
 echo $VERSION-$CVS
 

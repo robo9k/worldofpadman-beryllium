@@ -1,7 +1,7 @@
 #!/bin/sh
 
 BUILD_DIR='build'
-VERSION=`./version.sh`
+VERSION=$(./version.sh)
 
 BERYLLIUM='beryllium-v'$VERSION
 SRC='release'
