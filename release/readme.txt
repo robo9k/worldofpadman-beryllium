@@ -158,6 +158,7 @@
     Changes will only take effect when loading a new map. Watch
     out for error messages ;)
     Take a look at the included "maps/wop_diner.cfg" as an example.
+    The filename pattern is "maps/mapname.cfg".
 
 
     :: be_debugSecrets
@@ -193,8 +194,7 @@
 
     :: be_overrideEntities
     When activated, will look for a file to replace the map's entities.
-    There's no sample file or documentation yet, as this feature needs some
-    additional work. Stay tuned!
+    Take a look at the "Overriding entities" section below.
 
 
     :: be_settings
@@ -355,8 +355,8 @@
 
   :: Other changes
   
-    Beryllium also includes some changes to the game which are
-    mandatory and can not be configured at all.
+  Beryllium also includes some changes to the game which are
+  mandatory and can not be configured at all.
   
    * Several names are now forbidden, e.g. "server".
    * Quite a few sanity checks are being run against votes.
@@ -364,6 +364,26 @@
    * Most bugfixes from WoP's bleeding edge code have been 
      backported
 
+
+
+
+  :: Overriding entities
+
+  When enabling be_overrideEntities, Beryllium will no load the worldspawn
+  from the map's .bsp file, but use a replacement instead.
+  Take a look at the included "maps/wop_journeyctl.dat" as an example.
+  The filename pattern is "maps/mapname.dat".
+
+  To get dump the worldspawn of a map, use tools/entdmp.
+  This file is the same as http://r-1.ch/entdump.c but BSPVERSION was modified
+  to match Quake 3.
+
+    gcc tools/entdmp -o entdmp
+    ./entdmp maps/wop_journeyCTL.bsp > maps/wop_journeyctl.dat
+
+  You can then edit the created .dat file. Be carefull not to break things!
+  Some changes or additions will work, others do not. Maybe entity type
+  support will be enhanced, meanwhile figure this out by yourself.
 
 
 
@@ -387,5 +407,6 @@
    * ExcessivePlus
    * ETpro
    * BigBrotherBot
+   * r1ch
 
 
