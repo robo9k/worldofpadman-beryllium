@@ -209,8 +209,13 @@
     Read their readme if you wish to known more.
 
 
+    :: be_welcomeMessage
+    Will print this message to players on first connect.
+    Defaults to an unobtrusive Beryllium version info.
 
-  
+
+
+
   :: Commands
 
     :: Client

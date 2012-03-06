@@ -45,7 +45,6 @@ const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 	See CG_ServerCommand() in cg_servercmds.c
 */
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str ) {
-	int i, j;
 	char buffer[MAX_STRING_CHARS];
 
 
@@ -60,40 +59,15 @@ void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *
 
 
 	/* NOTE: Here's a special problem; You can not send newlines via rcon, not even
-	         via server console, only via game code. Thus we'll need to replace
-             \\n with a real \n.
-             Code will also convert \\ into real \
+	         via server console, only via game code. Thus we need to replace those
+	         and others ourself.
 	*/
 	/* FIXME: Only do conversion for print and centerprint */
 	/* NOTE: This most likely won't work for stell, ssay(_team) and smp anyways,
 	         since they suffer from the same bug; not even aware of newlines
 	*/
 
-	Q_strncpyz( buffer, str, sizeof( buffer ) );
-	for ( i = j = 0; i < strlen( buffer ); i++, j++ ) {
-		if ( '\0' == buffer[i] ) {
-			break;
-		}
-
-		if ( '\\' == buffer[i] ) {
-			if ( '\\' == buffer[i + 1] ) {
-				buffer[j] = '\\';
-				i++;
-			}
-			else if( 'n' == buffer[i + 1] ) {
-				buffer[j] = '\n';
-				i++;
-			}
-			else {
-				buffer[j] = buffer[i];
-			}
-		}
-		else {
-			buffer[j] = buffer[i];
-		}
-	}
-	buffer[j] = '\0';
-
+	EscapeChars( str, buffer, sizeof( buffer ) );
 
 	switch ( cmd ) {
 		case CCMD_CENTERPRINT:
@@ -735,5 +709,43 @@ qboolean G_ColoredOutput( void ) {
 	/* TODO: rcon output, if there is a way to check capabilities of remote end */
 
 	return qfalse;
+}
+
+
+/*
+	Copies str into buffer and replaces "\\n" with a real "\n", "\\" with "\" and
+	"\'" with "\"".
+*/
+void EscapeChars( const char *str, char *buffer, size_t size ) {
+	int i, j;
+
+	Q_strncpyz( buffer, str, size );
+	for ( i = j = 0; i < strlen( buffer ); i++, j++ ) {
+		if ( '\0' == buffer[i] ) {
+			break;
+		}
+
+		if ( '\\' == buffer[i] ) {
+			if ( '\\' == buffer[i + 1] ) {
+				buffer[j] = '\\';
+				i++;
+			}
+			else if( 'n' == buffer[i + 1] ) {
+				buffer[j] = '\n';
+				i++;
+			}
+			else if( '\'' == buffer[i + 1] ) {
+				buffer[j] = '"';
+				i++;
+			}
+			else {
+				buffer[j] = buffer[i];
+			}
+		}
+		else {
+			buffer[j] = buffer[i];
+		}
+	}
+	buffer[j] = '\0';
 }
 

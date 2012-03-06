@@ -128,6 +128,8 @@ vmCvar_t	be_overrideEntities;
 
 vmCvar_t	be_settings;
 
+vmCvar_t	be_welcomeMessage;
+
 /* unlagged - server options */
 vmCvar_t	sv_fps;
 
@@ -278,6 +280,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_overrideEntities, "be_overrideEntities", "0", CVAR_ARCHIVE, 0, qtrue },
 
 	{ &be_settings, "be_settings", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qfalse },
+
+	{ &be_welcomeMessage, "be_welcomeMessage", "", CVAR_ARCHIVE, 0, qfalse },
 
 	/* unlagged - server options */
 	{ &g_truePing, "g_truePing", "1", CVAR_ARCHIVE, 0, qtrue },

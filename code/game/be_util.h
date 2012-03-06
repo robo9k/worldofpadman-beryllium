@@ -104,5 +104,7 @@ void ReadableSize( char *buf, size_t bufsize, int value );
 
 qboolean G_ColoredOutput( void );
 
+void EscapeChars( const char *str, char *buffer, size_t size );
+
 #endif
 

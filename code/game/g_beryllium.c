@@ -435,8 +435,17 @@ void BE_ClientBegan( int clientNum ) {
 
 		/* Do some silent self-advertisement */
 		if ( ent->client->storage.firstTime ) {
-			SendClientCommand( clientNum, CCMD_PRT,
-			                   va( SKIPNOTIFY_S"This server is running "S_COLOR_BLUE"beryllium"S_COLOR_CYAN" "BERYLLIUM_VERSION S_COLOR_DEFAULT".\n" ) );
+			if ( strlen( be_welcomeMessage.string ) > 0 ) {
+				/* NOTE: This can easily break things */
+				SendClientCommand( clientNum, CCMD_PRT, va( "%s\n", be_welcomeMessage.string ) );
+			}
+			else {
+				/* Use default message */
+				SendClientCommand( clientNum, CCMD_PRT,
+				                   va( SKIPNOTIFY_S S_COLOR_GREEN"Hello and welcome!\n"
+				                       S_COLOR_WHITE"This server is running "S_COLOR_BLUE"beryllium"
+				                       S_COLOR_CYAN" "BERYLLIUM_VERSION S_COLOR_DEFAULT".\n" ) );
+			}
 		}
 	}
 

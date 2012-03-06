@@ -134,6 +134,8 @@ extern vmCvar_t	be_overrideEntities;
 
 extern vmCvar_t	be_settings;
 
+extern vmCvar_t	be_welcomeMessage;
+
 /* Parts of unlagged gamecode here as not to pollute the vanilla code */
 extern vmCvar_t g_truePing;
 extern vmCvar_t	sv_fps;
