@@ -12,12 +12,16 @@
 
   :: Current Version
 
-  v1.7b - 11.02.2012
-  * Print version info to clients once
-  * Fix missing sound for bouncepads
+  v1.7c - 11.02.2012
+  * Add cvar "be_welcomeMessage"
+  * Add some documentation about "Overriding entities"
 
 
   :: History
+
+  :: v1.7b - 11.02.2012
+  * Print version info to clients once
+  * Fix missing sound for bouncepads
 
   :: v1.7a - 31.12.11
   * Add g_smoothClients behaviour from unlagged
