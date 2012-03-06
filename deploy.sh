@@ -11,8 +11,8 @@ SYMLINK='beryllium-current.zip'
 
 ## TODO: Fix Makefile git dependencies so we can remove make clean
 ## ^ Njet, we also need to remove old beryllium versions
-rm -rf $BUILD_DIR
-make clean
+#rm -rf $BUILD_DIR
+#make clean
 make -j3
 
 ## export versioned content
@@ -29,6 +29,10 @@ cp build/release-linux-x86_64/baseq3/vm/qagame.qvm $DST/vm/
 ## zip all together
 rm $ZIP
 cd $BUILD_DIR
+#tar cvf -  $BERYLLIUM/* | xz -6e > $BERYLLIUM.tar.xz
+#tar czvf $BERYLLIUM.tar.gz $BERYLLIUM
+#tar cjvf $BERYLLIUM.tar.bz2 $BERYLLIUM
+#7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $BERYLLIUM.7z $BERYLLIUM
 zip -r -9 $ZIP $BERYLLIUM/*
 
 rm $SYMLINK
