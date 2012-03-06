@@ -273,12 +273,12 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	if ( !*ip ) {
     	return "No IP in userinfo.";
 	}
-	/* "127.0.0.1" or the like */
+	/* "127.0.0.1", "::1" or the like */
 	/* NOTE: Other possible values "bot", "localhost". But these don't occur, since
 	         we check for isBot and "localhost" luckily passes. We might also want to
 	         check number of dots (beware of IPv6)?
 	*/
-	if ( strlen( ip ) < 7 ) {
+	if ( strlen( ip ) < 3 ) {
 		return "Invalid IP in userinfo.";
 	}
 

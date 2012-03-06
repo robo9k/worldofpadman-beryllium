@@ -1444,7 +1444,7 @@ void ClientBegin( int clientNum ) {
 			trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " entered the game\n\"", client->pers.netname) );
 			*/
 			if ( ent->client->storage.firstTime ) {
-				SendClientCommand( CID_ALL, CCMD_PRT, va( S_COLOR_WHITE"%s entered the game.\n", client->pers.netname ) );
+				SendClientCommand( CID_ALL, CCMD_PRT, va( "%s"S_COLOR_WHITE" entered the game.\n", client->pers.netname ) );
 			}
 			/* end beryllium */
 		}
