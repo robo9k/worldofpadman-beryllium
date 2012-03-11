@@ -347,7 +347,6 @@ void move_killerducks(gentity_t *ent)
 		*/
 		if ( ( tmpv3[0] < opferlenght ) && !( g_entities[ownerNum].flags & FL_NOTARGET ) ) {
 			opfer = ownerNum;
-			opferlenght = tmpv3[0];
 		}
 		/* end beryllium */
 	}
