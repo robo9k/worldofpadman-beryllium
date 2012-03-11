@@ -119,7 +119,8 @@ void BE_Free( void *ptr ) {
 	char *freeend;
 	int *freeptr;
 
-	G_assert( ptr );
+	G_assert( ptr != NULL );
+	G_assert( freeHead != NULL );
 
 	freeptr = ptr;
 	freeptr--;
