@@ -2470,3 +2470,24 @@ void G_RunFrame( int levelTime ) {
 
 	/* end beryllium */
 }
+
+
+/* added beryllium */
+/* NOTE: This should be in be_util.c, but gameCvarTable is static. */
+/*
+	Returns the name used to register the cvar of NULL if not found in
+	local cvar table.
+*/
+char *NameForCvar( const vmCvar_t *vmCvar ) {
+	int i;
+
+	for ( i = 0; i < ARRAY_LEN( gameCvarTable ); ++i ) {
+		if ( vmCvar == gameCvarTable[ i ].vmCvar ) {
+			return gameCvarTable[ i ].cvarName;
+		}
+	}
+
+	return NULL;
+}
+/* end beryllium */
+

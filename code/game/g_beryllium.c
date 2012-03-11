@@ -720,12 +720,11 @@ void BE_WriteBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		/* FIXME: Hardcoded, cvarTable_t.cvarName */
-		G_Printf( "be_banFile not set, will not save to disk.\n" );
+		G_Printf( "%s not set, will not save to disk.\n", NameForCvar( &be_banFile ) );
 		return;
 	}
 
-	len = trap_FS_FOpenFile( filename, &f, FS_WRITE );
+	trap_FS_FOpenFile( filename, &f, FS_WRITE );
 	if ( !f ) {
 		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
 		return;	
@@ -785,8 +784,7 @@ void BE_LoadBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		/* FIXME: Hardcoded, cvarTable_t.cvarName */
-		G_Printf( BE_LOG_PREFIX"be_banFile not set, will not read banlist from disk.\n" );
+		G_Printf( BE_LOG_PREFIX"%s not set, will not read banlist from disk.\n", NameForCvar( &be_banFile ) );
 		return;
 	}
 
