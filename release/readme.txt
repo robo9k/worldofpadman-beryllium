@@ -379,7 +379,7 @@
   Take a look at the included "maps/wop_journeyctl.dat" as an example.
   The filename pattern is "maps/mapname.dat".
 
-  To get dump the worldspawn of a map, use tools/entdmp.
+  To dump the worldspawn of a map, use tools/entdmp.
   This file is the same as http://r-1.ch/entdump.c but BSPVERSION was modified
   to match Quake 3.
 
