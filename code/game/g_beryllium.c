@@ -472,7 +472,7 @@ void BE_ClientKilled( gentity_t *self ) {
 		gclient_t	*killer;
 		int			numShards, neededShards;
 
-		killer_ent = &g_entities[ self->client->lasthurt_client ];
+		killer_ent = &g_entities[ self->client->lastkilled_client ];
 		
 		if ( killer_ent->client && ( killer_ent != self ) ) {
 			killer = killer_ent->client;
@@ -483,7 +483,7 @@ void BE_ClientKilled( gentity_t *self ) {
 			neededShards	= be_oneUp.integer;
 			if ( numShards >= neededShards ) {
 				/* NOTE: AWARD_IMPRESSIVE has no clientside code */
-				SetAward( killer , AWARD_EXCELLENT );
+				SetAward( killer, AWARD_EXCELLENT );
 
 				killer->sess.livesleft++;
 				CalculateRanks();
