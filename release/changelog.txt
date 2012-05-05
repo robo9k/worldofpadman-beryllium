@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v1.8a - 21.04.2012
-  * Disallow /kill if player has 0 lives in LPS
+  v1.9a - 05.05.2012
+  * Improve spawn protection, see readme
 
   :: History
+
+  :: v1.8a - 21.04.2012
+  * Disallow /kill if player has 0 lives in LPS
 
   :: v1.7c - 06.03.2012
   * Add cvar "be_welcomeMessage"

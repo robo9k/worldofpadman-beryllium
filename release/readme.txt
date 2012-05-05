@@ -87,9 +87,10 @@
 
 
     :: be_respawnProtect
-    After respawning, clients don't take and handle damage.
-    Time is in seconds. There is no notification whether you
-    or a target are (still) protected.
+    After respawning, clients don't take damage while protected.
+    Time is in seconds.
+    Clients get Visionless for as long as they are protected.
+    Once they shoot, the protection will end immediately.
 
 
     :: be_maxVotes
