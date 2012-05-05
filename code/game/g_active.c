@@ -897,6 +897,9 @@ void ClientThink_real( gentity_t *ent ) {
 	     !( ucmd->buttons & BUTTON_TALK ) && ( ucmd->buttons & BUTTON_ATTACK ) &&
 	     ( client->ps.weaponTime <= 0 ) &&
 		 !InSprayroom( client ) ) {
+		/* added beryllium */
+		BE_FireWeapon( ent );
+		/* end beryllium */
 		pm.gauntletHit = CheckGauntletAttack( ent );
 	}
 
