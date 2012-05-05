@@ -624,6 +624,10 @@ void FireWeapon( gentity_t *ent ) {
 		ent->client->accuracy_shots++;
 	}
 
+	/* added beryllium */
+	BE_FireWeapon( ent );
+	/* end beryllium */
+
 	// set aiming directions
 	AngleVectors (ent->client->ps.viewangles, forward, right, up);
 

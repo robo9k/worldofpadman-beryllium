@@ -192,5 +192,9 @@ qboolean BE_GetEntityToken( char *buffer, int bufferSize );
 void BE_PreSpawnEntities( void );
 void BE_PostSpawnEntities( void );
 
+void BE_FireWeapon( gentity_t *ent );
+
+void BE_ClientSpawned( gentity_t *ent );
+
 #endif
 

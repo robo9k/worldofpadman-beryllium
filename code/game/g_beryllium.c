@@ -56,7 +56,7 @@ qboolean BE_ConsoleCommand( const char *cmd ) {
 
 /*
 	Hooks midway into G_Damage() in g_combat.c.
-	TODO: Create separate functions which handle knockback and radius damage
+	TODO: Create separate functions which handles knockback and radius damage
 */
 void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			   vec3_t dir, vec3_t point, int *damage, int *dflags, int *mod ) {
@@ -77,15 +77,9 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 
 	/* Respawn protection */
-	/* TODO: Visualise this by making weapons non-functional? Or simply centerprint countdown?
-	         Remove protection if weapon fired!
-	*/
 	/* TODO: Add MOD_WATER, MOD_SLIME, MOD_LAVA? */
 	if ( ( MOD_TRIGGER_HURT != *mod ) && ( targ != attacker ) ) {
-		if ( ( level.time - attacker->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {	
-			*damage = 0;
-		}
-		if ( ( level.time - targ->client->respawnTime ) <= ( be_respawnProtect.integer * 1000 ) ) {
+		if ( targ->client->pers.isProtected ) {
 			*damage = 0;
 		}
 	}
@@ -340,6 +334,15 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	return NULL;
 }
 
+/*
+	Disable spawn protection for client
+*/
+static void DisableProtection( gentity_t *ent ) {
+	G_assert( ent != NULL );
+
+	ent->client->pers.isProtected = qfalse;	
+}
+
 
 /*
 	Called once a second for each alive client
@@ -407,6 +410,13 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	/* TODO: Print a warning */
 	if ( be_checkPings.integer && ( ent->client->pers.connectionCounter > be_checkPings.integer ) ) {
 		trap_DropClient( ( ent - g_entities ), "Bad connection" );
+	}
+
+	/* Respawn protection timeout */
+	if ( ent->client->pers.isProtected ) {
+		if ( ( level.time - ent->client->respawnTime ) > ( be_respawnProtect.integer * 1000 ) ) {
+			DisableProtection( ent );
+		}
 	}
 }
 
@@ -936,7 +946,7 @@ static void BE_LoadEntities( const char *mapname ) {
 	char			filename[MAX_QPATH];
 
 
-	G_assert( mapname );
+	G_assert( mapname != NULL );
 
 	pWorldspawn = NULL;
 	if ( !be_overrideEntities.integer ) {
@@ -1017,6 +1027,29 @@ qboolean BE_GetEntityToken( char *buffer, int bufferSize ) {
 		else {
 			return qtrue;
 		}
+	}
+}
+
+
+/*
+	Called before muzzle is calculated or weapons are fired
+*/
+void BE_FireWeapon( gentity_t *ent ) {
+	G_assert( ent != NULL );
+
+	/* Disable spawn protection */
+	DisableProtection( ent );
+}
+
+
+/*
+	Called on ClientSpawn() before think, link etc. are done
+*/
+void BE_ClientSpawned( gentity_t *ent ) {
+	G_assert( ent != NULL );
+
+	if ( be_respawnProtect.integer > 0 ) {
+		ent->client->pers.isProtected = qtrue;
 	}
 }
 

@@ -338,6 +338,8 @@ typedef struct {
 	int			inactivityTime;
 	qboolean	inactivityWarning;
 
+	qboolean	isProtected;
+
 	/* unlagged - true ping */
 	int			realPing;
 	int			pingsamples[NUM_PING_SAMPLES];
