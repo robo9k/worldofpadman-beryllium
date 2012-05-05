@@ -338,9 +338,17 @@ char *BE_ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	Disable spawn protection for client
 */
 static void DisableProtection( gentity_t *ent ) {
+	int remaining;
+
 	G_assert( ent != NULL );
 
-	ent->client->pers.isProtected = qfalse;	
+	if ( ent->client->pers.isProtected ) {
+		ent->client->pers.isProtected = qfalse;
+		remaining = ( ( be_respawnProtect.integer * 1000 ) - ( level.time - ent->client->respawnTime ) );
+		if ( remaining > 0 ) {
+			ent->client->ps.powerups[PW_VISIONLESS] -= remaining;
+		}
+	}
 }
 
 
@@ -1050,6 +1058,7 @@ void BE_ClientSpawned( gentity_t *ent ) {
 
 	if ( be_respawnProtect.integer > 0 ) {
 		ent->client->pers.isProtected = qtrue;
+		ent->client->ps.powerups[PW_VISIONLESS] = ( level.time + be_respawnProtect.integer * 1000 );
 	}
 }
 
