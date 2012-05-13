@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v1.9a - 05.05.2012
-  * Improve spawn protection, see readme
+  v1.9b - 13.05.2012
+  * Don't apply spawn protection to spectators, d'uh!
 
   :: History
+
+  :: v1.9a - 05.05.2012
+  * Improve spawn protection, see readme
 
   :: v1.8a - 21.04.2012
   * Disallow /kill if player has 0 lives in LPS
