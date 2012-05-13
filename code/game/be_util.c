@@ -749,3 +749,13 @@ void EscapeChars( const char *str, char *buffer, size_t size ) {
 	buffer[j] = '\0';
 }
 
+
+/*
+	Returns qtrue if client is a spectator or dead waiting player in LPS
+*/
+qboolean IsSpectator( gclient_t *client ) {
+	G_assert( client != NULL );
+
+	return ( ( TEAM_SPECTATOR == client->sess.sessionTeam ) || LPSDeadSpec( client ) );
+}
+

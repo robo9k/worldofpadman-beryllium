@@ -109,5 +109,7 @@ void EscapeChars( const char *str, char *buffer, size_t size );
 /* NOTE: Implementation is in g_main.c */
 char *NameForCvar( const vmCvar_t *vmCvar );
 
+qboolean IsSpectator( gclient_t *client );
+
 #endif
 

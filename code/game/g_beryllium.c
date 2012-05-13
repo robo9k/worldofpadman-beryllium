@@ -366,7 +366,7 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	if ( CON_CONNECTED != ent->client->pers.connected ) {
 		return;
 	}
-	if ( TEAM_SPECTATOR == ent->client->sess.sessionTeam ) {
+	if ( IsSpectator( ent->client ) ) {
 		return;
 	}
 
@@ -1056,9 +1056,12 @@ void BE_FireWeapon( gentity_t *ent ) {
 void BE_ClientSpawned( gentity_t *ent ) {
 	G_assert( ent != NULL );
 
-	if ( be_respawnProtect.integer > 0 ) {
-		ent->client->pers.isProtected = qtrue;
-		ent->client->ps.powerups[PW_VISIONLESS] = ( level.time + be_respawnProtect.integer * 1000 );
+	if ( !IsSpectator( ent->client ) ) {
+
+		if ( be_respawnProtect.integer > 0 ) {
+			ent->client->pers.isProtected = qtrue;
+			ent->client->ps.powerups[PW_VISIONLESS] = ( level.time + be_respawnProtect.integer * 1000 );
+		}
 	}
 }
 

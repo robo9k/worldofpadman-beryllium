@@ -127,7 +127,7 @@ void BE_Cmd_Vote_f( gentity_t *ent ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Vote already cast.\n" );
 		return;
 	}
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( IsSpectator( ent->client ) ) {
 		SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not allowed to vote as spectator.\n" );
 		return;
 	}
@@ -235,7 +235,7 @@ void BE_Cmd_CallVote_f( gentity_t *ent ) {
 			return;
 		}
 	
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		if ( IsSpectator( ent->client ) ) {
 			SendClientCommand( ( ent - g_entities ), CCMD_PRT, S_COLOR_NEGATIVE"Not allowed to call a vote as spectator.\n" );
 			return;
 		}
@@ -402,6 +402,7 @@ static void G_CountVotingClients( void ) {
 		}
 
 		/* Anyone currently in a team is allowed to vote */
+		/* TODO: Decide about dead LPS specators and then use IsSpectator() */
 		if ( level.clients[i].sess.sessionTeam != TEAM_SPECTATOR ) {
 			level.numVotingClients++;
 		}
