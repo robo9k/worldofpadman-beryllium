@@ -63,6 +63,8 @@ typedef signed int clientNum_t;
 
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str );
 
+#define SendCmd(cId, cmdType, cmd) SendClientCommand(cId, cmdType, cmd)
+
 gametype_t StringToGametype( const char *str );
 char* GametypeToString( gametype_t gt );
 
