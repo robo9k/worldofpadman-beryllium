@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BUILD_DIR='build'
+BUILD_DIR='build/up'
 VERSION=$(./version.sh)
 
 BERYLLIUM='beryllium-v'$VERSION
@@ -15,6 +15,9 @@ SYMLINK='beryllium-current.zip'
 #make clean
 make -j3
 
+##
+mkdir -p $BUILD_DIR
+
 ## export versioned content
 rm -rf $DST
 #svn export $SRC $DST
@@ -28,6 +31,7 @@ cp build/release-linux-x86_64/baseq3/vm/qagame.qvm $DST/vm/
 
 ## zip all together
 rm $ZIP
+PREVWD=$PWD
 cd $BUILD_DIR
 #tar cvf -  $BERYLLIUM/* | xz -6e > $BERYLLIUM.tar.xz
 #tar czvf $BERYLLIUM.tar.gz $BERYLLIUM
@@ -38,7 +42,7 @@ zip -r -9 $ZIP $BERYLLIUM/*
 rm $SYMLINK
 ln -s $ZIP $SYMLINK
 
-cd ..
+cd $PREVWD
 
 rm -rf $DST
 
@@ -59,7 +63,7 @@ zip -r -9 $ZIP $BERYLLIUM_B3/*
 rm $SYMLINK
 ln -s $ZIP $SYMLINK
 
-cd ..
+cd $PREVWD
 
 rm -rf $DST
 
