@@ -12,10 +12,16 @@
 
   :: Current Version
 
-  v1.9b - 13.05.2012
-  * Don't apply spawn protection to spectators, d'uh!
+  v1.9.2 - 25.06.2012
+  * Fix incorrect "Too close to lolly base"
 
   :: History
+
+  :: v1.9.1 - 20.06.2012
+  * Fix 1up being applied to wrong players
+
+  :: v1.9b - 13.05.2012
+  * Don't apply spawn protection to spectators, d'uh!
 
   :: v1.9a - 05.05.2012
   * Improve spawn protection, see readme

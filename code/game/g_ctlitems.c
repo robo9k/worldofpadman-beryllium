@@ -126,9 +126,15 @@ qboolean IsBambamBoomieSpotClean( vec3_t spot, gentity_t *pEnt, char* pickupName
 				return qfalse;
 			}
 		}
+		/* changed beryllium */
+		/*
 		else if( otherEnt->s.eType == ET_ITEM && 
 			( otherEnt->item->giTag == PW_REDFLAG || otherEnt->item->giTag == PW_BLUEFLAG ) )
 		{
+		*/
+		else if ( ( ET_ITEM == otherEnt->s.eType )
+		          && ( IT_TEAM == otherEnt->item->giType ) ) {
+		/* end changed */
 			float distSqr = DistanceSquared( otherEnt->s.pos.trBase, spot );
 			if( distSqr < Square(256) )
 			{
