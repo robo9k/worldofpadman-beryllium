@@ -259,6 +259,8 @@ endif
 
 ## FIXME: BASEGAME
 BERYLLIUM_OBJ_CVS = \
+	$(B)/baseq3/game/g_beryllium.o \
+	$(B)/baseq3/game/g_beryllium.asm \
 	$(B)/baseq3/game/g_main.o \
 	$(B)/baseq3/game/g_main.asm
 
@@ -2399,10 +2401,10 @@ ifeq ($(USE_SVN),1)
   $(B)/client/cl_console.o : .svn/entries
   $(B)/client/common.o : .svn/entries
   $(B)/ded/common.o : .svn/entries
+endif
 
-  ifdef BERYLLIUM_OBJ_CVS
-    $(BERYLLIUM_OBJ_SVN): .git/index
-  endif
+ifdef BERYLLIUM_OBJ_CVS
+  $(BERYLLIUM_OBJ_CVS): VERSION
 endif
 
 
