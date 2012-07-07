@@ -1776,7 +1776,13 @@ void ClientDisconnect( int clientNum ) {
 	G_RemoveQueuedBotBegin( clientNum );
 
 	ent = g_entities + clientNum;
+	/* changed beryllium */
+	/*
 	if ( !ent->client ) {
+	*/
+	if ( !ent->client ||
+	     (CON_DISCONNECTED == ent->client->pers.connected) ) {
+	/* end beryllium */
 		return;
 	}
 

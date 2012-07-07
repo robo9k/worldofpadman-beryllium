@@ -2271,7 +2271,13 @@ void ClientCommand( int clientNum ) {
 	char	cmd[MAX_TOKEN_CHARS];
 
 	ent = g_entities + clientNum;
+	/* changed beryllium */
+	/*
 	if ( !ent->client ) {
+	*/
+	if ( !ent->client ||
+	     (CON_DISCONNECTED == ent->client->pers.connected) ) {
+	/* end beryllium */
 		return;		// not fully in game yet
 	}
 
