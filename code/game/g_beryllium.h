@@ -92,9 +92,11 @@ enum {
 extern int			numGUIDBans;
 extern guidBan_t	guidBans[MAX_GUIDBANS];
 
+extern const char	*be_version;
+
 
 /* Cvars. See g_main.c */
-extern vmCvar_t	be_version;
+extern vmCvar_t	g_beryllium;
 
 extern vmCvar_t	be_voteDuration;
 extern vmCvar_t	be_allowedVotes;

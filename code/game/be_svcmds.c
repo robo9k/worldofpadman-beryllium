@@ -874,10 +874,17 @@ static void BE_Svcmd_Memory_f( void ) {
 static void BE_Svcmd_Beryllium_f( void ) {
 	char buf[MAX_STRING_CHARS] = { "" };
 
-	Q_strcat(buf, sizeof( buf ), va( "%s\n", BERYLLIUM_ASCII_S ) );
-	Q_strcat(buf, sizeof( buf ), va( S_COLOR_BLUE"version"S_COLOR_DEFAULT": "S_COLOR_CYAN"%s\n", BERYLLIUM_VERSION_S )  );
-	Q_strcat(buf, sizeof( buf ), va( S_COLOR_BLUE"built"S_COLOR_DEFAULT":   "S_COLOR_CYAN"%s, %s\n", __DATE__, __TIME__ ) );
-	Q_strcat(buf, sizeof( buf ), va( S_COLOR_BLUE"base"S_COLOR_DEFAULT":    "S_COLOR_CYAN"%s\n", G_VERSION_S ) );
+	Q_strcat( buf, sizeof( buf ),
+	          va( "%s\n", BERYLLIUM_ASCII_S ) );
+	Q_strcat( buf, sizeof( buf ),
+	          va( S_COLOR_BLUE"version"S_COLOR_DEFAULT": "
+			      S_COLOR_CYAN"%s\n", be_version )  );
+	Q_strcat( buf, sizeof( buf ),
+	          va( S_COLOR_BLUE"built"S_COLOR_DEFAULT":   "
+			      S_COLOR_CYAN"%s, %s\n", __DATE__, __TIME__ ) );
+	Q_strcat( buf, sizeof( buf ),
+	          va( S_COLOR_BLUE"base"S_COLOR_DEFAULT":    "
+			      S_COLOR_CYAN"%s\n", G_VERSION_S ) );
 
 	if ( !G_ColoredOutput() ) {
 		Q_DecolorStr( buf, buf, sizeof( buf ) );

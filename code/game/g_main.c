@@ -86,7 +86,7 @@ vmCvar_t	g_logDamage;
 
 /* added beryllium */
 
-vmCvar_t	be_version;
+vmCvar_t	g_beryllium;
 vmCvar_t	g_version;
 
 vmCvar_t	be_voteDuration;
@@ -237,7 +237,7 @@ static cvarTable_t		gameCvarTable[] = {
 
 	/* added beryllium */
 
-	{ &be_version, "g_beryllium", "v"BERYLLIUM_VERSION_S, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
+	{ &g_beryllium, "g_beryllium", "v"BERYLLIUM_VERSION_S, ( CVAR_SERVERINFO | CVAR_ROM ), 0, qfalse },
 	/* NOTE: This is meant to allow identification of codebase and thus compatibility. */
 	{ &g_version, "g_version", G_VERSION_S, CVAR_ROM, 0, qfalse },
 

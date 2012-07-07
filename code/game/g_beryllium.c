@@ -28,6 +28,8 @@ guidBan_t	guidBans[MAX_GUIDBANS];
 
 static char	*pWorldspawn, *pWorldspawnParsePoint;
 
+const char *be_version = BERYLLIUM_VERSION_S;
+
 
 /* Functions */
 
