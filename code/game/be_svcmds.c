@@ -41,6 +41,7 @@ static void BE_Svcmd_PlaySound_f( void );
 static void BE_Svcmd_Memory_f( void );
 static void BE_Svcmd_Beryllium_f( void );
 static void BE_Svcmd_QueryCvar_f( void );
+static void BE_Svcmd_KillPlayer_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -71,7 +72,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "sound",			BE_Svcmd_PlaySound_f		},
 	{ "memory",			BE_Svcmd_Memory_f			},
 	{ "beryllium",		BE_Svcmd_Beryllium_f		},
-	{ "querycvar",		BE_Svcmd_QueryCvar_f		}
+	{ "querycvar",		BE_Svcmd_QueryCvar_f		},
+    { "kill",           BE_Svcmd_KillPlayer_f       }
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -926,5 +928,41 @@ static void BE_Svcmd_QueryCvar_f( void ) {
 	Com_sprintf( cmd, sizeof( cmd ), "qc %s", ConcatArgs( 2 ) );
 
 	trap_SendServerCommand( clientNum, cmd );
+}
+
+
+/*
+ * Kills a player.
+ */
+static void BE_Svcmd_KillPlayer_f( void ) {
+	char	    clientStr[3];
+	int		    clientNum;
+    gentity_t   *ent;
+
+	if ( trap_Argc() < 2 ) {
+		G_Printf( "Usage: kill <cid>\n" );
+		return;
+	}
+
+	trap_Argv( 1, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+		G_Printf( "You must supply a client number.\n" );
+		return;
+	}
+
+	clientNum = atoi( clientStr );
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+		G_Printf( "Not a valid client number.\n" );
+		return;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		G_Printf( "Client not connected.\n" );
+		return;
+	}
+
+    ent = &g_entities[ clientNum ];
+    G_Damage( ent, NULL, NULL, NULL, NULL, 3000, 0, MOD_UNKNOWN );
 }
 
