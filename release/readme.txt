@@ -199,6 +199,16 @@
     Will print this message to players on first connect.
     Defaults to an unobtrusive Beryllium version info.
 
+    :: be_botFlags
+    This is a bitmask, supporting the following flags:
+      1 - Bots use Bambams and Boomies when there is
+          a waypoint file
+      2 - Bots try not to pickup Bambams and Boomies
+
+    Take a look at the "Waypoints" section below for flag 1.
+    Please note that both options are considered experimental
+    and might break bot logic sometimes.
+
 
   :: Commands
 
@@ -317,6 +327,9 @@
       :: beryllium
       Prints version information about beryllium.
 
+      :: kill cid
+      Kills a player.
+
 
   :: Other changes
   
@@ -347,6 +360,27 @@
   You can then edit the created .dat file. Be carefull not to break things!
   Some changes or additions will work, others do not. Maybe entity type
   support will be enhanced, meanwhile figure this out by yourself.
+
+
+  :: Waypoints
+
+  The game uses waypoint files to add information for the bots about
+  which routes to take and where to place items.
+  While the original gamecode had disabled the code for bots to place
+  items such as Bambams and Boomies, it is now configurable in
+  Beryllium via the be_botFlags cvar.
+
+  There are already waypoint files for some of the maps. Just extract
+  them from the pk3, edit and store them as a new plain file.
+  The filename pattern is "maps/mapname.wp".
+
+  The syntax to add Bambams and Boomies is
+    bambam team x y z
+    boomie team x y z pitch yaw
+
+  Team can be "red" or "blue". You can obtain the other data by
+  loading a map, going to a nice spot and using the "/viewpos"
+  command, which will print "(x y z) : pitch yaw roll".
 
 
 :: Credits

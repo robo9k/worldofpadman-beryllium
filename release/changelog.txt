@@ -12,10 +12,15 @@
 
   :: Current Version
 
-  v1.9.2 - 25.06.2012
-  * Fix incorrect "Too close to lolly base"
+  v1.9.3 - 14.07.2012
+  * Fix bug in "editbotinv"
+  * Add cvar "be_botFlags"
+  * Add server command "kill" 
 
   :: History
+
+  :: v1.9.2 - 25.06.2012
+  * Fix incorrect "Too close to lolly base"
 
   :: v1.9.1 - 20.06.2012
   * Fix 1up being applied to wrong players
