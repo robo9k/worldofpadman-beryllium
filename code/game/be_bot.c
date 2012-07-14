@@ -60,7 +60,8 @@ qboolean BE_Bot_IllegalGoal( bot_state_t* bs ) {
 
 void BE_Bot_CheckEntity(bot_state_t *bs, entityState_t *state) {
     if ( BE_Bot_IgnoreItems() &&
-         ( ET_ITEM == state->eType ) ) {
+         ( ET_ITEM == state->eType ) &&
+         ( state->modelindex2 != 0 ) ) {
         gitem_t *item = &bg_itemlist[state->modelindex];
         int avoidTime = 0;
 
