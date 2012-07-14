@@ -870,6 +870,7 @@ void BotCtfSeekGoals(bot_state_t* bs){
 		return;
 	}
 
+    /* changed beryllium */
 	/*
 	if( bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_BAMBAM )
 	{
@@ -907,6 +908,38 @@ void BotCtfSeekGoals(bot_state_t* bs){
 		}
 	}
 	*/
+
+    if ( BE_Bot_UseItems() ) {
+        if ( MODELINDEX_BAMBAM == bs->cur_ps.stats[STAT_HOLDABLE_ITEM] ) {
+    		if ( LTG_PLANTBAMBAM == bs->ltgtype ) {
+                return;
+            }
+    		else {
+    			if ( PickBambamGoal( bs ) ) {
+    				bs->decisionmaker = bs->client;
+    				bs->ltgtype = LTG_PLANTBAMBAM;
+                    // FIXME: Magical constant 120
+    				bs->teamgoal_time = ( FloatTime() + 120 );
+    				return;
+    			}
+    		}
+    	}
+        else if ( MODELINDEX_BOOMIE == bs->cur_ps.stats[STAT_HOLDABLE_ITEM] ) {
+    		if ( LTG_PLANTBOOMIE == bs->ltgtype ) {
+                return;
+            }
+    		else {
+    			if ( PickBoomieGoal( bs ) ) {
+    				bs->decisionmaker = bs->client;
+    				bs->ltgtype = LTG_PLANTBOOMIE;
+                    // FIXME: Magical constant 120
+    				bs->teamgoal_time = ( FloatTime() + 120 );
+    				return;
+    			}
+            }
+    	}
+    }
+    /* end beryllium */
 	
 	// dont go for ctl-goals as long as bad equiped (though don't interrupt important tasks)
 	if( bs->ltgtype != LTG_PICKUPFLAG &&	// LTG_CAPTUREFLAG is covered above
@@ -4291,6 +4324,9 @@ void BotCheckSnapshot(bot_state_t *bs) {
 		//check for grenades the bot should avoid
 		BotCheckForGrenades(bs, &state);
 		//
+        /* added beryllium */
+        BE_Bot_CheckEntity( bs, &state );
+        /* end added */
 	}
 	//check the player state for events
 	BotAI_GetEntityState(bs->client, &state);

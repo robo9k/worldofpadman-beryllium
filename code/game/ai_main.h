@@ -367,3 +367,7 @@ int		BotAI_GetClientState( int clientNum, playerState_t *state );
 int		BotAI_GetEntityState( int entityNum, entityState_t *state );
 int		BotAI_GetSnapshotEntity( int clientNum, int sequence, entityState_t *state );
 
+
+/* added beryllium */
+#include "be_bot.h"
+/* end beryllium */

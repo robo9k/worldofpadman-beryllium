@@ -1262,6 +1262,7 @@ int		trap_AAS_BestReachableArea(vec3_t origin, vec3_t mins, vec3_t maxs, vec3_t 
 #include "be_storage.h"
 #include "be_alloc.h"
 
+
 //unlagged - g_unlagged.c
 void G_PredictPlayerMove( gentity_t *ent, float frametime );
 //unlagged - g_unlagged.c

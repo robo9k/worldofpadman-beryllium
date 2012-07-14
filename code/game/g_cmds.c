@@ -2240,7 +2240,12 @@ void Cmd_EditBotInv_f( gentity_t *ent ){
 	spec_ent = &g_entities[ ent->client->sess.spectatorClient ];
 
 	if(spec_ent != ent){
+        /* changed beryllium */
+        /*
 		if ( !( ent->r.svFlags & SVF_BOT ) ) {
+        */
+        if ( !( spec_ent->r.svFlags & SVF_BOT ) ) {
+        /* end changed */
 			trap_SendServerCommand(ent-g_entities, va("print \"error: target is human \n\"" ) );
 			return;
 		}

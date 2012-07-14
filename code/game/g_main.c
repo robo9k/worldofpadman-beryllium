@@ -130,6 +130,8 @@ vmCvar_t	be_settings;
 
 vmCvar_t	be_welcomeMessage;
 
+vmCvar_t    be_botFlags;
+
 /* unlagged - server options */
 vmCvar_t	sv_fps;
 
@@ -282,6 +284,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_settings, "be_settings", "0", ( CVAR_ARCHIVE | CVAR_LATCH ), 0, qfalse },
 
 	{ &be_welcomeMessage, "be_welcomeMessage", "", CVAR_ARCHIVE, 0, qfalse },
+
+    { &be_botFlags, "be_botFlags", "0", CVAR_ARCHIVE, 0, qfalse },
 
 	/* unlagged - server options */
 	{ &g_truePing, "g_truePing", "1", CVAR_ARCHIVE, 0, qtrue },
@@ -2475,7 +2479,7 @@ void G_RunFrame( int levelTime ) {
 /* added beryllium */
 /* NOTE: This should be in be_util.c, but gameCvarTable is static. */
 /*
-	Returns the name used to register the cvar of NULL if not found in
+	Returns the name used to register the cvar or NULL if not found in
 	local cvar table.
 */
 char *NameForCvar( const vmCvar_t *vmCvar ) {
