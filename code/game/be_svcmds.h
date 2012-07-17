@@ -23,7 +23,7 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 /* TODO: Maybe we should use structs similar to those in be_vote? */
 typedef struct {
-    char		*cmdName;
+    const char  *cmdName;
     void		( *cmdHandler )( void );
 } svcmd_t;
 

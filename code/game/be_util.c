@@ -21,22 +21,27 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 
 typedef struct {
-	char		*str;
-	gametype_t	type;
+	const char		*name;
+    const char      *shortName;
+	gametype_t      type;
 } mapGametypeString_t;
 
+#define GAMETYPE_MAP(gt) { GAMETYPE_NAME( gt ), GAMETYPE_NAME_SHORT( gt ), gt }
 
 const mapGametypeString_t GAMETYPE_REMAP[] = {
-		{ GAMETYPE_NAME( GT_FFA ),			GT_FFA				},
-		{ GAMETYPE_NAME( GT_TOURNAMENT ),	GT_TOURNAMENT		},
-		{ GAMETYPE_NAME( GT_SINGLE_PLAYER ),GT_SINGLE_PLAYER	},
-		{ GAMETYPE_NAME( GT_SPRAYFFA ),		GT_SPRAYFFA			},
-		{ GAMETYPE_NAME( GT_LPS ),			GT_LPS				},
-		{ GAMETYPE_NAME( GT_TEAM ),			GT_TEAM				},
-		{ GAMETYPE_NAME( GT_CTF ),			GT_CTF				},
-		{ GAMETYPE_NAME( GT_SPRAY ),		GT_SPRAY			},
-		{ GAMETYPE_NAME( GT_BALLOON ),		GT_BALLOON			}
-	};
+    GAMETYPE_MAP( GT_FFA ),
+    GAMETYPE_MAP( GT_TOURNAMENT ),
+    GAMETYPE_MAP( GT_SINGLE_PLAYER ),
+    GAMETYPE_MAP( GT_SPRAYFFA ),
+    GAMETYPE_MAP( GT_LPS ),
+    GAMETYPE_MAP( GT_TEAM ),
+    GAMETYPE_MAP( GT_CTF ),
+    GAMETYPE_MAP( GT_SPRAY ),
+    GAMETYPE_MAP( GT_BALLOON )
+};
+
+#undef GAMETYPE_MAP
+
 const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 
 
@@ -104,7 +109,7 @@ gametype_t StringToGametype( const char *str ) {
 
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
-		if ( Q_stricmp( GAMETYPE_REMAP[i].str, str ) == 0 ) {
+		if ( Q_stricmp( GAMETYPE_REMAP[i].name, str ) == 0 ) {
 			return ( GAMETYPE_REMAP[i].type );
 		}
 	}
@@ -118,13 +123,13 @@ gametype_t StringToGametype( const char *str ) {
 	Converts a gametype into a string.
 	Might return NULL if no match
 */
-char* GametypeToString( gametype_t gt ) {
+const char* GametypeToString( gametype_t gt ) {
 	int i;
 
 
 	for ( i = 0; i < NUM_GTSTRS; i++ ) {
 		if ( GAMETYPE_REMAP[i].type == gt ) {
-			return ( GAMETYPE_REMAP[i].str );
+			return ( GAMETYPE_REMAP[i].name );
 		}
 	}
 

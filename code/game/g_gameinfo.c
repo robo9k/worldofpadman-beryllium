@@ -213,7 +213,12 @@ g_gametypeBitmap_s gametypeMap[GT_MAX_GAME_TYPE] = {
 GametypeBits
 =================
 */
+/* changed beryllium */
+/*
 static int GametypeBits( const char *string ) {
+*/
+int GametypeBits( const char *string ) {
+/* end beryllium */
 	int		bits;
 	char	*p;
 	char	*token;
