@@ -42,6 +42,7 @@ static void BE_Svcmd_Memory_f( void );
 static void BE_Svcmd_Beryllium_f( void );
 static void BE_Svcmd_QueryCvar_f( void );
 static void BE_Svcmd_KillPlayer_f( void );
+static void BE_Svcmd_Mapinfo_f( void );
 
 
 /* FIXME: Add this to game headers? Declared in g_main.c */
@@ -73,7 +74,8 @@ const svcmd_t BE_SVCMDS[] = {
 	{ "memory",			BE_Svcmd_Memory_f			},
 	{ "beryllium",		BE_Svcmd_Beryllium_f		},
 	{ "querycvar",		BE_Svcmd_QueryCvar_f		},
-    { "kill",           BE_Svcmd_KillPlayer_f       }
+    { "kill",           BE_Svcmd_KillPlayer_f       },
+    { "mapinfo",        BE_Svcmd_Mapinfo_f          }
 };
 const unsigned int NUM_SVCMDS = ARRAY_LEN( BE_SVCMDS );
 
@@ -964,5 +966,65 @@ static void BE_Svcmd_KillPlayer_f( void ) {
 
     ent = &g_entities[ clientNum ];
     G_Damage( ent, NULL, NULL, NULL, NULL, 3000, 0, MOD_UNKNOWN );
+}
+
+
+/*
+ * Prints information about a map.
+ */
+static void BE_Svcmd_Mapinfo_f( void ) {
+    const char *tmp;
+    char mapname[MAX_INFO_VALUE];
+    char info[MAX_INFO_STRING];
+    char gametypes[128] = { "" };
+    char *longname;
+    int gametypeBits;
+    int i;
+    char buf[MAX_STRING_CHARS] = { "" };
+
+    if ( trap_Argc() < 2 ) {
+        tmp = level.mapname;
+    }
+    else {
+        tmp = ConcatArgs( 1 );
+    }
+    Q_strncpyz( mapname, tmp, sizeof( mapname ) );
+
+    tmp = G_GetArenaInfoByMap( mapname );
+    if ( NULL == tmp ) {
+        G_Printf( "No information for map \"%s\".\n", mapname );
+        return;
+    }
+    Q_strncpyz( info, tmp, sizeof( info ) );
+
+    longname = Info_ValueForKey( info, "longname" );
+    if ( strlen( longname ) < 1 ) {
+        longname = "<nothing>";
+    }
+
+    gametypeBits = GametypeBits( Info_ValueForKey( info, "type" ) );
+
+    for ( i = 0; i < ARRAY_LEN( GAMETYPE_REMAP ); i++ ) {
+        if ( gametypeBits & ( 1 << GAMETYPE_REMAP[i].type ) ) {
+            if ( strlen( gametypes ) > 0 ) {
+                Q_strcat( gametypes, sizeof( gametypes ),
+                          S_COLOR_DEFAULT", " );
+            }
+            Q_strcat( gametypes, sizeof( gametypes ),
+                    va( S_COLOR_CYAN"%s", GAMETYPE_REMAP[i].shortName ) );
+
+        }
+    }
+
+    Q_strcat( buf, sizeof( buf ),
+              va( S_COLOR_BLUE"Map"S_COLOR_DEFAULT":       \""S_COLOR_CYAN"%s"S_COLOR_DEFAULT"\"\n",
+                  mapname ) );
+    Q_strcat( buf, sizeof( buf ),
+              va( S_COLOR_BLUE"Long name"S_COLOR_DEFAULT": \""S_COLOR_CYAN"%s"S_COLOR_DEFAULT"\"\n",
+                  longname ) );
+    Q_strcat( buf, sizeof( buf ),
+              va( S_COLOR_BLUE"Gametypes"S_COLOR_DEFAULT": %s\n", gametypes ) );
+
+    G_Printf( "%s", buf );
 }
 

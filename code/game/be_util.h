@@ -60,6 +60,13 @@ enum {
 */
 typedef signed int clientNum_t;
 
+typedef struct {
+	const char		*name;
+    const char      *shortName;
+	gametype_t      type;
+} mapGametypeString_t;
+extern const mapGametypeString_t GAMETYPE_REMAP[GT_MAX_GAME_TYPE];
+
 
 void SendClientCommand( clientNum_t clientNum, clientCommand_t cmd, const char *str );
 

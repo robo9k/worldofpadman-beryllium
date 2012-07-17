@@ -20,15 +20,9 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #include "g_local.h"
 
 
-typedef struct {
-	const char		*name;
-    const char      *shortName;
-	gametype_t      type;
-} mapGametypeString_t;
-
 #define GAMETYPE_MAP(gt) { GAMETYPE_NAME( gt ), GAMETYPE_NAME_SHORT( gt ), gt }
 
-const mapGametypeString_t GAMETYPE_REMAP[] = {
+const mapGametypeString_t GAMETYPE_REMAP[GT_MAX_GAME_TYPE] = {
     GAMETYPE_MAP( GT_FFA ),
     GAMETYPE_MAP( GT_TOURNAMENT ),
     GAMETYPE_MAP( GT_SINGLE_PLAYER ),
@@ -41,8 +35,6 @@ const mapGametypeString_t GAMETYPE_REMAP[] = {
 };
 
 #undef GAMETYPE_MAP
-
-const unsigned int NUM_GTSTRS = ARRAY_LEN( GAMETYPE_REMAP );
 
 
 /*
@@ -108,7 +100,7 @@ gametype_t StringToGametype( const char *str ) {
 	G_assert( str != NULL );
 
 
-	for ( i = 0; i < NUM_GTSTRS; i++ ) {
+	for ( i = 0; i < ARRAY_LEN( GAMETYPE_REMAP ); i++ ) {
 		if ( Q_stricmp( GAMETYPE_REMAP[i].name, str ) == 0 ) {
 			return ( GAMETYPE_REMAP[i].type );
 		}
@@ -127,7 +119,7 @@ const char* GametypeToString( gametype_t gt ) {
 	int i;
 
 
-	for ( i = 0; i < NUM_GTSTRS; i++ ) {
+	for ( i = 0; i < ARRAY_LEN( GAMETYPE_REMAP ); i++ ) {
 		if ( GAMETYPE_REMAP[i].type == gt ) {
 			return ( GAMETYPE_REMAP[i].name );
 		}

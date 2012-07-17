@@ -137,7 +137,10 @@ char *ConcatArgs( int start );
 void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, const char *name, const char *message );
 
 /* Declared in g_client.c, formerly static */
-extern void ClientCleanName( const char *in, char *out, size_t outSize );
+void ClientCleanName( const char *in, char *out, size_t outSize );
+
+/* Declared in g_gameinfo.c, formerly static */
+int GametypeBits( const char *string );
 
 
 /* "Exported" Functions */
