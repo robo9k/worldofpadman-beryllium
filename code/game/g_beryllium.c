@@ -112,7 +112,7 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 	char model[MAX_QPATH], headmodel[MAX_QPATH];
 	char *modelInfo, *headmodelInfo;
 
-	G_assert( IsValidClientID( clientNum, qfalse ) );
+	G_assert( ValidClientID( clientNum, qfalse ) );
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
@@ -530,7 +530,7 @@ void BE_ClientBegan( int clientNum ) {
 				             S_COLOR_WHITE
 							 "This server is running "
 							 S_COLOR_BLUE"beryllium"S_COLOR_CYAN" "
-							 BERYLLIUM_VERSION S_COLOR_DEFAULT".\n" ) );
+							 BERYLLIUM_VERSION_S S_COLOR_DEFAULT".\n" ) );
 			}
 		}
 	}
