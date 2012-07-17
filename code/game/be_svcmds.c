@@ -890,10 +890,7 @@ static void BE_Svcmd_Beryllium_f( void ) {
 	          va( S_COLOR_BLUE"base"S_COLOR_DEFAULT":    "
 			      S_COLOR_CYAN"%s\n", G_VERSION_S ) );
 
-	if ( !G_ColoredOutput() ) {
-		Q_DecolorStr( buf, buf, sizeof( buf ) );
-	}
-	G_Printf( "%s", buf );
+	BE_Printf( "%s", buf );
 }
 
 

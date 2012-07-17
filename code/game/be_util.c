@@ -405,6 +405,28 @@ void QDECL G_DPrintf( const char *fmt, ... ) {
 
 
 /*
+	Prints text to server console, which will be optionally decolored.
+*/
+/* NOTE: This is an almost exact copy of G_Printf */
+void QDECL BE_Printf( const char *fmt, ... ) {
+	va_list		argptr;
+	char		buf[1024];
+
+	G_assert( fmt != NULL );
+
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+
+	if ( !G_ColoredOutput() ) {
+		Q_DecolorStr( buf, buf, sizeof( buf ) );
+	}
+
+	trap_Printf( buf );
+}
+
+
+/*
 	Removes all colortags "recursively".
 */
 void Q_DecolorStr( char *in, char *out, size_t outsize ) {

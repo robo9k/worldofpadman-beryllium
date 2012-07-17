@@ -94,6 +94,8 @@ qboolean InList( const char *needle, const char *haystack );
 
 void QDECL G_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 
+void QDECL BE_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+
 void Q_DecolorStr( char *in, char *out, size_t outsize );
 void Q_StripWhitespace( char *in, char *out, size_t outsize );
 void Q_ExtraCleanStr( char *in, char *out, size_t outsize );
