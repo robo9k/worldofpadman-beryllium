@@ -696,7 +696,7 @@ static void ParseSecrets( char *buff ) {
 
 		if ( Q_stricmp( token, "secret" ) == 0 ) {
 			if ( numSecrets >= ARRAY_LEN( secretNames ) ) {
-				G_Printf( BE_LOG_PREFIX"Secrets limit of %ld exceeded.\n",
+				BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Secrets limit of %ld exceeded.\n",
 				          ARRAY_LEN( secretNames ) );
 				break;
 			}
@@ -716,7 +716,7 @@ static void ParseSecrets( char *buff ) {
 
 	/* TODO: Validate each target name by comparing to entities in map? */
 
-	G_Printf( BE_LOG_PREFIX"Parsed %d secret%s.\n",
+	BE_Printf( BE_LOG_PREFIX"Parsed %d secret%s.\n",
 	          numSecrets, ( numSecrets != 1 ? "s" : "" ) );
 }
 
@@ -740,7 +740,7 @@ static void BE_LoadSecrets( void ) {
 	
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_BOLD"Could not open \"%s\".\n", filename );
 		return;
 	}
 
@@ -817,14 +817,14 @@ void BE_WriteBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		G_Printf( "%s not set, will not save to disk.\n",
+		BE_Printf( S_COLOR_BOLD"%s not set, will not save to disk.\n",
 		          NameForCvar( &be_banFile ) );
 		return;
 	}
 
 	trap_FS_FOpenFile( filename, &f, FS_WRITE );
 	if ( !f ) {
-		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\".\n", filename );
 		return;	
 	}
 
@@ -858,7 +858,7 @@ static void ParseBans( char *buff ) {
 		}
 
 		if ( numGUIDBans >= MAX_GUIDBANS ) {
-			G_Printf( BE_LOG_PREFIX"GUID bans limit of %d exceeded.\n",
+			BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"GUID bans limit of %d exceeded.\n",
 			          MAX_GUIDBANS );
 			break;
 		}
@@ -868,7 +868,7 @@ static void ParseBans( char *buff ) {
 		AddBan( ban );
 	}
 
-	G_Printf( BE_LOG_PREFIX"Parsed %d GUID ban%s.\n",
+	BE_Printf( BE_LOG_PREFIX"Parsed %d GUID ban%s.\n",
 	          numGUIDBans, ( numGUIDBans != 1 ? "s" : "" ) );
 }
 
@@ -884,7 +884,7 @@ void BE_LoadBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		G_Printf( BE_LOG_PREFIX"%s not set,"
+		BE_Printf( BE_LOG_PREFIX"%s not set,"
 		          "will not read banlist from disk.\n",
 				  NameForCvar( &be_banFile ) );
 		return;
@@ -892,7 +892,7 @@ void BE_LoadBans( void ) {
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		G_Printf( BE_LOG_PREFIX"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\".\n", filename );
 		return;	
 	}
 
@@ -1053,7 +1053,7 @@ static void BE_LoadEntities( const char *mapname ) {
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		G_Printf( BE_LOG_PREFIX"Could not open \"%s\","
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\","
 		          "will fallback to .bsp entities.\n", filename );
 		return;	
 	}
@@ -1069,7 +1069,7 @@ static void BE_LoadEntities( const char *mapname ) {
 	pWorldspawn[len] = '\0';
 	trap_FS_FCloseFile( f );
 
-	G_Printf( BE_LOG_PREFIX"Loaded entities from \"%s\".\n", filename );
+	BE_Printf( BE_LOG_PREFIX S_COLOR_BOLD"Loaded entities from \"%s\".\n", filename );
 }
 
 

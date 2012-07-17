@@ -226,11 +226,11 @@ void BE_MemoryInfo( void ) {
 
 	/* NOTE: QVM implementation of printf("%p") does not print "0x" prefix */
 
-	G_Printf( "%p-%p: ", fmn, end );
+	BE_Printf( "%p-%p: ", fmn, end );
 	ReadableSize( sizeBuf, sizeof( sizeBuf ), ( sizeof( memory_pool ) - freeMem ) );
-	G_Printf( "%s out of ", sizeBuf );
+	BE_Printf( S_COLOR_BOLD"%s"S_COLOR_DEFAULT" / ", sizeBuf );
 	ReadableSize( sizeBuf, sizeof( sizeBuf ), sizeof( memory_pool ) );
-	G_Printf( "%s allocated.\n", sizeBuf );
+	BE_Printf( S_COLOR_BOLD"%s"S_COLOR_DEFAULT".\n", sizeBuf );
 
 	while ( fmn < end ) {
 		size = chunks = 0;
@@ -242,7 +242,8 @@ void BE_MemoryInfo( void ) {
 		}
 		if ( size ) {
 			ReadableSize( sizeBuf, sizeof( sizeBuf ), size );
-			Com_Printf( "	%p: %s free (%d chunks)\n", p, sizeBuf, chunks );
+			Com_Printf( "	%p: "S_COLOR_BOLD"%s free"S_COLOR_DEFAULT
+                        " (%d chunks)\n", p, sizeBuf, chunks );
 		}
 		size = chunks = 0;
 		p = fmn;
@@ -253,7 +254,8 @@ void BE_MemoryInfo( void ) {
 		}
 		if ( size ) {
 			ReadableSize( sizeBuf, sizeof( sizeBuf ), size );
-			Com_Printf( "	%p: %s allocated (%d chunks)\n", p, sizeBuf, chunks );
+			Com_Printf( "	%p: "S_COLOR_BOLD"%s allocated"S_COLOR_DEFAULT
+                        " (%d chunks)\n", p, sizeBuf, chunks );
 		}
 	}
 }

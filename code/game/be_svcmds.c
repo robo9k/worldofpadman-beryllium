@@ -448,7 +448,7 @@ static void BE_Svcmd_Callvote_f( void ) {
 */
 static void BE_Svcmd_LogPrint_f( void ) {
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: logprint <text>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: logprint <text>\n" );
 		return;
 	}
 
@@ -862,7 +862,7 @@ static void BE_Svcmd_KillPlayer_f( void ) {
     gentity_t   *ent;
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( S_COLOR_NEGATIVE"Usage: kill <cid>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: kill <cid>\n" );
 		return;
 	}
 

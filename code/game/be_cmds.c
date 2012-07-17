@@ -196,7 +196,8 @@ void BE_Cmd_QueryCvarResponse_f( gentity_t *ent ) {
 	clientNum = ( ent - g_entities );
 
 	if ( trap_Argc() != 3 ) {
-		G_Printf( "Recieved invalid query cvar response from client %d.\n", clientNum );
+		BE_Printf( S_COLOR_NEGATIVE"Recieved invalid query cvar response from client %d.\n",
+                   clientNum );
 		return;
 	}
 
@@ -207,6 +208,6 @@ void BE_Cmd_QueryCvarResponse_f( gentity_t *ent ) {
 	trap_Argv( 1, cvar, sizeof( cvar ) );
 	trap_Argv( 2, value, sizeof( value ) );
 
-	G_Printf( "Query cvar response from %d: %s - \"%s\"\n", clientNum, cvar, value );
+	BE_Printf( "Query cvar response from %d: %s - \"%s\"\n", clientNum, cvar, value );
 }
 
