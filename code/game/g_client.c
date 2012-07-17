@@ -925,6 +925,9 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 		Q_strncpyz(out, "UnnamedPlayer", outSize );
 }
 */
+
+#define INVALID_PLAYERNAME_DEFAULT_S	"UnnamedPlayer"
+
 void ClientCleanName( const char *in, char *out, size_t outSize ) {
 	int outpos = 0, colorlessLen = 0, spaces = 0;
 	int			totalWhitespace = 0;
@@ -1033,8 +1036,11 @@ void ClientCleanName( const char *in, char *out, size_t outSize ) {
 	if ( invalid ) {
 		Q_strncpyz( out, INVALID_PLAYERNAME_DEFAULT_S, outSize );
 	}
-	/* end beryllium */
 }
+
+#undef INVALID_PLAYERNAME_DEFAULT_S
+
+/* end beryllium */
 
 /*
 ===========

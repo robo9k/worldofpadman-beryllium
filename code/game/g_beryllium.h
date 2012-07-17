@@ -40,22 +40,9 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #define BE_LOG_PREFIX		"beryllium: "
 
-
-#define DEFAULT_PLAYERMODEL_S	"padman"
-#define DEFAULT_PLAYERSKIN_S	"default"
-#define PLAYERMODEL_PATH_S		"models/wop_players/"
-
-#define INVALID_PLAYERNAME_DEFAULT_S	"UnnamedPlayer"
-#define RENAMED_PLAYERNAME_S			"RenamedPlayer"
-
 #define CHAT_SERVER_NAME	"server"
 
 #define SKIPNOTIFY_S		"[skipnotify]"
-
-#define MAX_CAMPTIME		20
-
-#define MAX_TARGETNAME		64
-#define MAX_SECRETS			64
 
 #define MAX_GUIDBANS		128
 

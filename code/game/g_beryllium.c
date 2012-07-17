@@ -19,9 +19,12 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 
 #include "g_local.h"
 
-
+#define MAX_TARGETNAME		64
+#define MAX_SECRETS			64
 int		numSecrets;
 char	secretNames[MAX_SECRETS][MAX_TARGETNAME];
+#undef MAX_TARGETNAME
+#undef MAX_SECRETS
 
 int			numGUIDBans;
 guidBan_t	guidBans[MAX_GUIDBANS];
@@ -96,6 +99,10 @@ void BE_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
  *         Maybe cache userinfo for each client and strcmp(), then return
  *		   from original function if no changes?
  */
+
+#define DEFAULT_PLAYERMODEL_S	"padman"
+#define RENAMED_PLAYERNAME_S	"RenamedPlayer"
+
 void BE_ClientUserinfoChanged( int clientNum ) {
 	char userinfo[MAX_INFO_STRING];
 	qboolean changed = qfalse;
@@ -243,6 +250,9 @@ void BE_ClientUserinfoChanged( int clientNum ) {
 		trap_SetUserinfo( clientNum , userinfo );
 	}
 }
+
+#undef DEFAULT_PLAYERMODEL_S
+#undef RENAMED_PLAYERNAME_S
 
 
 /*
@@ -404,6 +414,9 @@ static void DisableProtection( gentity_t *ent ) {
 /*
  *	Called once a second for each alive client.
  */
+
+#define MAX_CAMPTIME    20
+
 void BE_ClientTimerActions( gentity_t* ent ) {
 	vec3_t	position;
 	int counter, remaining;
@@ -481,6 +494,8 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 		}
 	}
 }
+
+#undef MAX_CAMPTIME
 
 
 /*
@@ -680,9 +695,9 @@ static void ParseSecrets( char *buff ) {
 		}
 
 		if ( Q_stricmp( token, "secret" ) == 0 ) {
-			if ( numSecrets >= MAX_SECRETS ) {
-				G_Printf( BE_LOG_PREFIX"Secrets limit of %d exceeded.\n",
-				          MAX_SECRETS );
+			if ( numSecrets >= ARRAY_LEN( secretNames ) ) {
+				G_Printf( BE_LOG_PREFIX"Secrets limit of %ld exceeded.\n",
+				          ARRAY_LEN( secretNames ) );
 				break;
 			}
 
@@ -691,12 +706,11 @@ static void ParseSecrets( char *buff ) {
 			target = secretNames[ numSecrets++ ];
 			token = COM_Parse( &buff );
 			if ( !*token ) {
-				COM_ParseWarning( "Missing target name for secret." );
+	    		COM_ParseWarning( "Missing target name for secret." );
 				break;
 			}
 
-			/* FIXME: Use sizeof(). */
-			Q_strncpyz( target, token, MAX_TARGETNAME );
+			Q_strncpyz( target, token, sizeof( secretNames[0] ) );
 		}		
 	}
 

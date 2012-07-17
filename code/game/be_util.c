@@ -259,6 +259,10 @@ qboolean fileExists( const char *path ) {
 	Helper function to fix models like "padman/doesntexist"
 	which basically use a non existing skin.
 */
+
+#define DEFAULT_PLAYERSKIN_S	"default"
+#define PLAYERMODEL_PATH_S		"models/wop_players/"
+
 qboolean validPlayermodel( const char *model, const char *headModel ) {
 	char base[MAX_QPATH];
 	char *skin;
@@ -301,6 +305,9 @@ qboolean validPlayermodel( const char *model, const char *headModel ) {
 
 	return qtrue;	
 }
+
+#undef DEFAULT_PLAYERSKIN_S
+#undef PLAYERMODEL_PATH_S
 
 
 /*
