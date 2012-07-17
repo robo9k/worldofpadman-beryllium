@@ -740,7 +740,8 @@ static void BE_LoadSecrets( void ) {
 	
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		BE_Printf( BE_LOG_PREFIX S_COLOR_BOLD"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_ITALIC"Could not load secrets from \""
+                   S_COLOR_BOLD"%s"S_COLOR_ITALIC"\".\n", filename );
 		return;
 	}
 
@@ -824,7 +825,8 @@ void BE_WriteBans( void ) {
 
 	trap_FS_FOpenFile( filename, &f, FS_WRITE );
 	if ( !f ) {
-		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not write bans to \""
+                S_COLOR_BOLD"%s"S_COLOR_NEGATIVE"\".\n", filename );
 		return;	
 	}
 
@@ -884,7 +886,7 @@ void BE_LoadBans( void ) {
 
 	filename = be_banFile.string;
 	if ( !filename[0] ) {
-		BE_Printf( BE_LOG_PREFIX"%s not set,"
+		BE_Printf( BE_LOG_PREFIX"%s not set, "
 		          "will not read banlist from disk.\n",
 				  NameForCvar( &be_banFile ) );
 		return;
@@ -892,7 +894,9 @@ void BE_LoadBans( void ) {
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\".\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not read bans from \""
+                   S_COLOR_BOLD"%s"S_COLOR_NEGATIVE"\".\n",
+                   filename );
 		return;	
 	}
 
@@ -1053,8 +1057,9 @@ static void BE_LoadEntities( const char *mapname ) {
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\", "
-		          "will fallback to .bsp entities.\n", filename );
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not load entities from \""
+                   S_COLOR_BOLD"%s"S_COLOR_NEGATIVE"\".\n",
+		           filename );
 		return;	
 	}
 
@@ -1069,7 +1074,7 @@ static void BE_LoadEntities( const char *mapname ) {
 	pWorldspawn[len] = '\0';
 	trap_FS_FCloseFile( f );
 
-	BE_Printf( BE_LOG_PREFIX S_COLOR_BOLD"Loaded entities from \"%s\".\n", filename );
+	BE_Printf( BE_LOG_PREFIX"Loaded entities from \"%s\".\n", filename );
 }
 
 
