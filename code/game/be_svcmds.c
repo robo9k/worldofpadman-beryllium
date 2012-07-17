@@ -260,8 +260,9 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	Basically the same as clientkick, but can provide a reason to the kicked client
 */
 static void BE_Svcmd_DropClient_f( void ) {
-	char clientStr[3], reason[MAX_STRING_CHARS];
+	char clientStr[3], reason[MAX_STRING_CHARS] = { "" };
 	int clientNum;
+    gentity_t *ent;
 
 
 	if ( trap_Argc() < 2 ) {
@@ -288,15 +289,14 @@ static void BE_Svcmd_DropClient_f( void ) {
 		return;
 	}
 
-
-	Q_strncpyz( reason, "was kicked", sizeof( reason ) );
 	if ( trap_Argc() > 2 ) {
-		Com_sprintf( reason, sizeof( reason ), "was kicked: %s", ConcatArgs( 2 ) );
+        Q_strncpyz( reason, ConcatArgs( 2 ), sizeof( reason ) );
 	}
 
 	/* TODO: Also log this? */
 	
-	trap_DropClient( clientNum, reason );	
+    ent = &g_entities[ clientNum ];
+	G_DropClient( ent, reason );	
 }
 
 

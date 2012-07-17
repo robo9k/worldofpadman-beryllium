@@ -759,3 +759,21 @@ qboolean IsSpectator( gclient_t *client ) {
 	return ( ( TEAM_SPECTATOR == client->sess.sessionTeam ) || LPSDeadSpec( client ) );
 }
 
+
+/*
+ * Drops a client with an optional reason
+ */
+void G_DropClient( gentity_t *ent, const char *reason ) {
+    char buff[128];
+
+    G_assert( ent != NULL );
+
+    if ( ( NULL == reason ) || ( strlen( reason ) < 1 ) ) {
+        Q_strncpyz( buff, "was kicked.", sizeof( buff ) );
+    }
+    else {
+        Com_sprintf( buff, sizeof( buff ), "was kicked: %s.", reason );
+    }
+
+    trap_DropClient( ( ent - g_entities ), buff );
+}

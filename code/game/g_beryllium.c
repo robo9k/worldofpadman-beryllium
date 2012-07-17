@@ -275,7 +275,7 @@ static qboolean GUIDBanned( const char *guid ) {
  *	rejected with our return value.
 */
 /*
- * FIXME: Call trap_DropClient() rather than having them trying to
+ * FIXME: Call G_DropClient() rather than having them trying to
  *        connect continously?
  */
 char *BE_ClientConnect( int clientNum, qboolean firstTime,
@@ -470,7 +470,7 @@ void BE_ClientTimerActions( gentity_t* ent ) {
 	/* TODO: Print a warning. */
 	if ( be_checkPings.integer
 	     && ( ent->client->pers.connectionCounter > be_checkPings.integer ) ) {
-		trap_DropClient( ( ent - g_entities ), "Bad connection" );
+		G_DropClient( ent, "bad connection" );
 	}
 
 	/* Respawn protection timeout */

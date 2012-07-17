@@ -113,5 +113,7 @@ char *NameForCvar( const vmCvar_t *vmCvar );
 
 qboolean IsSpectator( gclient_t *client );
 
+void G_DropClient( gentity_t *ent, const char *reason );
+
 #endif
 
