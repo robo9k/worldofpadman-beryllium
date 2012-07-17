@@ -112,7 +112,7 @@ qboolean BE_ConCmd( const char *cmd ) {
 */
 static void BE_Svcmd_Cancelvote_f( void ) {
 	if ( !level.voteTime && !level.voteExecuteTime ) {
-		G_Printf( "No vote in progress.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"No vote in progress.\n" );
 		return;
 	}
 
@@ -126,7 +126,7 @@ static void BE_Svcmd_Cancelvote_f( void ) {
 	BE_CheckVote();
 
 	/* TODO: Also log this? */
-	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
+	SendCmd( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Vote was canceled.\n" );
 }
 
 
@@ -146,13 +146,13 @@ static void BE_Svcmd_ShuffleTeams_f( void ) {
 
 
 	if ( g_gametype.integer < GT_TEAM ) {
-		G_Printf( "Not in a team gametype." );
+		BE_Printf( S_COLOR_NEGATIVE"Not in a team gametype." );
 		return;
 	}
 
 
 	/* TODO: Also log this? */
-	SendClientCommand( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
+	SendCmd( CID_ALL, CCMD_PRT, S_COLOR_ITALIC"Shuffling teams ..\n" );
 
 	/* Offset to put "best"/first player in currently inferior team */
 	p = ( ( level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE] ) ? 1 : 0 );
@@ -208,20 +208,25 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 
 	if ( trap_Argc() < 3 ) {
 		/* TODO: Move counting of arguments and help into BE_ConCmd() ? */
-		G_Printf( "Usage: rename <cid> <newname>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: rename <cid> <newname>\n" );
 		return;
 	}
+
+    /*
+     * TODO: Create a function similar to GetConnectedClientNum().
+     *       Also see note about connected clients below.
+     */
 
 	trap_Argv( 1, clientStr, sizeof( clientStr ) );
 
 	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"You must supply a client number.\n" );
 		return;
 	}
 
 	clientNum = atoi( clientStr );
 	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Not a valid client number.\n" );
 		return;
 	}
 
@@ -262,34 +267,21 @@ static void BE_Svcmd_RenamePlayer_f( void ) {
 	Basically the same as clientkick, but can provide a reason to the kicked client
 */
 static void BE_Svcmd_DropClient_f( void ) {
-	char clientStr[3], reason[MAX_STRING_CHARS] = { "" };
+	char err[128], reason[MAX_STRING_CHARS] = { "" };
 	int clientNum;
     gentity_t *ent;
 
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: dropclient <cid> [reason]\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: dropclient <cid> [reason]\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	/* TODO: Shall we allow world here? */
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
 	if ( trap_Argc() > 2 ) {
         Q_strncpyz( reason, ConcatArgs( 2 ), sizeof( reason ) );
@@ -313,7 +305,7 @@ static void BE_Svcmd_Say_f( void ) {
 
 	if ( Q_stricmp( "ssay", arg ) == 0 ) {
 		if ( trap_Argc() < 2 ) {
-			G_Printf( "Usage: ssay <text>\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Usage: ssay <text>\n" );
 			return;
 		}
 
@@ -325,7 +317,7 @@ static void BE_Svcmd_Say_f( void ) {
 		int i;
 
 		if ( trap_Argc() < 3 ) {
-			G_Printf( "Usage: ssay_team <team> <text>\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Usage: ssay_team <team> <text>\n" );
 			return;
 		}
 
@@ -333,16 +325,16 @@ static void BE_Svcmd_Say_f( void ) {
 		team = TeamFromString( arg );
 
 		if ( TEAM_NUM_TEAMS == team ) {
-			G_Printf( "Unknown team.\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Unknown team name.\n" );
 			return;
 		}
 
 		if ( ( g_gametype.integer < GT_TEAM ) && ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) ) {
-			G_Printf( "Not a valid team in non-team gametype.\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Not a valid team in non-team gametype.\n" );
 			return;		
 		}
 		else if ( TEAM_FREE == team ) {
-			G_Printf( "Not a valid team in team gametype.\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Not a valid team in team gametype.\n" );
 			return;
 		}
 
@@ -355,7 +347,7 @@ static void BE_Svcmd_Say_f( void ) {
 			}
 		}
 		if ( i == level.maxclients ) {
-			G_Printf( "No players in desired team.\n" );
+			BE_Printf( S_COLOR_BOLD"No players in desired team.\n" );
 			return;
 		}
 
@@ -363,31 +355,21 @@ static void BE_Svcmd_Say_f( void ) {
 		G_Say( NULL, ( g_entities + i ), SAY_TEAM, ConcatArgs( 2 ) );
 	}
 	else if ( Q_stricmp( "stell", arg ) == 0 ) {
+        char err[128];
 		int clientNum;
 
 		if ( trap_Argc() < 3 ) {
-			G_Printf( "Usage: stell <cid> <text>\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Usage: stell <cid> <text>\n" );
 			return;
 		}
 
-		trap_Argv( 1, arg, sizeof( arg ) );
+        clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+        if ( CID_NONE == clientNum ) {
+            BE_Printf( "%s\n", err );
+            return;
+        }
 
-		if ( !Q_isanumber( arg ) ) {
-			G_Printf( "You must supply a client number.\n" );
-			return;
-		}
-
-
-		clientNum = atoi( arg );
-		/* NOTE: Don't allow world here. say/print should be used instead */
-		if ( !ValidClientID( clientNum, qfalse ) ) {
-			G_Printf( "Not a valid client number.\n" );
-			return;
-		}
-
-		/* TODO: Check for CON_CONNECTED */
-
-		G_Say( NULL, ( g_entities + clientNum ), SAY_TELL, ConcatArgs( 2 ) );
+    	G_Say( NULL, ( g_entities + clientNum ), SAY_TELL, ConcatArgs( 2 ) );
 	}
 	else {
 		G_Error( "Be_Svmcmd_Say_f: Unknown mode %s!\n", arg );
@@ -421,20 +403,21 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 	}
 
 	if ( trap_Argc() < 3 ) {
-		G_Printf( "Usage: %s <cid> <text>\n", arg );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: %s <cid> <text>\n", arg );
 		return;
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
 
 	if ( !Q_isanumber( arg ) ) {
-		G_Printf( "You must supply a client number.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"You must supply a client number.\n" );
 		return;
 	}
 
 	clientNum = atoi( arg );
+    /* allowWorld is what makes this different from GetConnectedClientNum() */
 	if ( !ValidClientID( clientNum, qtrue ) ) {
-		G_Printf( "No a valid client number.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"No a valid client number.\n" );
 		return;
 	}
 
@@ -447,8 +430,7 @@ static void BE_Svcmd_ClientCommand_f( void ) {
 		Q_strncpyz( arg, ConcatArgs( 2 ), sizeof( arg ) );
 	}
 
-
-	SendClientCommand( clientNum, cmd, arg );
+	SendCmd( clientNum, cmd, arg );
 }
 
 
@@ -478,6 +460,7 @@ static void BE_Svcmd_LogPrint_f( void ) {
 	Reloads guid bans from disk, dropping current ones in memory
 */
 static void BE_Svcmd_RehashGUIDs_f( void ) {
+    BE_Printf( "Reloading GUIDs from disk.\n" );
 	BE_LoadBans();
 }
 
@@ -489,9 +472,9 @@ static void BE_Svcmd_ListGUIDs_f( void ) {
 	int index;
 
 	for ( index = 0; index < numGUIDBans; index++ ) {
-		G_Printf( "Ban #%d: %s\n", index, guidBans[ index ].guid );
+		BE_Printf( "Ban #%d: %s\n", index, guidBans[ index ].guid );
 	}
-	G_Printf( "Total %d GUID bans.\n", index );
+	BE_Printf( "Total "S_COLOR_BOLD"%d"S_COLOR_DEFAULT" GUID bans.\n", index );
 }
 
 
@@ -502,9 +485,10 @@ static void BE_Svcmd_BanGUID_f( void ) {
 	char		arg[MAX_STRING_CHARS];
 	int			clientNum;
 	guidBan_t	ban;
+    banNum_t    banNum;
 
 	if ( trap_Argc() != 2 ) {
-		G_Printf( "Usage: banguid <cid|guid>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: banguid <cid|guid>\n" );
 		return;
 	}
 
@@ -512,7 +496,7 @@ static void BE_Svcmd_BanGUID_f( void ) {
 
 	if ( strlen( arg ) == ( GUIDSTRMAXLEN - 1 ) ) {
 		if ( !validGUID( arg ) ) {
-			G_Printf( "Not a valid GUID!\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Not a valid GUID!\n" );
 			return;
 		}
 
@@ -521,39 +505,31 @@ static void BE_Svcmd_BanGUID_f( void ) {
 	else {
 		gentity_t *ent;
 
-		if ( !Q_isanumber( arg ) ) {
-			G_Printf( "You must supply a client number!\n" );
-			return;
-		}
-
-		clientNum = atoi( arg );
-
-		if ( !ValidClientID( clientNum, qfalse ) ) {
-			G_Printf( "No a valid client number!\n" );
-			return;
-		}
-
-		if ( level.clients[ clientNum ].pers.connected == CON_DISCONNECTED ) {
-			G_Printf( "Client not connected!\n" );
-			return;
-		}
+        /* Abuse otherwise unused array */
+        clientNum = GetConnectedClientNum( 1, arg, sizeof( arg ) );
+        if ( CID_NONE == clientNum ) {
+            BE_Printf( "%s\n", arg );
+            return;
+        }
 
 		ent = &( g_entities[ clientNum ] );
 		if ( ent->r.svFlags & SVF_BOT ) {
-			G_Printf( "Can not ban bots!\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Can not ban bots!\n" );
 			return;
 		}
 
 		Q_strncpyz( ban.guid, level.clients[ clientNum ].pers.guid, sizeof( ban.guid ) );
 	}
 
-	if ( !AddBan( ban ) ) {
-		G_Printf( "Error adding guid ban!\n" );
+    banNum = AddBan( ban );
+	if ( -1 == banNum ) {
+		BE_Printf( S_COLOR_NEGATIVE"Error adding guid ban!\n" );
 		return;
 	}
 
 	// TODO: Print info if already present?
-	G_Printf( "Added guid ban.\n" );
+	BE_Printf( S_COLOR_POSITIVE"Added guid ban "S_COLOR_CYAN
+               "#%d %s"S_COLOR_POSITIVE".\n", banNum, ban.guid );
 
 	// TODO: Kick client(s) if connected?
 
@@ -568,9 +544,10 @@ static void BE_Svcmd_DelGUID_f( void ) {
 	char arg[MAX_STRING_CHARS];
 	int banNum;
 	int index;
+    guidBan_t ban;
 
 	if ( trap_Argc() != 2 ) {
-		G_Printf( "Usage: delguid <id|guid>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: delguid <id|guid>\n" );
 		return;
 	}
 
@@ -581,12 +558,14 @@ static void BE_Svcmd_DelGUID_f( void ) {
 		banNum = 0;
 		while ( index < numGUIDBans ) {
 			if ( Q_stricmp( guidBans[ index ].guid, arg ) == 0 ) {
-				if ( !DeleteBan( index ) ) {
-					G_Printf( "Could not delete guid ban %d!\n", banNum );
+				if ( !DeleteBan( index, &ban ) ) {
+					BE_Printf( S_COLOR_NEGATIVE"Could not delete guid ban #%d!\n", index );
 					// FIXME: G_Error()?
 					return;
 				}
 				else {
+                    BE_Printf( S_COLOR_POSITIVE"Deleted guid ban "S_COLOR_BOLD
+                       "#%d %s"S_COLOR_POSITIVE".\n", index, ban.guid );
 					banNum++;
 				}
 			}
@@ -594,34 +573,32 @@ static void BE_Svcmd_DelGUID_f( void ) {
 				index++;
 			}
 		}
-		if ( banNum > 0 ) {
-			G_Printf( "Deleted guid ban.\n" );
-		}
-		else {
-			G_Printf( "GUID not in list.\n" );
+		if ( 0 == banNum ) {
+			BE_Printf( S_COLOR_NEGATIVE"GUID not in list.\n" );
 			return;
 		}
 	}
 	else {
 		if ( !Q_isanumber( arg ) ) {
-			G_Printf( "You must supply a guid ban number!\n" );
+			BE_Printf( S_COLOR_NEGATIVE"You must supply a guid ban number!\n" );
 			return;
 		}
 
 		banNum = atoi( arg );
 
 		if ( ( banNum < 0 ) || ( banNum >= numGUIDBans ) ) {
-			G_Printf( "Invalid guid ban id %d!\n", banNum );
+			BE_Printf( S_COLOR_NEGATIVE"Invalid guid ban id #%d!\n", banNum );
 			return;
 		}
 
-		if ( !DeleteBan( banNum ) ) {
-			G_Printf( "Could not delete guid ban %d!\n", banNum );
+		if ( !DeleteBan( banNum, &ban ) ) {
+			BE_Printf( S_COLOR_NEGATIVE"Could not delete guid ban #%d!\n", banNum );
 			// FIXME: Continue, G_Error(), ..?
 			return;
 		}
 		
-		G_Printf( "Deleted guid ban %d.\n", banNum );
+		BE_Printf( S_COLOR_POSITIVE"Deleted guid ban "S_COLOR_BOLD
+                   "#%d %s"S_COLOR_POSITIVE".\n", banNum, ban.guid );
 	}
 
 	BE_WriteBans();
@@ -635,7 +612,7 @@ static void BE_Svcmd_FlushGUIDs_f( void ) {
 	numGUIDBans = 0;
 	BE_WriteBans();
 
-	G_Printf( "All GUID bans have been deleted.\n" );
+	BE_Printf( S_COLOR_POSITIVE"All GUID bans have been deleted.\n" );
 }
 
 
@@ -644,45 +621,31 @@ static void BE_Svcmd_FlushGUIDs_f( void ) {
 	TODO: Once forced by admin, disallow changes by player.
 */
 static void BE_Svcmd_SetHandicap_f( void ) {
-	char	clientStr[3], userinfo[MAX_INFO_STRING];
+	char	err[128], userinfo[MAX_INFO_STRING];
 	int		clientNum, handicap;
 
-
-	if ( trap_Argc() < 3 ) {
-		G_Printf( "Usage: handicap <cid> <handicap>\n" );
+    if ( trap_Argc() < 3 ) {
+		BE_Printf( S_COLOR_NEGATIVE"Usage: handicap <cid> <handicap>\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
-
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
 	/* Abuse so far unused array */
 	trap_Argv( 2, userinfo, sizeof( userinfo ) );
 
 	if ( !Q_isanumber( userinfo ) ) {
-		G_Printf( "You must supply a handicap number.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"You must supply a handicap number.\n" );
 		return;
 	}
 
 	handicap = atoi( userinfo );
 	if ( ( handicap < 1 ) || ( handicap > 100 ) ) {
-		G_Printf( "Handicap must be in range 1-100.\n");
+		BE_Printf( S_COLOR_NEGATIVE"Handicap must be in range 1-100.\n");
 		return;
 	}
 
@@ -704,45 +667,32 @@ static void BE_Svcmd_SetHandicap_f( void ) {
 	Forces the player into the given team, regardless of any limits.
 */
 static void BE_Svcmd_SetTeam_f( void ) {
-	char	clientStr[3], teamStr[16];
+	char	err[128], teamStr[16];
 	int		clientNum;
 	team_t	team;
 
 
 	if ( trap_Argc() < 3 ) {
-		G_Printf( "Usage: forceteam <cid> <team>\n" );
+		BE_Printf( S_COLOR_RED"Usage: forceteam <cid> <team>\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
-
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
 	trap_Argv( 2, teamStr, sizeof( teamStr ) );
 
 	team = TeamFromString( teamStr );
 	if ( TEAM_NUM_TEAMS == team ) {
-		G_Printf( "Not a valid team.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Not a valid team name.\n" );
 		return;
 	}
 
 	if ( ( g_gametype.integer < GT_TEAM ) && ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) ) {
-		G_Printf( "Not a valid team.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Not a valid team.\n" );
 		return;		
 	} 
 
@@ -760,7 +710,7 @@ static void BE_Svcmd_LockTeam_f( void ) {
 
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: lockteam <team>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: lockteam <team>\n" );
 		return;
 	}
 
@@ -768,19 +718,19 @@ static void BE_Svcmd_LockTeam_f( void ) {
 
 	team = TeamFromString( teamStr );
 	if ( TEAM_NUM_TEAMS == team ) {
-		G_Printf( "Not a valid team.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Not a valid team.\n" );
 		return;
 	}
 
 	if ( g_gametype.integer < GT_TEAM ) {
 		if ( ( TEAM_RED == team ) || ( TEAM_BLUE == team ) ) {
-			G_Printf( "Not a valid team in non-team gametype.\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Not a valid team in non-team gametype.\n" );
 			return;
 		}
 	}
 	else {
 		if ( ( TEAM_FREE == team ) ) {
-			G_Printf( "Not a valid team in team gametype.\n" );
+			BE_Printf( S_COLOR_NEGATIVE"Not a valid team in team gametype.\n" );
 			return;
 		}
 	}
@@ -789,10 +739,10 @@ static void BE_Svcmd_LockTeam_f( void ) {
 
 	lock = !level.teamLocked[team];
 	if ( lock ) {
-		G_Printf( "Locking team.\n" );
+		BE_Printf( "Locking team.\n" );
 	}
 	else {
-		G_Printf( "Unlocking team.\n" );
+		BE_Printf( "Unlocking team.\n" );
 	}
 
 	level.teamLocked[team] = lock;
@@ -803,39 +753,25 @@ static void BE_Svcmd_LockTeam_f( void ) {
 	Creates a command to be run by the specified client.
 */
 static void BE_Svcmd_RunAs_f( void ) {
-	char	clientStr[3], arg[MAX_STRING_CHARS];
+	char	err[128], arg[MAX_STRING_CHARS];
 	int		clientNum;
 
 
 	if ( trap_Argc() < 3 ) {
-		G_Printf( "Usage: runas <cid> <command>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: runas <cid> <command>\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
 	/* NOTE: We can not validate the command in any way.
 	         It'd be possible to filter /disconnect and such, but well..
 	*/
-	/* Create a local copy */
 	Com_sprintf( arg, sizeof( arg ), "%s", ConcatArgs( 2 ) );
-
 	ExecuteClientCommand( clientNum, arg );	
 }
 
@@ -848,14 +784,14 @@ static void BE_Svcmd_PlaySound_f( void ) {
 	int soundIndex;
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: sound <filename>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: sound <filename>\n" );
 		return;
 	}
 
 	trap_Argv( 1, arg, sizeof( arg ) );
 
 	if ( !fileExists( arg ) ) {
-		G_Printf( "File not found.\n" );
+		BE_Printf( S_COLOR_NEGATIVE"File not found.\n" );
 		return;
 	}
 
@@ -898,34 +834,21 @@ static void BE_Svcmd_Beryllium_f( void ) {
 	Sends a cvar query to a client
 */
 static void BE_Svcmd_QueryCvar_f( void ) {
-	char	clientStr[3], cmd[MAX_STRING_CHARS];
+	char	err[128], cmd[MAX_STRING_CHARS];
 	int		clientNum;
 
 	if ( trap_Argc() < 3 ) {
-		G_Printf( "Usage: querycvar <cid> <cvar>\n" );
+		BE_Printf( S_COLOR_NEGATIVE"Usage: querycvar <cid> <cvar>\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
 	Com_sprintf( cmd, sizeof( cmd ), "qc %s", ConcatArgs( 2 ) );
-
 	trap_SendServerCommand( clientNum, cmd );
 }
 
@@ -977,7 +900,9 @@ static void BE_Svcmd_Mapinfo_f( void ) {
 
     tmp = G_GetArenaInfoByMap( mapname );
     if ( NULL == tmp ) {
-        G_Printf( "No information for map \"%s\".\n", mapname );
+        BE_Printf( S_COLOR_NEGATIVE"No information for map "S_COLOR_DEFAULT"\""
+                   S_COLOR_BOLD"%s"S_COLOR_DEFAULT"\""S_COLOR_NEGATIVE".\n",
+                   mapname );
         return;
     }
     Q_strncpyz( info, tmp, sizeof( info ) );
@@ -1010,6 +935,6 @@ static void BE_Svcmd_Mapinfo_f( void ) {
     Q_strcat( buf, sizeof( buf ),
               va( S_COLOR_BLUE"Gametypes"S_COLOR_DEFAULT": %s\n", gametypes ) );
 
-    G_Printf( "%s", buf );
+    BE_Printf( "%s", buf );
 }
 

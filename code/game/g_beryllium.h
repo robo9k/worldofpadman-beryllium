@@ -75,6 +75,7 @@ enum {
 	BE_SIMPLENAMES	= 2
 };
 
+typedef signed int banNum_t;
 
 extern int			numGUIDBans;
 extern guidBan_t	guidBans[MAX_GUIDBANS];
@@ -175,8 +176,8 @@ qboolean BE_HideChat( gentity_t *ent, gentity_t *target, int mode, int color, co
 
 void BE_LoadBans( void );
 void BE_WriteBans( void );
-qboolean AddBan( guidBan_t ban );
-qboolean DeleteBan( unsigned int index );
+banNum_t AddBan( guidBan_t ban );
+qboolean DeleteBan( banNum_t banNum, guidBan_t *ban );
 
 /* See NOTE in implementation */
 qboolean G_SetTeam( gentity_t *ent, char *s, qboolean force );

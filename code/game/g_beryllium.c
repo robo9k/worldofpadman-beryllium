@@ -761,45 +761,48 @@ static void BE_LoadSecrets( void ) {
 /*
  *	Adds a new ban to memory list.
  */
-qboolean AddBan( guidBan_t ban ) {
+banNum_t AddBan( guidBan_t ban ) {
 	int index;
 
 	if ( numGUIDBans > ARRAY_LEN( guidBans ) ) {
-		return qfalse;
+		return -1;
 	}
 
 	/* Check whether it's already in list. */
 	for ( index = 0; index < numGUIDBans; index++ ) {
 		if ( Q_stricmp( guidBans[ index ].guid, ban.guid ) == 0 ) {
-			return qtrue;
+			return index;
 		}
 	}
 
 	Q_strncpyz( guidBans[ numGUIDBans ].guid, ban.guid,
 	            sizeof( guidBans[ numGUIDBans ].guid ) );
-	numGUIDBans++;
-
-	return qtrue;
+	return numGUIDBans++;
 }
 
 
 /*
  *	Deletes the given guid ban from memory.
  */
-qboolean DeleteBan( unsigned int index ) {
-	if ( index == ( numGUIDBans - 1 ) ) {
+qboolean DeleteBan( banNum_t banNum, guidBan_t *ban ) {
+    qboolean found = qfalse;
+
+    G_assert( NULL != ban );
+
+	if ( banNum == ( numGUIDBans - 1 ) ) {
+        *ban = guidBans[banNum];
+        found = qtrue;
 		numGUIDBans--;
-		return qtrue;
 	}
-	else if ( index < ( ARRAY_LEN( guidBans ) - 1 ) ) {
-		memmove( ( guidBans + index ), ( guidBans + index + 1 ),
-		         ( ( numGUIDBans - index - 1 ) * sizeof( *guidBans ) ) );
+	else if ( banNum < ( ARRAY_LEN( guidBans ) - 1 ) ) {
+        *ban = guidBans[banNum];
+        found = qtrue;
+		memmove( ( guidBans + banNum ), ( guidBans + banNum + 1 ),
+		         ( ( numGUIDBans - banNum - 1 ) * sizeof( *guidBans ) ) );
 		numGUIDBans--;
-		return qtrue;
 	}
 
-	/* Not present or invalid index. */
-	return qfalse;
+    return found;
 }
 
 
