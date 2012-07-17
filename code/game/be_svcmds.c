@@ -934,32 +934,20 @@ static void BE_Svcmd_QueryCvar_f( void ) {
  * Kills a player.
  */
 static void BE_Svcmd_KillPlayer_f( void ) {
-	char	    clientStr[3];
+	char	    err[128];
 	int		    clientNum;
     gentity_t   *ent;
 
 	if ( trap_Argc() < 2 ) {
-		G_Printf( "Usage: kill <cid>\n" );
+		G_Printf( S_COLOR_NEGATIVE"Usage: kill <cid>\n" );
 		return;
 	}
 
-	trap_Argv( 1, clientStr, sizeof( clientStr ) );
-
-	if ( !Q_isanumber( clientStr ) ) {
-		G_Printf( "You must supply a client number.\n" );
-		return;
-	}
-
-	clientNum = atoi( clientStr );
-	if ( !ValidClientID( clientNum, qfalse ) ) {
-		G_Printf( "Not a valid client number.\n" );
-		return;
-	}
-
-	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
-		G_Printf( "Client not connected.\n" );
-		return;
-	}
+    clientNum = GetConnectedClientNum( 1, err, sizeof( err ) );
+    if ( CID_NONE == clientNum ) {
+        BE_Printf( "%s\n", err );
+        return;
+    }
 
     ent = &g_entities[ clientNum ];
     G_Damage( ent, NULL, NULL, NULL, NULL, 3000, 0, MOD_UNKNOWN );

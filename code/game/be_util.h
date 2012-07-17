@@ -124,5 +124,7 @@ qboolean IsSpectator( gclient_t *client );
 
 void G_DropClient( gentity_t *ent, const char *reason );
 
+clientNum_t GetConnectedClientNum( int argv, char *buf, size_t bufsize );
+
 #endif
 

@@ -803,3 +803,33 @@ void G_DropClient( gentity_t *ent, const char *reason ) {
 
     trap_DropClient( ( ent - g_entities ), buff );
 }
+
+
+/*
+ * Tries to obtain the client id of a connected client.
+ */
+clientNum_t GetConnectedClientNum( int argv, char *buf, size_t bufsize ) {
+    char	    clientStr[3];
+	int		    clientNum;
+
+    trap_Argv( argv, clientStr, sizeof( clientStr ) );
+
+	if ( !Q_isanumber( clientStr ) ) {
+        Q_strncpyz( buf, S_COLOR_NEGATIVE"You must supply a client number, not a name.", bufsize );
+		return CID_NONE;
+	}
+
+	clientNum = atoi( clientStr );
+	if ( !ValidClientID( clientNum, qfalse ) ) {
+        Q_strncpyz( buf, S_COLOR_NEGATIVE"Not a valid client number.", bufsize );
+		return CID_NONE;
+	}
+
+	if ( CON_DISCONNECTED == level.clients[clientNum].pers.connected ) {
+		Q_strncpyz( buf, S_COLOR_NEGATIVE"Client not connected.", bufsize );
+		return CID_NONE;
+	}
+
+    return clientNum;
+}
+
