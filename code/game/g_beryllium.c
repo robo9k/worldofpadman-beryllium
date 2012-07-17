@@ -1053,7 +1053,7 @@ static void BE_LoadEntities( const char *mapname ) {
 
 	len = trap_FS_FOpenFile( filename, &f, FS_READ );
 	if ( !f ) {
-		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\","
+		BE_Printf( BE_LOG_PREFIX S_COLOR_NEGATIVE"Could not open \"%s\", "
 		          "will fallback to .bsp entities.\n", filename );
 		return;	
 	}
