@@ -48,6 +48,8 @@ static void G_PredictPlayerClipVelocity( vec3_t in, vec3_t normal, vec3_t out ) 
 	VectorMA( in, -backoff, normal, out );
 }
 
+#undef OVERCLIP
+
 
 /*
 ========================
@@ -219,6 +221,8 @@ static qboolean G_PredictPlayerSlideMove( gentity_t *ent, float frametime ) {
 	return ( bumpcount != 0 );
 }
 
+#undef MAX_CLIP_PLANES
+
 
 /*
 ============================
@@ -275,6 +279,8 @@ static void G_PredictPlayerStepSlideMove( gentity_t *ent, float frametime ) {
 		G_PredictPlayerClipVelocity( ent->s.pos.trDelta, trace.plane.normal, ent->s.pos.trDelta );
 	}
 }
+
+#undef STEPSIZE
 
 
 /*

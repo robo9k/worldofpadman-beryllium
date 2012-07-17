@@ -20,10 +20,6 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #ifndef _BE_STORAGE_H
 #define _BE_STORAGE_H
 
-
-#define STORAGE_CVARNAME	"storage"
-
-
 void BE_InitClientStorageData( gclient_t *client );
 
 void BE_WriteClientStorageData( const gclient_t *client );

@@ -50,6 +50,9 @@ void BE_InitClientStorageData( gclient_t *client ) {
 /*
 	Called on game shutdown
 */
+
+#define STORAGE_CVARNAME "storage"
+
 void BE_WriteClientStorageData( const gclient_t *client ) {
 	char	var[32];
 	char	buff[MAX_STRING_CHARS] = { "" };
@@ -104,6 +107,8 @@ void BE_ReadClientStorageData( gclient_t *client ) {
 	stor->firstTime = strtol( endp, &endp, 10 );
 	stor->sawGreeting = strtol( endp, &endp, 10 );
 }
+
+#undef STORAGE_CVARNAME
 
 
 /*

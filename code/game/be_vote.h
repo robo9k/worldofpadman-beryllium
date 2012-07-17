@@ -20,8 +20,6 @@ along with this program.  If not, see <http://gnu.org/licenses/>.
 #ifndef _BE_VOTE_H
 #define _BE_VOTE_H
 
-#define VOTE_EXECUTEDELAY 3000
-
 
 typedef enum {
 	VOTEID_NONE,

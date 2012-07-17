@@ -418,6 +418,7 @@ static void G_CountVotingClients( void ) {
 	Beryllium's replacement for CheckVote() in g_main.c
 	Determines whether a vote passed or failed and execute it
 */
+#define VOTE_EXECUTEDELAY 3000
 void BE_CheckVote( void ) {
 	if ( level.voteExecuteTime && ( level.voteExecuteTime < level.time ) ) {
 		level.voteExecuteTime = 0;
@@ -461,6 +462,7 @@ void BE_CheckVote( void ) {
 	trap_SetConfigstring( CS_VOTE_TIME, "" );
 	trap_SetConfigstring( CS_VOTE_STRING, "" );
 }
+#undef VOTE_EXECUTEDELAY
 
 
 /*

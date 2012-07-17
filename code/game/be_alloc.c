@@ -19,13 +19,9 @@ along with this program.	If not, see <http://gnu.org/licenses/>.
 
 #include "g_local.h"
 
-/* 512K ought to be enough for anybody */
-# define	POOL_SIZE ( 2048 * 1024 )
 
 /* Any unlikely to be used value */
 #define	FREEMEMCOOKIE	((int)0xDEADBE3F)
-/* Round to 32 bytes */
-#define	ROUNDBITS		31u
 
 typedef struct freeMemNode_s {
 	/* Size of ROUNDBITS */
@@ -34,7 +30,10 @@ typedef struct freeMemNode_s {
 	struct freeMemNode_s *prev, *next;
 } freeMemNode_t;
 
+/* 512K ought to be enough for anybody */
+#define	POOL_SIZE   ( 2048 * 1024 )
 static char				memory_pool[POOL_SIZE];
+#undef POOL_SIZE
 static freeMemNode_t	*freeHead;
 static int				freeMem;
 
@@ -43,6 +42,10 @@ static int				freeMem;
 	Find a free block and allocate.
 	Does two passes, attempts to fill same-sized free slot first.
 */
+
+/* Round to 32 bytes */
+#define	ROUNDBITS   31u
+
 void *BE_Alloc( unsigned int size ) {
 	freeMemNode_t *fmn, *prev, *next, *smallest;
 	unsigned int allocSize, smallestSize;
@@ -55,7 +58,7 @@ void *BE_Alloc( unsigned int size ) {
 
 	smallest = NULL;
 	/* Guaranteed not to miss any slots :) */
-	smallestSize = ( POOL_SIZE + 1 );
+	smallestSize = ( sizeof( memory_pool ) + 1 );
 	for( fmn = freeHead; fmn; fmn = fmn->next ) {
 		if ( fmn->cookie != FREEMEMCOOKIE ) {
 			G_Error( "BE_Alloc: Memory corruption detected!\n" );
@@ -110,6 +113,8 @@ void *BE_Alloc( unsigned int size ) {
 	return NULL;
 }
 
+#undef ROUNDBITS
+
 
 /*
 	Release allocated memory, add it to the free list.
@@ -155,7 +160,7 @@ void BE_Free( void *ptr ) {
 void BE_InitMemory( void ) {
 	freeHead = (freeMemNode_t *)memory_pool;
 	freeHead->cookie = FREEMEMCOOKIE;
-	freeHead->size = POOL_SIZE;
+	freeHead->size = sizeof( memory_pool );
 	freeHead->next = NULL;
 	freeHead->prev = NULL;
 	freeMem = sizeof( memory_pool );
@@ -215,16 +220,16 @@ void BE_DefragmentMemory( void ) {
 void BE_MemoryInfo( void ) {
 	freeMemNode_t *fmn = (freeMemNode_t *)memory_pool;
 	int size, chunks;
-	freeMemNode_t *end = (freeMemNode_t *)( memory_pool + POOL_SIZE );
+	freeMemNode_t *end = (freeMemNode_t *)( memory_pool + sizeof( memory_pool ) );
 	void *p;
 	char sizeBuf[128];
 
 	/* NOTE: QVM implementation of printf("%p") does not print "0x" prefix */
 
 	G_Printf( "%p-%p: ", fmn, end );
-	ReadableSize( sizeBuf, sizeof( sizeBuf ), ( POOL_SIZE - freeMem ) );
+	ReadableSize( sizeBuf, sizeof( sizeBuf ), ( sizeof( memory_pool ) - freeMem ) );
 	G_Printf( "%s out of ", sizeBuf );
-	ReadableSize( sizeBuf, sizeof( sizeBuf ), POOL_SIZE );
+	ReadableSize( sizeBuf, sizeof( sizeBuf ), sizeof( memory_pool ) );
 	G_Printf( "%s allocated.\n", sizeBuf );
 
 	while ( fmn < end ) {
