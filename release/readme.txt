@@ -330,6 +330,10 @@
       :: kill cid
       Kills a player.
 
+      :: mapinfo [mapname]
+      Prints information about the current or a given map as made
+      available by the mapper.
+
 
   :: Other changes
   

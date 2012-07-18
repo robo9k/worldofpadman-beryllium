@@ -12,12 +12,16 @@
 
   :: Current Version
 
-  v1.9.3 - 14.07.2012
+  v1.9.4 - 18.07.2012
+  * Add server command "mapinfo"
+  * Add more colors to beryllium output
+
+  :: History
+
+  :: v1.9.3 - 14.07.2012
   * Fix bug in "editbotinv"
   * Add cvar "be_botFlags"
   * Add server command "kill" 
-
-  :: History
 
   :: v1.9.2 - 25.06.2012
   * Fix incorrect "Too close to lolly base"
