@@ -762,6 +762,8 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 		return;
 	}
 
+    /* changed beryllium */
+    /*
 	// if all the way up, just delay before coming down
 	if ( ent->moverState == ROTATOR_POS2 ) {
 		if ( ent->spawnflags & FDR_RETURN ) {
@@ -769,6 +771,21 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 		}
 		return;
 	}
+    */
+
+	if ( ROTATOR_POS2 == ent->moverState ) {
+        /* Just delay before coming down. */
+		if ( ent->spawnflags & FDR_RETURN ) {
+			ent->nextthink = level.time + ent->wait;
+		}
+        /* Come down right now. */
+        if ( ent->spawnflags & FDR_TOGGLE ) {
+            ReturnToApos1( ent );
+        }
+
+		return;
+	}
+    /* end beryllium */
 
 	// only partway down before reversing
 	if ( ent->moverState == ROTATOR_2TO1 ) {
