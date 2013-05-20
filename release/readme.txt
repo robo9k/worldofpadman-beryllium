@@ -229,6 +229,10 @@
       If the server supports it, VoIP is also disabled for
       the targets.
 
+      :: players
+      Prints a list of currently connected players. Mainly intended
+      to get access to client ids in a regular way.
+
 
     :: Server
 
