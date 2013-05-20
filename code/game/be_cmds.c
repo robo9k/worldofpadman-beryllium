@@ -25,7 +25,8 @@ const ccmd_t BE_CCMDS[] = {
 	{ "cv",				CMD_MESSAGE,	BE_Cmd_CallVote_f			},
 	{ "vote",			CMD_MESSAGE,	BE_Cmd_Vote_f				},
 	{ "ignore",			0,				BE_Cmd_Ignore_f				},
-	{ "qcr",			0,				BE_Cmd_QueryCvarResponse_f	}
+	{ "qcr",			0,				BE_Cmd_QueryCvarResponse_f	},
+	{ "players",		0,				BE_Cmd_Players_f			}
 };
 const unsigned int NUM_CCMDS = ARRAY_LEN( BE_CCMDS );
 
@@ -209,5 +210,47 @@ void BE_Cmd_QueryCvarResponse_f( gentity_t *ent ) {
 	trap_Argv( 2, value, sizeof( value ) );
 
 	BE_Printf( "Query cvar response from %d: %s - \"%s\"\n", clientNum, cvar, value );
+}
+
+
+/*
+ * Prints a list of players, similar to the scoreboard, but including
+ * slot numbers.
+ */
+void BE_Cmd_Players_f( gentity_t *ent ) {
+    int i;
+    char buf[MAX_STRING_CHARS] = { "" };
+
+    Q_strcat( buf, sizeof( buf ), S_COLOR_ITALIC " # t scr png name\n" );
+    for ( i = 0; i < level.maxclients; i++ ) {
+        const gclient_t *cl = &level.clients[i];
+        /* color code (^n) + one char + \0 == 4 */
+        char ping[4];
+        char team[4];
+
+        if ( cl->pers.connected < CON_CONNECTING ) {
+            continue;
+        }
+
+        Com_sprintf( team, sizeof( team ), "%s", TeamnameShort( cl->sess.sessionTeam ) );
+        if ( g_entities[i].r.svFlags & SVF_BOT ) {
+            Com_sprintf( ping, sizeof( ping ), "%s", "bot" );
+        }
+        else {
+            if ( CON_CONNECTING == cl->pers.connected ) {
+                Com_sprintf( ping, sizeof( ping ), "cnt" );
+            }
+            else {
+                Com_sprintf( ping, sizeof( ping ), "%3d",
+                             ( ( cl->pers.realPing < 999 ) ? cl->pers.realPing : 999 ) );
+            }
+        }
+
+        /* # team score ping name */
+		Q_strcat( buf, sizeof( buf ), va( S_COLOR_DEFAULT "%2d %s" S_COLOR_DEFAULT " %3d %s %s\n",
+				i, team, cl->ps.persistant[PERS_SCORE], ping, cl->pers.netname ) );
+	}
+
+    SendCmd( ( ent - g_entities ), CCMD_PRINT, buf );
 }
 

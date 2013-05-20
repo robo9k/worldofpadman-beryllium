@@ -105,6 +105,7 @@ void ExecuteClientCommand( clientNum_t clientNum, const char *cmd );
 qboolean validGUID( const char *guid );
 
 char *Teamname( team_t team );
+char *TeamnameShort( team_t team );
 char *TeamColorStr( team_t team );
 
 void FormatChatName( char *buff, size_t size, char *namesrc, int mode, char *location, team_t team );

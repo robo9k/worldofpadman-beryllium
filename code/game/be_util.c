@@ -598,6 +598,42 @@ char *Teamname( team_t team ) {
 
 
 /*
+ * Returns a short colored team name without " team" suffix.
+ */
+char *TeamnameShort( team_t team ) {
+	char		*teamname;
+	static char	coloredTeamname[4];
+
+
+	switch ( team ) {
+		case TEAM_RED:
+			teamname = "r";
+			break;
+
+		case TEAM_BLUE:
+			teamname = "b";
+			break;
+
+		case TEAM_FREE:
+			teamname = "f";
+			break;
+
+		case TEAM_SPECTATOR:
+			teamname = "s";
+			break;
+
+		default:
+			teamname = "?";
+			break;
+	}
+
+	Com_sprintf( coloredTeamname, sizeof( coloredTeamname ), "%s%s", TeamColorStr( team ), teamname );
+
+	return coloredTeamname;
+}
+
+
+/*
 	Returns a color string for the team
 */
 char *TeamColorStr( team_t team ) {

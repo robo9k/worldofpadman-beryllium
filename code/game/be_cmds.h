@@ -41,6 +41,7 @@ qboolean BE_ClCmd( gentity_t *ent, const char *cmd );
 void BE_Cmd_Ignore_f( gentity_t *ent );
 void BE_Cmd_TellSpectator_f( gentity_t *ent );
 void BE_Cmd_QueryCvarResponse_f( gentity_t *ent );
+void BE_Cmd_Players_f( gentity_t *ent );
 
 #endif
 
