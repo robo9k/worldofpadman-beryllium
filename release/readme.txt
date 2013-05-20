@@ -173,7 +173,7 @@
     This file will be overwritten on several events.
 
     :: g_truePing
-    Taken from the unlagged code, will do exactly the same.
+    Taken from the Unlagged code, will do exactly the same.
     Read their readme if you wish to known more.
 
     :: be_chatFlags
@@ -189,7 +189,7 @@
     This is a bitmask, supporting the following flags:
       1 - Enforce unique player names
       2 - Enforce simple player names
-          Black ^0 is now usable either way
+    Black ^0 is now usable either way
 
     :: g_smoothClients
     Taken from the Unlagged code, will do exactly the same.
@@ -263,7 +263,7 @@
 
       You can print newlines with scp and sprint by using "\n" in
       the text, which will get expanded to a real newline, e.g.
-      scp -1 "line one\nline two"
+        scp -1 "line one\nline two"
 
       :: dropclient cid [reason]
       Basically the same as clientkick, but you can supply an
