@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v1.9.6 - 20.05.2013
-  * Add client command "players"
+  v1.9.7 - 02.11.2013
+  * Fix order of inactivity check
 
   :: History
+
+  v1.9.6 - 20.05.2013
+  * Add client command "players"
 
   :: v1.9.5 - 04.08.2012
   * Add code to make func_door_rotating spawnflag TOGGLE actually work
