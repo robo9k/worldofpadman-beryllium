@@ -824,6 +824,15 @@ void ClientThink_real( gentity_t *ent ) {
 		Cmd_dropCartridge_f(ent);
 	}
 
+	/* added beryllium */
+	/* Do inactivity checks before spectator thinks. Otherwise clients can accumulate inactivity
+	 * as a spectator and then get dropped for inactivity once they join the game again.
+	 */
+	if ( !ClientInactivityTimer( client ) ) {
+		return;
+	}
+	/* end beryllium */
+
 	// spectators don't do much
 	if ( ( client->sess.sessionTeam == TEAM_SPECTATOR ) || LPSDeadSpec( client ) ) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
@@ -835,10 +844,14 @@ void ClientThink_real( gentity_t *ent ) {
 		return;
 	}
 
+	/* changed beryllium */
+	/*
 	// check for inactivity timer, but never drop the local client of a non-dedicated server
 	if ( !ClientInactivityTimer( client ) ) {
 		return;
 	}
+	*/
+	/* end beryllium */
 
 	// clear the rewards if time
 	if ( level.time > client->rewardTime ) {
