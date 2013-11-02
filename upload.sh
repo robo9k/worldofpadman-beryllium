@@ -1,6 +1,6 @@
 #!/bin/sh
 
-HOST='bfg.9k'
+HOST='overmind'
 VERSION=$(./version.sh)
 BERYLLIUM='beryllium-v'$VERSION'.zip'
 BE3='beryllium-b3-v'$VERSION'.zip'
