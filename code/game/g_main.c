@@ -132,6 +132,8 @@ vmCvar_t	be_welcomeMessage;
 
 vmCvar_t    be_botFlags;
 
+vmCvar_t	be_inactivity;
+
 /* unlagged - server options */
 vmCvar_t	sv_fps;
 
@@ -286,6 +288,8 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &be_welcomeMessage, "be_welcomeMessage", "", CVAR_ARCHIVE, 0, qfalse },
 
     { &be_botFlags, "be_botFlags", "0", CVAR_ARCHIVE, 0, qfalse },
+
+	{ &be_inactivity, "be_inactivity", "3", CVAR_ARCHIVE, 0, qfalse },
 
 	/* unlagged - server options */
 	{ &g_truePing, "g_truePing", "1", CVAR_ARCHIVE, 0, qtrue },

@@ -209,6 +209,17 @@
     Please note that both options are considered experimental
     and might break bot logic sometimes.
 
+	:: be_inactivity
+	This is a bitmask, supporting the following flags:
+      1 - Check spectators for inactivity
+	  2 - Check bots for inactivity
+	  4 - Move inactive clients to spectators
+
+	Setting 1 or 2 means the matching clients will never be checked
+	and thus kicked for inactivity.
+	Setting 4 means clients will be moved to spectators, with their
+	inactivity timer reset.
+
 
   :: Commands
 

@@ -75,6 +75,12 @@ enum {
 	BE_SIMPLENAMES	= 2
 };
 
+enum {
+	BE_INACTIVITY_SPECTATOR = 1,
+	BE_INACTIVITY_BOT = 2,
+	BE_INACTIVITY_SPECTATE = 4
+};
+
 typedef signed int banNum_t;
 
 extern int			numGUIDBans;
@@ -125,6 +131,8 @@ extern vmCvar_t	be_overrideEntities;
 extern vmCvar_t	be_settings;
 
 extern vmCvar_t	be_welcomeMessage;
+
+extern vmCvar_t	be_inactivity;
 
 
 /* Parts of unlagged gamecode here as not to pollute the vanilla code */

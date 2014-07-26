@@ -424,11 +424,34 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 	}
 	else if ( !client->pers.localClient ) {
 		if ( level.time > client->pers.inactivityTime ) {
+			if ( !(be_inactivity.integer & BE_INACTIVITY_BOT) &&
+				 (g_entities[client - level.clients].r.svFlags & SVF_BOT)) {
+				/* If bots do not have inactivity and this is a bot, continue */
+				return qtrue;
+			}
+
+			if ( !(be_inactivity.integer & BE_INACTIVITY_SPECTATOR) &&
+					IsSpectator(client) ) {
+				/* If spectators do not have inactivity and this is a spectator, continue */
+				return qtrue;
+			}
+
+			if ( (be_inactivity.integer & BE_INACTIVITY_SPECTATE) &&
+					!IsSpectator(client) ) {
+				/* If this is an inactive player, move him to spectators */
+				G_SetTeam( &g_entities[client - level.clients], "spectator", qtrue );
+				/* Reset his inactivity timer, so he does not get kicked immediately */
+				client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+
+				return qtrue;
+			}
+
 			trap_DropClient( client - level.clients, "Dropped due to inactivity" );
 			return qfalse;
 		}
 		if ( ( level.time > ( client->pers.inactivityTime - 10000 ) ) && !client->pers.inactivityWarning ) {
 			client->pers.inactivityWarning = qtrue;
+			/* TODO: With BE_INACTIVITY_SPECTATE this might not result in a drop */
 			SendClientCommand( ( client - level.clients ), CCMD_CP, S_COLOR_BOLD"Ten seconds until inactivity drop!\n" );
 		}
 	}
