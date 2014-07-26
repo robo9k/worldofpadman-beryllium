@@ -443,6 +443,7 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 				 * enter ClientInactivityTimer() indirectly from G_SetTeam().
 				 */
 				client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
+				client->pers.inactivityWarning = qfalse;
 				/* If this is an inactive player, move him to spectators */
 				G_SetTeam( &g_entities[client - level.clients], "spectator", qtrue );
 
@@ -454,8 +455,22 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 		}
 		if ( ( level.time > ( client->pers.inactivityTime - 10000 ) ) && !client->pers.inactivityWarning ) {
 			client->pers.inactivityWarning = qtrue;
-			/* TODO: With BE_INACTIVITY_SPECTATE this might not result in a drop */
-			SendClientCommand( ( client - level.clients ), CCMD_CP, S_COLOR_BOLD"Ten seconds until inactivity drop!\n" );
+
+			if ( !(be_inactivity.integer & BE_INACTIVITY_SPECTATOR) &&
+					IsSpectator(client) ) {
+				/* If spectators do not have inactivity and this is a spectator, continue */
+				return qtrue;
+			}
+
+			if ( (be_inactivity.integer & BE_INACTIVITY_SPECTATE) &&
+					!IsSpectator(client) ) {
+				SendClientCommand( ( client - level.clients ), CCMD_CP,
+						S_COLOR_BOLD"Ten seconds until spectator mode\n"
+						S_COLOR_BOLD"due to inactivity!\n" );
+			} else {
+				SendClientCommand( ( client - level.clients ), CCMD_CP,
+						S_COLOR_BOLD"Ten seconds until inactivity drop!\n" );
+			}
 		}
 	}
 
