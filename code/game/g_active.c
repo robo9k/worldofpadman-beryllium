@@ -438,10 +438,13 @@ qboolean ClientInactivityTimer( gclient_t *client ) {
 
 			if ( (be_inactivity.integer & BE_INACTIVITY_SPECTATE) &&
 					!IsSpectator(client) ) {
+				/* Reset his inactivity timer, so he does not get kicked immediately */
+				/* NOTE: This needs to be done first, otherwise a kick will occur when we
+				 * enter ClientInactivityTimer() indirectly from G_SetTeam().
+				 */
+				client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
 				/* If this is an inactive player, move him to spectators */
 				G_SetTeam( &g_entities[client - level.clients], "spectator", qtrue );
-				/* Reset his inactivity timer, so he does not get kicked immediately */
-				client->pers.inactivityTime = ( level.time + g_inactivity.integer * 1000 );
 
 				return qtrue;
 			}

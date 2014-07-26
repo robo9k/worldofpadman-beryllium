@@ -12,10 +12,13 @@
 
   :: Current Version
 
-  v1.9.8 - 26.07.2014
-  * Add cvar "be_inactivity"
+  v1.9.9 - 26.07.2014
+  * Fix inactivity check so be_inactivity 1+4 works
 
   :: History
+
+  :: v1.9.8 - 26.07.2014
+  * Add cvar "be_inactivity"
 
   :: v1.9.7 - 02.11.2013
   * Fix order of inactivity check
